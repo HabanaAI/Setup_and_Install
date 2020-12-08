@@ -1,4 +1,4 @@
-# Gaudi Setup and Installation
+# Gaudi Setup and Installation - DRAFT, INTERNAL ONLY
 Setup and Installation Instructions for Habana(TM) binaries, docker image creation
 
 GitHub version of the internal Installation guide; Instructions on how to install Habana binaries on bare metal, or create docker images.  Will cover three scenarios:
