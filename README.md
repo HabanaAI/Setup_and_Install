@@ -8,20 +8,21 @@ GitHub version of the internal Installation guide; Instructions on how to instal
 * Management of additional scripts
 
 
-## Installation of DKMS driver
-* Why
-* How to do it
-* how to check it
+## HOW TO BUILD DOCKER IMAGES
+* Dockerfile for full Synapse AI with TensorFlow or PyTorch with institutions with access to the Public Vault.  Will show how to build your own Docker image
+* We will put the dockerfile itself in the repo
 
-## Installation of Habana Gaudi Drivers
-* Why
-* How to do it
-* how to check it
+## Building with Habana's TensorFlow Docker Image
+* Install the base drivers and then. 
+*	Install the Docker image
+* Launch the image
+* notes:  need to think about this for RPM and Debian, as well as TF and PyT instructions
 
-## How to Create a Docker Image from Dockerfile
-* Why
-* How to do it
-* how to check it
+## Bare Metal Installation
+* Installation of Habana Drivers leveraging the Public Vault – Copy from the Install guide.
+* Install DKMS (PCIe) driver (and the other things that are missing when you use the TF/PyT docker image)
+* How do you get to TensorFlow or PyTorch from here? 
+* Next steps.. for the HW specific installation instrcutionrs (Firmware, BMC, etc).. goto our documentation (ReadtheDocs)
 
 ## How to use the Habana Container Runtime
 
