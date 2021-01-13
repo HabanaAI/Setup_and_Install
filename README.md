@@ -8,7 +8,7 @@ GitHub version of the internal Installation guide; Instructions on how to instal
 * Management of additional scripts
 
 
-## HOW TO BUILD DOCKER IMAGES
+## How to Build Docker Images from Habana Dockerfiles
 * Dockerfile for full Synapse AI with TensorFlow or PyTorch with institutions with access to the Public Vault.  Will show how to build your own Docker image
 * We will put the dockerfile itself in the repo
 
