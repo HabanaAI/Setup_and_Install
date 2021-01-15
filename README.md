@@ -1,7 +1,7 @@
-### Gaudi Setup and Installation - DRAFT, INTERNAL ONLY
+# Gaudi Setup and Installation - DRAFT, INTERNAL ONLY
 
-### Setting Up and Installing Using Docker Images
-## Install base drivers
+## Setting Up and Installing Using Docker Images
+### Install base drivers
 1. Remove old packages habanalabs-dkms
 ```
 sudo dpkg -P habanalabs-dkms
@@ -23,7 +23,7 @@ sudo hl-fw-loader --yes
 ```
 sudo modprobe habanalabs
 ```
-## Install the Docker image
+### Install the Docker image
 1. Stop running dockers
 ```
 docker stop $(docker ps -a -q)
@@ -34,7 +34,7 @@ docker stop $(docker ps -a -q)
 docker pull artifactory.habana-labs.com/docker-local/0.12.0/ubuntu18.04/habanalabs/tensorflow-installer:0.12.0-353
 ```
 
-## Launch the image
+### Launch the image
 1. Run docker ---  Note: this will Need the external Artifacotry for this to work.  
 **NOTE:** This assumes Imagenet dataset is under /opt/datasets/imagenet on the host. Modify accordingly.  
 ```
@@ -55,7 +55,7 @@ docker ps
 docker exec -ti <NAME> bash 
 ```
 
-### How to Build Docker Images from Habana Dockerfiles
+## How to Build Docker Images from Habana Dockerfiles
 1. Download Docker files and build script from Github to local directory 
 ```
 docker ps
@@ -74,7 +74,7 @@ Run build script:
 ./build_basic_tf_demo.sh 
 ```
 
-### Ubuntu Bare Metal Installation
+## Ubuntu Bare Metal Installation
  Package content
 The installation for bare metal contains the following Installers:
 • habanalabs-graph-_all – installs the Graph Compiler and the run-time.
@@ -92,13 +92,13 @@ sudo dpkg --configure -a
 sudo apt-get update
 ```
 
-## Driver installation
+### Driver installation
 Install the driver using the following command:
 ```
 sudo apt install -y ./habanalabs-dkms_*_all.deb
 ```
 
-## Update FW
+### Update FW
 To update the firmware, follow the below steps:
 1. Remove the driver:
 ```
@@ -115,24 +115,24 @@ sudo hl-fw-loader
 sudo modprobe habanalabs
 ```
 
-## Thunk installation
+### Thunk installation
 To install the thunk library, use the following command:
 ```
 sudo apt install -y ./habanalabs-thunk-*_all.deb
 ```
 
-## FW tools installation
+### FW tools installation
 To install the firmware tools, use the following command:
 ```
 sudo apt install -y ./habanalabs-fw-tools*.deb
 ```
 
-## Graph compiler and run-time installation
+### Graph compiler and run-time installation
 To install the graph compiler and run-time, use the following command:
 ```
 sudo apt install -y ./habanalabs-graph-*_all.deb
 ```
-## (Optional) Demos installation
+### (Optional) Demos installation
 To install demos, use the following commands:
 ```
 sudo apt install -y ./habanalabs-aeon*_all.deb
@@ -140,13 +140,13 @@ sudo chmod +x habanalabs-demo-gaudi_*.sh
 ./habanalabs-demo-gaudi_*.sh
 ```
 
-## (Optional) qual installation
+### (Optional) qual installation
 To install hl_qual, use the following command:
 ```
 sudo apt install -y ./habanalabs-qual*.deb
 ```
 
-### Next steps
+## Next steps
 Once you have installed the packages you can refer to the following for how to start running with Tensorflow:
 [Model Examples Tensorflow](https://github.com/habana-labs-demo/ResnetModelExample/blob/master/TensorFlow)
 
@@ -156,6 +156,6 @@ For Pytorch:
 For any additional information about installation, please refer to the following link:
 [ReadtheDocs Installation Guide](https://habana-labs-synapseai-gaudi.readthedocs-hosted.com/en/latest/Installation_Guide/GAUDI_Installation_Guide.html)
 
-### How to use the Habana Container Runtime
+## How to use the Habana Container Runtime
 
-### Managing additional scripts and add-ons
+## Managing additional scripts and add-ons
