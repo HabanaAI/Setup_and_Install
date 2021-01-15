@@ -81,11 +81,87 @@ Run build script:
 ./build_basic_tf_demo.sh 
 ```
 
-### Bare Metal Installation
-* Installation of Habana Drivers leveraging the Public Vault – Copy from the Install guide.
-* Install DKMS (PCIe) driver (and the other things that are missing when you use the TF/PyT docker image)
-* How do you get to TensorFlow or PyTorch from here? 
-* Next steps.. for the HW specific installation instrcutionrs (Firmware, BMC, etc).. goto our documentation (ReadtheDocs)
+### Ubuntu Bare Metal Installation
+ Package content
+The installation for bare metal contains the following Installers:
+• habanalabs-graph-_all – installs the Graph Compiler and the run-time.
+• habanalabs-thunk-_all – installs the thunk library.
+• habanalabs-dkms_all – installs the PCIe driver.
+• habanalabs-fw-tools – installs the FW update tools.
+• habanalabs-aeon – installs demo’s data loader.
+• habanalabs-demo-_.sh – installs the demo package.
+• habanalabs-qual – installs the qualification application package.
+
+Installing the package with internet connection available allows the network to download and install the required
+dependencies for the SynapseAI package (apt get and pip install etc.).
+```
+sudo dpkg --configure -a
+sudo apt-get update
+```
+
+## Driver installation
+Install the driver using the following command:
+```
+sudo apt install -y ./habanalabs-dkms_*_all.deb
+```
+
+## Update FW
+To update the firmware, follow the below steps:
+1. Remove the driver:
+```
+sudo rmmod habanalabs
+```
+When running on HLS, make sure to remove write protect for burning uboot. For additional details, refer to
+Remove write protect for burning uboot.
+2. Update the device’s FW:
+```
+sudo hl-fw-loader
+```
+3. Start the driver:
+```
+sudo modprobe habanalabs
+```
+
+## Thunk installation
+To install the thunk library, use the following command:
+```
+sudo apt install -y ./habanalabs-thunk-*_all.deb
+```
+
+## FW tools installation
+To install the firmware tools, use the following command:
+```
+sudo apt install -y ./habanalabs-fw-tools*.deb
+```
+
+## Graph compiler and run-time installation
+To install the graph compiler and run-time, use the following command:
+```
+sudo apt install -y ./habanalabs-graph-*_all.deb
+```
+## (Optional) Demos installation
+To install demos, use the following commands:
+```
+sudo apt install -y ./habanalabs-aeon*_all.deb
+sudo chmod +x habanalabs-demo-gaudi_*.sh
+./habanalabs-demo-gaudi_*.sh
+```
+
+## (Optional) qual installation
+To install hl_qual, use the following command:
+```
+sudo apt install -y ./habanalabs-qual*.deb
+```
+
+### Next steps
+Once you have installed the packages you can refer to the following for how to start running with Tensorflow:
+[Model Examples Tensorflow](https://github.com/habana-labs-demo/ResnetModelExample/blob/master/TensorFlow)
+
+For Pytorch:
+[Model Examples Pytorch](##TODO##)
+
+For any additional information about installation, please refer to the following link:
+[ReadtheDocs Installation Guide](https://habana-labs-synapseai-gaudi.readthedocs-hosted.com/en/latest/Installation_Guide/GAUDI_Installation_Guide.html)
 
 ### How to use the Habana Container Runtime
 
