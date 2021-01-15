@@ -61,11 +61,25 @@ docker ps
 ```
 docker exec -ti <NAME> bash 
 ```
-## notes:  need to think about this for RPM and Debian, as well as TF and PyT instructions
 
 ### How to Build Docker Images from Habana Dockerfiles
-* Dockerfile for full Synapse AI with TensorFlow or PyTorch with institutions with access to the Public Vault.  Will show how to build your own Docker image
-* We will put the dockerfile itself in the repo
+1. Download Docker files and build script from Github to local directory 
+```
+docker ps
+```
+
+2. Run build script to generate Docker image
+```
+Set $VERSION and $REVISION environment variables, for example: 
+
+export VERSION=0.12.0 
+
+export REVISION=353 
+
+Run build script: 
+
+./build_basic_tf_demo.sh 
+```
 
 ### Bare Metal Installation
 * Installation of Habana Drivers leveraging the Public Vault – Copy from the Install guide.
