@@ -1,11 +1,4 @@
 ### Gaudi Setup and Installation - DRAFT, INTERNAL ONLY
-Setup and Installation Instructions for Docker images, Docker image creation, and Habana(TM) packages on bare metal.
-
-GitHub version of the internal Installation guide; Instructions on how to install Habana binaries on bare metal, or create docker images.  Will cover three scenarios:
-* Install DKMS (PCIe) driver
-* Installation of Habana Gaudi Drivers leveraging the Public Vault
-* Dockerfile for full Synapse AI with TensorFlow or PyTorch with institutions with access to the Public Vault.  Will show how to build your own Docker image.
-* Management of additional scripts
 
 ### Setting Up and Installing Using Docker Images
 ## Install base drivers
