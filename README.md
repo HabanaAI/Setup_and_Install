@@ -77,13 +77,13 @@ Run build script:
 ## Ubuntu Bare Metal Installation
  Package content
 The installation for bare metal contains the following Installers:
-• habanalabs-graph-_all – installs the Graph Compiler and the run-time.
-• habanalabs-thunk-_all – installs the thunk library.
-• habanalabs-dkms_all – installs the PCIe driver.
-• habanalabs-fw-tools – installs the FW update tools.
-• habanalabs-aeon – installs demo’s data loader.
-• habanalabs-demo-_.sh – installs the demo package.
-• habanalabs-qual – installs the qualification application package.
+* habanalabs-graph-_all – installs the Graph Compiler and the run-time.
+* habanalabs-thunk-_all – installs the thunk library.
+* habanalabs-dkms_all – installs the PCIe driver.
+* habanalabs-fw-tools – installs the FW update tools.
+* habanalabs-aeon – installs demo’s data loader.
+* habanalabs-demo-_.sh – installs the demo package.
+* habanalabs-qual – installs the qualification application package.
 
 Installing the package with internet connection available allows the network to download and install the required
 dependencies for the SynapseAI package (apt get and pip install etc.).
