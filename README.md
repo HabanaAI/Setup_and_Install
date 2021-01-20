@@ -57,9 +57,6 @@ docker exec -ti <NAME> bash
 
 ## How to Build Docker Images from Habana Dockerfiles
 1. Download Docker files and build script from Github to local directory 
-```
-docker ps
-```
 
 2. Run build script to generate Docker image
 ```
