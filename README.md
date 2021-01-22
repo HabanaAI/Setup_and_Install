@@ -1,4 +1,4 @@
-# Gaudi Setup and Installation - DRAFT, INTERNAL ONLY
+# Gaudi Setup and Installation
 
 ## Setting Up and Installing Using Docker Images
 ### Install base drivers
