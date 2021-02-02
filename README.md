@@ -60,15 +60,11 @@ docker exec -ti <NAME> bash
 
 2. Run build script to generate Docker image
 ```
-Set $VERSION and $REVISION environment variables, for example: 
-
-export VERSION=0.12.0 
-
-export REVISION=353 
-
-Run build script: 
-
-./build_basic_tf_demo.sh 
+./docker_build.sh version revision mode [base,tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2]
+```
+For example: 
+```
+./docker_build 0.12.0 353 tensorflow ubuntu18.04
 ```
 
 ## Ubuntu Bare Metal Installation
