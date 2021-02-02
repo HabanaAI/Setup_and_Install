@@ -1,0 +1,57 @@
+# HabanaLabs Dockerfile Tensorflow installer layer
+# Written by: Pawel Szewc <pszewc@habana.ai>
+ARG BASE_NAME
+ARG VERSION
+ARG REVISION
+FROM ${BASE_NAME}:${VERSION}-${REVISION}
+ARG VERSION
+ARG REVISION
+
+USER root
+WORKDIR /root
+
+# Install unzip to extract pre-trained weights for BERT demo
+RUN yum install -y unzip \
+        openssh-client \
+        openssh-server \
+        git \
+        bc \
+        mesa-libGL && \
+    yum remove openmpi -y
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py pip==19.3.1 && \
+    rm -rf get-pip.py && \
+    pip3 install gast==0.2.2 \
+         py-cpuinfo==5.0.0 \
+         requests==2.20 \
+         tensorflow_datasets==1.2.0 \
+         tensorflow-metadata==0.12.1 \
+         cython==0.29.15 \
+         imgaug==0.4.0 \
+         keras==2.3.1 \
+         cloudpickle==1.6.0 \
+         git+https://github.com/NVIDIA/dllogger.git@26a0f8f1958de2c0c460925ff6102a4d2486d6cc#egg=dllogger \
+         numpy==1.19.2 && \
+         # pycocotools has to be installed in separated process otherwise it fails
+    pip3 install pycocotools==2.0.0 \
+         tensorflow-cpu==2.2.0 \
+         tensorflow-model-optimization==0.5.0
+
+RUN wget https://artifactory.habana-labs.com/sw-build-meta-manifest/"${VERSION}"/"${REVISION}"\
+/amzn2/binary/tensorflow_modules-"${VERSION}"_"${REVISION}".tgz && \
+    tar -xf tensorflow_modules-"${VERSION}"_"${REVISION}".tgz -C /usr/lib/habanalabs/. && \
+    /sbin/ldconfig && \
+    rm -rf ~/tensorflow_modules-"${VERSION}"_"${REVISION}".tgz && \
+    echo "export TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/" | tee -a /etc/profile.d/habanalabs.sh && \
+    echo "export PYTHONPATH=/root:/usr/lib/habanalabs/" | tee -a /etc/profile.d/habanalabs.sh && \
+    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/" | tee -a /etc/profile.d/habanalabs.sh && \
+    echo "export PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/" | tee -a /etc/profile.d/habanalabs.sh && \
+    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
+    echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
+
+ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
+RUN yum install -y openmpi openmpi-devel python3-openmpi
+ENV CC=/usr/lib64/openmpi/bin/mpicc
+ENV MPICC=/usr/lib64/openmpi/bin/mpicc
+RUN pip3 install mpi4py --no-cache-dir
