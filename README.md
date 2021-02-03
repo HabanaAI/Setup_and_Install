@@ -78,8 +78,6 @@ Mandatory packages: 
 
 Optional packages:
 * habanalabs-fw-tools – installs various fw tools (hlml, hl-smi, etc.)
-* habanalabs-aeon – installs synapse level demo’s data loader.
-* habanalabs-demo (.sh) – installs the synapse level demo package. See [Gaudi Examples Overview.](https://habana-labs-synapseai-gaudi.readthedocs-hosted.com/en/master/Examples_Overview/GAUDI_Examples_Overview.html#gaudi-examples-overview)
 * habanalabs-qual – installs the qualification application package. See [Gaudi Qualification Library.](https://habana-labs-synapseai-gaudi.readthedocs-hosted.com/en/master/Qualification_Library/GAUDI_Qualification_Library.html#gaudi-qualification-library)
 
 Installing the package with internet connection available allows the network to download and install the required
@@ -128,14 +126,6 @@ sudo apt install -y ./habanalabs-graph-*_all.deb
 To install the firmware tools, use the following command:
 ```
 sudo apt install -y ./habanalabs-fw-tools*.deb
-```
-
-### (Optional) Demos installation
-To install demos, use the following commands:
-```
-sudo apt install -y ./habanalabs-aeon*_all.deb
-sudo chmod +x habanalabs-demo-gaudi_*.sh
-./habanalabs-demo-gaudi_*.sh
 ```
 
 ### (Optional) qual installation
