@@ -6,7 +6,7 @@
 * [Ubuntu Bare Metal Installation](#Ubuntu-Bare-Metal-Installation)
 
 ## Setting Up and Installing Using Docker Images
-### Install base drivers
+### Setup base drivers
 If the driver needs to be upadated or installed on a fresh system, please use the following directions:
 
 1. Remove old packages habanalabs-dkms
@@ -30,6 +30,10 @@ sudo hl-fw-loader --yes
 ```
 sudo modprobe habanalabs
 ```
+Once the above steps are completed, driver and firmware has been updated.  
+Please refer to the following instructions on how to ensure setup has completed properly:  
+[Package setup checks](#Package-setup-checks)
+
 ### Install the Docker image
 1. Stop running dockers
 ```
@@ -61,6 +65,8 @@ docker ps
 ```
 docker exec -ti <NAME> bash 
 ```
+Once you have launched the image, you can refer to the following for how to start running with Tensorflow:  
+[Model Examples Tensorflow](https://github.com/habana-labs-demo/ResnetModelExample/blob/master/TensorFlow)
 
 ## How to Build Docker Images from Habana Dockerfiles
 1. Download Docker files and build script from Github to local directory 
@@ -75,7 +81,7 @@ For example:
 ```
 
 ## Ubuntu Bare Metal Installation
-The installation for bare metal contains the following Installers:
+The installation for bare metal contains the following Installers:  
 Mandatory packages: 
 * habanalabs-dkms – installs the PCIe driver.
 * habanalabs-thunk  – installs the thunk library.
@@ -139,10 +145,57 @@ To install hl_qual, use the following command:
 sudo apt install -y ./habanalabs-qual*.deb
 ```
 
-## Next steps
-Once you have installed the packages you can refer to the following for how to start running with Tensorflow:
-[Model Examples Tensorflow](https://github.com/habana-labs-demo/ResnetModelExample/blob/master/TensorFlow)
+## Package setup checks
+This section will provide some commands to help verify the software installation/update has been done properly
 
+### PCI Cards Connected
+Check that all the cards show up by running the following command: 
+```
+sudo lspci -tvvv | grep 1da3 
+```
+You should expect to see all Gaudi cards listed.
+
+### PCI Link Status
+Check that all the links are trained to Gen3 x16 by running the following command
+```
+sudo lspci -vvv -s 17:00.0 | grep LnkSta
+```
+Repeat while modifying the 17:00.0 to walk through all the PCI links from listing of previous command (lspci -tvvv | grep 1da3).  
+(17.00.0, 18.00.0, 19.00.0, 1a.00.0, 1b.00.0, 1d.00.0, 1e.00.0, ae.00.0, af.00.0 …) 
+
+### Firmware Versions Correct
+This section requires hl-smi to be used, please refer [this](### FW-tools-installation) section on how to install hl-smi.  
+Check all of the card's FW versions by running the following commands: 
+```
+sudo hl-smi -q | grep FIT 
+sudo hl-smi -q | grep SPI
+```
+You should see the FIT version for each of the cards installed.  
+Make sure the version matches what is expected (matching the release version you installed)
+
+### Gaudi Clock Freq
+This section requires hl-smi to be used, please refer [this](### FW-tools-installation) section on how to install hl-smi.  
+Check all of the card's frequencies by running the following command: 
+```
+sudo hl-smi -q | grep -A 1 'Clocks$' 
+```
+This will list each card's frequency. Please make sure they are set as expected.
+
+### habanalabs-qual
+For some qualification tests, please refer to the following document on how to run and use habanalabs-qual:
+[GAUDI_Qualification_Library](https://habana-labs-synapseai-gaudi.readthedocs-hosted.com/en/latest/Qualification_Library/GAUDI_Qualification_Library.html)
+
+### CPU Performance Settings
+Check that the CPU setting are set to performance: 
+```
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 
+```
+If not, set CPU setting to Performance: 
+```
+echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 
+```
+
+## Additional links
 For Pytorch:
 [Model Examples Pytorch](##TODO##)
 
