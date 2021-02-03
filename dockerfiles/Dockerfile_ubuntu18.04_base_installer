@@ -26,7 +26,7 @@ RUN apt-get update && \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential=12.4ubuntu1 \
-    ca-certificates=20201027ubuntu0.18.04.1 \
+    ca-certificates=20210119~18.04.1 \
     dkms=2.3-3ubuntu9.7 \
     gcc=4:7.4.0-1ubuntu2.3 \
     graphviz=2.40.1-2 \
