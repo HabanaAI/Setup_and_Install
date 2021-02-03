@@ -15,8 +15,8 @@ RUN yum install -y sudo system-lsb-core
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "baseurl=https://artifactory.habana-labs.com/pre-release-centos7/aws/l2/testing" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=http://artifactory.habana-labs.com/api/gpg/key/public" >> /etc/yum.repos.d/habanalabs.repo
+    echo "baseurl=https://vault.habana.ai/artifactory/al2" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://vault.habana.ai/api/gpg/key/public" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-fw-tools-"$VERSION"-"$REVISION".amzn2 \

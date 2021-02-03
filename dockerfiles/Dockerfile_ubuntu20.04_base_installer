@@ -56,9 +56,9 @@ RUN locale-gen en_US.UTF-8
 RUN pip3 install setuptools==41.0.0 \
     google-pasta==0.2.0
 
-RUN echo "deb https://artifactory.habana-labs.com/repo-ubuntu20.04 focal qa" | tee -a /etc/apt/sources.list && \
-    echo "deb https://artifactory.habana-labs.com/repo-ubuntu20.04 focal testing" | tee -a /etc/apt/sources.list && \
-    wget https://artifactory.habana-labs.com/api/gpg/key/public && \
+RUN echo "deb https://vault.habana.ai/artifactory/debian focal qa" | tee -a /etc/apt/sources.list && \
+    echo "deb https://vault.habana.ai/artifactory/debian focal testing" | tee -a /etc/apt/sources.list && \
+    wget https://vault.habana.ai/api/gpg/key/public && \
     apt-key add public && \
     rm public && \
     apt-get update

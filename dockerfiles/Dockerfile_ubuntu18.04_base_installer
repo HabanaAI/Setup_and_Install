@@ -1,5 +1,5 @@
 # HabanaLabs Dockerfile base installer layer for Ubuntu 18.04
-FROM artifactory.habana-labs.com/docker-developers/base/u18/u18-base:bionic-20190307
+FROM ubuntu:bionic-20190307
 ARG VERSION
 ARG REVISION
 
@@ -60,11 +60,10 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
 RUN pip3.6 install setuptools==41.0.0
 
 RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
-    echo "deb https://artifactory.habana-labs.com/repo-ubuntu18.04 bionic qa" | tee -a /etc/apt/sources.list && \
-    echo "deb https://artifactory.habana-labs.com/repo-ubuntu18.04 bionic testing" | tee -a /etc/apt/sources.list && \
-    wget http://artifactory.habana-labs.com/api/gpg/key/public && \
+    echo "deb https://vault.habana.ai/artifactory/debian bionic qa" | tee -a /etc/apt/sources.list && \
+    echo "deb https://vault.habana.ai/artifactory/debian bionic testing" | tee -a /etc/apt/sources.list && \
+    wget https://vault.habana.ai/api/gpg/key/public && \
     apt-key add public && \
-    rm public && \
     apt-get update
 
 RUN apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
