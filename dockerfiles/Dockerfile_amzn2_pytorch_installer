@@ -1,5 +1,4 @@
 # HabanaLabs Dockerfile PyTorch installer layer for Amazon Linux 2
-
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -7,15 +6,8 @@ FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
 
-LABEL maintainer="Shashank N Devaraj - sdevaraj@habana.ai"
-
-# Set user and workdir
-USER root
-WORKDIR /root
-
 ENV LANG=en_US.UTF-8
 
-# Install dependencies
 RUN yum update -y && yum install -y \
     unzip \
     openssh-client \

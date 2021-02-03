@@ -1,5 +1,4 @@
-# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu
-
+# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu18.04/Ubuntu20.04
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -8,15 +7,8 @@ ARG VERSION
 ARG REVISION
 ARG BASE_NAME
 
-LABEL maintainer="Shashank N Devaraj - sdevaraj@habana.ai"
-
-# Set user and workdir
-USER root
-WORKDIR /root
-
 ENV LANG=en_US.UTF-8
 
-# Install dependencies
 RUN apt-get update && apt-get install -y \
     unzip \
     openssh-client \
@@ -48,5 +40,4 @@ RUN wget artifactory.habana-labs.com/sw-build-meta-manifest/"${VERSION}"/"${REVI
 # requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
 # pytorch uses its own package "hb-torch", to avoid the conflict between two pkgs, we uninstall torch pkg
 
-# Set env
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib:/usr/lib/habanalabs/

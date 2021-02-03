@@ -1,14 +1,10 @@
-# HabanaLabs Dockerfile Tensorflow installer layer
-# Written by: Pawel Szewc <pszewc@habana.ai>
+# HabanaLabs Dockerfile Tensorflow installer layer for Amazon Linux 2
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
-
-USER root
-WORKDIR /root
 
 # Install unzip to extract pre-trained weights for BERT demo
 RUN yum install -y unzip \

@@ -1,10 +1,7 @@
-# HabanaLabs Dockerfile
-# Written by: Alexey Nikandrov <anikandrov@habana.ai>
+# HabanaLabs Dockerfile base installer layer for Ubuntu 20.04
 FROM artifactory.habana-labs.com/docker-developers/base/u20/u20-base:latest
 ARG VERSION
 ARG REVISION
-
-WORKDIR /root
 
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8

@@ -1,5 +1,4 @@
-# HabanaLabs Dockerfile Tensorflow installer layer
-# Written by: Pawel Szewc <pszewc@habana.ai>
+# HabanaLabs Dockerfile Tensorflow installer layer for Ubuntu18.04/Ubuntu20.04
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -7,18 +6,12 @@ FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
 
-# Set user and workdir
-USER root
-WORKDIR /root
-
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
 ENV PYTHONPATH=/usr/lib/habanalabs/:/root
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/
 ENV PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/
-ENV PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/
 ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
 
-# Install OS dependencies
 RUN apt-get update && \
     apt-get remove openmpi-bin -y && \
     apt-get autoremove --purge openmpi-bin -y && \

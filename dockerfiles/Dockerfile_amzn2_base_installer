@@ -1,3 +1,4 @@
+# HabanaLabs Dockerfile base installer layer for Amazon Linux 2
 FROM artifactory.habana-labs.com/docker-developers/base/aws/aws-base:latest
 ARG VERSION
 ARG REVISION
@@ -10,14 +11,6 @@ RUN yum update -y && yum install -y \
     python3-tkinter \
     wget
 
-RUN wget https://artifactory.habana-labs.com/puppet-amazon/kernel-5.4.58-33.126.amzn2.x86_64.rpm && \
-    wget https://artifactory.habana-labs.com/puppet-amazon/kernel-devel-5.4.58-33.126.amzn2.x86_64.rpm && \
-    wget https://artifactory.habana-labs.com/puppet-amazon/kernel-headers-5.4.58-33.126.amzn2.x86_64.rpm && \
-    yum install -y ./kernel-5.4.58-33.126.amzn2.x86_64.rpm \
-        ./kernel-devel-5.4.58-33.126.amzn2.x86_64.rpm \
-        ./kernel-headers-5.4.58-33.126.amzn2.x86_64.rpm && \
-    rm ./kernel-*.rpm
-
 RUN yum install -y sudo system-lsb-core
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
@@ -29,8 +22,6 @@ RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-fw-tools-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-graph-"$VERSION"-"$REVISION".amzn2
 
-USER root
-WORKDIR /root
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
