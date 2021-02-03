@@ -1,5 +1,10 @@
 # Gaudi Setup and Installation
 
+## Table Of Contents
+* [Setting Up and Installing Using Docker Images](#Setting-Up-and-Installing-Using-Docker-Images)
+* [How to Build Docker Images from Habana Dockerfiles](#How-to-Build-Docker-Images-from-Habana-Dockerfiles)
+* [Ubuntu Bare Metal Installation](#Ubuntu-Bare-Metal-Installation)
+
 ## Setting Up and Installing Using Docker Images
 ### Install base drivers
 If the driver needs to be upadated or installed on a fresh system, please use the following directions:
