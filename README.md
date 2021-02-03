@@ -2,6 +2,8 @@
 
 ## Setting Up and Installing Using Docker Images
 ### Install base drivers
+If the driver needs to be upadated or installed on a fresh system, please use the following directions:
+
 1. Remove old packages habanalabs-dkms
 ```
 sudo dpkg -P habanalabs-dkms
@@ -68,15 +70,17 @@ For example:
 ```
 
 ## Ubuntu Bare Metal Installation
- Package content
 The installation for bare metal contains the following Installers:
-* habanalabs-graph-_all – installs the Graph Compiler and the run-time.
-* habanalabs-thunk-_all – installs the thunk library.
-* habanalabs-dkms_all – installs the PCIe driver.
-* habanalabs-fw-tools – installs the FW update tools.
-* habanalabs-aeon – installs demo’s data loader.
-* habanalabs-demo-_.sh – installs the demo package.
-* habanalabs-qual – installs the qualification application package.
+Mandatory packages: 
+* habanalabs-dkms – installs the PCIe driver.
+* habanalabs-thunk  – installs the thunk library.
+* habanalabs-graph – installs the Graph Compiler and the run-time.
+
+Optional packages:
+* habanalabs-fw-tools – installs various fw tools (hlml, hl-smi, etc.)
+* habanalabs-aeon – installs synapse level demo’s data loader.
+* habanalabs-demo (.sh) – installs the synapse level demo package. See [Gaudi Examples Overview.](https://habana-labs-synapseai-gaudi.readthedocs-hosted.com/en/master/Examples_Overview/GAUDI_Examples_Overview.html#gaudi-examples-overview)
+* habanalabs-qual – installs the qualification application package. See [Gaudi Qualification Library.](https://habana-labs-synapseai-gaudi.readthedocs-hosted.com/en/master/Qualification_Library/GAUDI_Qualification_Library.html#gaudi-qualification-library)
 
 Installing the package with internet connection available allows the network to download and install the required
 dependencies for the SynapseAI package (apt get and pip install etc.).
@@ -114,17 +118,18 @@ To install the thunk library, use the following command:
 sudo apt install -y ./habanalabs-thunk-*_all.deb
 ```
 
+### Graph compiler and run-time installation
+To install the graph compiler and run-time, use the following command:
+```
+sudo apt install -y ./habanalabs-graph-*_all.deb
+```
+
 ### FW tools installation
 To install the firmware tools, use the following command:
 ```
 sudo apt install -y ./habanalabs-fw-tools*.deb
 ```
 
-### Graph compiler and run-time installation
-To install the graph compiler and run-time, use the following command:
-```
-sudo apt install -y ./habanalabs-graph-*_all.deb
-```
 ### (Optional) Demos installation
 To install demos, use the following commands:
 ```
