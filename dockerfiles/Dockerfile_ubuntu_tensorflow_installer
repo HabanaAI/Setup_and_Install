@@ -1,0 +1,45 @@
+# Copyright (c) 2021 HabanaLabs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile Tensorflow installer layer for Ubuntu18.04/Ubuntu20.04
+ARG BASE_NAME
+ARG VERSION
+ARG REVISION
+FROM ${BASE_NAME}:${VERSION}-${REVISION}
+ARG VERSION
+ARG REVISION
+
+ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
+ENV PYTHONPATH=/usr/lib/habanalabs/:/root
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/
+ENV PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/
+ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
+
+RUN apt-get update && \
+    apt-get remove openmpi-bin -y && \
+    apt-get autoremove --purge openmpi-bin -y && \
+    apt-get clean
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py pip==19.3.1 && \
+    rm -rf get-pip.py
+
+COPY requirements-training-release.txt requirements-training-release.txt
+
+RUN pip3 install -r requirements-training-release.txt && \
+    pip3 uninstall --yes tensorflow && \
+    # tensorflow-cpu and -model have to be installed in separated processes otherwise old version of tf will be imported
+    pip3 install tensorflow-cpu==2.2.0 && \
+    pip3 install tensorflow-model-optimization==0.5.0 && \
+    # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
+    pip3 install pycocotools==2.0.1 && \
+    rm requirements-training-release.txt 
+
+RUN wget https://vault.habana.ai/artifactory/gaudi-tf-modules/"${VERSION}"/"${REVISION}"\
+/ubuntu${OS_NUMBER}/binary/tensorflow_modules-"${VERSION}"_"${REVISION}".tgz && \
+    tar -xf tensorflow_modules-"${VERSION}"_"${REVISION}".tgz -C /usr/lib/habanalabs/. && \
+    /sbin/ldconfig && \
+    rm -rf tensorflow_modules-"${VERSION}"_"${REVISION}".tgz && \
+    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
+    echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc

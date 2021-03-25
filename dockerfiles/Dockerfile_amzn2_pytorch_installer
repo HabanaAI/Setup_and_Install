@@ -1,0 +1,51 @@
+# Copyright (c) 2021 HabanaLabs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile PyTorch installer layer for Amazon Linux 2
+ARG BASE_NAME
+ARG VERSION
+ARG REVISION
+FROM ${BASE_NAME}:${VERSION}-${REVISION}
+ARG VERSION
+ARG REVISION
+
+ENV LANG=en_US.UTF-8
+
+RUN yum update -y && yum install -y \
+    unzip \
+    openssh-client \
+    curl \
+    libcurl4 \
+    redhat-lsb-core \
+    openmpi-devel \
+    libcairo2-dev \
+    cairo-devel \
+    pkg-config \
+    git && \
+    yum clean all
+
+# Make Python 3.7 to be default python
+RUN rm -f /usr/bin/python || echo "Python Symlink" && \
+    ln -s /usr/bin/python3.7 /usr/bin/python && \
+    curl --create-dirs -sSLo get-pip.py https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py pip==19.3.1 --no-warn-script-location && \
+    rm -rf get-pip.py
+
+RUN wget https://vault.habana.ai/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+/amzn2/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
+    mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
+    tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
+    mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/ && \
+    # MPICC env variable is required only during mpi4py installation
+    env MPICC=/usr/lib64/openmpi/bin/mpicc pip install --no-cache-dir mpi4py --user && \
+    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --user --no-warn-script-location && \
+    pip uninstall --yes torch && \
+    pip install /root/habanalabs/pytorch_temp/*.whl --user && \
+    /sbin/ldconfig && \
+    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
+    rm -rf /root/habanalabs/pytorch_temp/ && \
+    rm -rf pytorch_modules-"${VERSION}"_"${REVISION}".tgz
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib:/usr/lib/habanalabs/
+ENV PATH=$PATH:/usr/lib64/openmpi/bin

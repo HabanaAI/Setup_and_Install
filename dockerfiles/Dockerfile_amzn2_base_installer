@@ -1,0 +1,32 @@
+# Copyright (c) 2021 Habana Labs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile base installer layer for Amazon Linux 2
+FROM amazonlinux:2.0.20200722.0
+ARG VERSION
+ARG REVISION
+RUN yum update -y && yum install -y \
+    ethtool-4.8-10.amzn2.x86_64 \
+    python-devel \
+    python3 \
+    python3-devel \
+    python3-pip \
+    python3-tkinter \
+    wget
+
+RUN yum install -y sudo system-lsb-core
+
+RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
+    echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "baseurl=https://vault.habana.ai/artifactory/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://vault.habana.ai/artifactory/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+
+RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 \
+        habanalabs-fw-tools-"$VERSION"-"$REVISION".amzn2 \
+        habanalabs-graph-"$VERSION"-"$REVISION".amzn2
+
+RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
+RUN export LANG=en_US.UTF-8
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
+ENV HABANA_LOGS=/var/log/habana_logs/

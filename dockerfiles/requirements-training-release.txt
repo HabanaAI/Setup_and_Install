@@ -1,0 +1,17 @@
+gast==0.3.3
+py-cpuinfo==5.0.0
+requests==2.21.0
+tensorflow_datasets==1.2.0
+tensorflow-metadata==0.12.1
+tf-slim==1.1.0
+cython==0.29.15
+imgaug==0.4.0
+keras==2.3.1
+cloudpickle==1.6.0
+numpy==1.19.2
+scipy==1.4.1
+tensorflow-addons==0.11.1
+munch==2.5.0
+git+https://github.com/nvidia/dllogger@26a0f8f1958de2c0c460925ff6102a4d2486d6cc#egg=dllogger
+git+https://github.com/tensorpack/tensorpack@11ca8b2c34056feb331744281000f78e3c157983
+h5py==2.10.0

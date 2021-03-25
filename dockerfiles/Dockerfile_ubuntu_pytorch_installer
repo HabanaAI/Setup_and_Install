@@ -1,0 +1,47 @@
+# Copyright (c) 2021 HabanaLabs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu18.04/Ubuntu20.04
+ARG BASE_NAME
+ARG VERSION
+ARG REVISION
+FROM ${BASE_NAME}:${VERSION}-${REVISION}
+ARG VERSION
+ARG REVISION
+ARG BASE_NAME
+
+ENV LANG=en_US.UTF-8
+
+RUN apt-get update && apt-get install -y \
+    unzip \
+    openssh-client \
+    curl \
+    libcurl4 \
+    # PyTorch dependencies - for distributed tests
+    python3-mpi4py && \
+    apt-get clean
+
+# Make Python 3.x to be default python depending on OS version
+RUN bash -c "if [[ $BASE_NAME == *"ubuntu18.04"* ]]; then ln -s /usr/bin/python3.6 /usr/bin/python; else ln -s /usr/bin/python3.8 /usr/bin/python; apt-get update; apt install -y libcairo2-dev; apt-get clean; fi"
+
+RUN curl --create-dirs -sSLo get-pip.py https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py pip==19.3.1 --no-warn-script-location && \
+    rm -rf get-pip.py
+
+RUN wget https://vault.habana.ai/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+/ubuntu${OS_NUMBER}/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
+    mkdir -p /root/habanalabs/pytorch_temp && \
+    tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
+    mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/ && \
+    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --user --no-warn-script-location && \
+    pip uninstall --yes torch && \
+    pip install /root/habanalabs/pytorch_temp/*.whl --user && \
+    /sbin/ldconfig && \
+    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
+    rm -rf /root/habanalabs/pytorch_temp/ && \
+    rm -rf pytorch_modules-"${VERSION}"_"${REVISION}".tgz
+# requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
+# pytorch uses its own package "hb-torch", to avoid the conflict between two pkgs, we uninstall torch pkg
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib:/usr/lib/habanalabs/
