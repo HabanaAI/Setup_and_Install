@@ -4,6 +4,7 @@
 #
 # HabanaLabs Dockerfile base installer layer for Ubuntu 20.04
 FROM ubuntu:focal-20201008
+ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 
@@ -18,8 +19,8 @@ ENV OS_NUMBER=2004
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    apt-transport-https=2.0.4 \
-    apt-utils=2.0.4 \
+    apt-transport-https=2.0.5 \
+    apt-utils=2.0.5 \
     ethtool=1:5.4-1 \
     gpg-agent=2.2.19-3ubuntu2.1 \
     libjemalloc2=5.2.1-1ubuntu1 \
@@ -50,8 +51,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     bc=1.07.1-2build1 \
     git=1:2.25.1-1ubuntu3 \
-    openssh-client=1:8.2p1-4ubuntu0.1 \
-    openssh-server=1:8.2p1-4ubuntu0.1 \
+    openssh-client=1:8.2p1-4ubuntu0.* \
+    openssh-server=1:8.2p1-4ubuntu0.* \
     unzip=6.0-25ubuntu1 \
     vim=2:8.1.2269-1ubuntu5 && \
     apt-get autoremove && apt-get clean
@@ -61,8 +62,8 @@ RUN pip3 install setuptools==41.0.0 \
     google-pasta==0.2.0
 
 RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
-    echo "deb https://vault.habana.ai/artifactory/debian focal main" | tee -a /etc/apt/sources.list && \
-    wget https://vault.habana.ai/artifactory/api/gpg/key/public && \
+    echo "deb https://${ARTIFACTORY_URL}/debian focal main" | tee -a /etc/apt/sources.list && \
+    wget "https://${ARTIFACTORY_URL}/api/gpg/key/public" && \
     apt-key add public && \
     rm public && \
     apt-get update

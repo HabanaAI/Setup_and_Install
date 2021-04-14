@@ -10,6 +10,7 @@ FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
 ARG BASE_NAME
+ARG ARTIFACTORY_URL
 
 ENV LANG=en_US.UTF-8
 
@@ -29,7 +30,7 @@ RUN curl --create-dirs -sSLo get-pip.py https://bootstrap.pypa.io/get-pip.py && 
     python get-pip.py pip==19.3.1 --no-warn-script-location && \
     rm -rf get-pip.py
 
-RUN wget https://vault.habana.ai/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /ubuntu${OS_NUMBER}/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
     mkdir -p /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \

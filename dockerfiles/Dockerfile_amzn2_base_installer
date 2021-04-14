@@ -4,6 +4,7 @@
 #
 # HabanaLabs Dockerfile base installer layer for Amazon Linux 2
 FROM amazonlinux:2.0.20200722.0
+ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 RUN yum update -y && yum install -y \
@@ -15,12 +16,14 @@ RUN yum update -y && yum install -y \
     python3-tkinter \
     wget
 
-RUN yum install -y sudo system-lsb-core
+# Install development tools and cmake for habana-horovod compilation sdist package
+RUN yum groupinstall -y "Development Tools"
+RUN yum install -y sudo system-lsb-core cmake
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "baseurl=https://vault.habana.ai/artifactory/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=https://vault.habana.ai/artifactory/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+    echo "baseurl=https://${ARTIFACTORY_URL}/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-fw-tools-"$VERSION"-"$REVISION".amzn2 \

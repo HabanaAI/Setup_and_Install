@@ -9,6 +9,7 @@ ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
+ARG ARTIFACTORY_URL
 
 ENV LANG=en_US.UTF-8
 
@@ -22,7 +23,9 @@ RUN yum update -y && yum install -y \
     libcairo2-dev \
     cairo-devel \
     pkg-config \
-    git && \
+    git \
+    libjpeg-devel \
+    zlib-devel && \
     yum clean all
 
 # Make Python 3.7 to be default python
@@ -32,7 +35,7 @@ RUN rm -f /usr/bin/python || echo "Python Symlink" && \
     python get-pip.py pip==19.3.1 --no-warn-script-location && \
     rm -rf get-pip.py
 
-RUN wget https://vault.habana.ai/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /amzn2/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \

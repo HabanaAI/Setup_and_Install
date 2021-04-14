@@ -9,6 +9,10 @@ ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
+# tensorflow-cpu version default set to 2.2.0
+ARG TF_VERSION=2.2.2
+ARG OPENMPI_VER=4.0.2
+ARG ARTIFACTORY_URL
 
 # Install unzip to extract pre-trained weights for BERT demo
 RUN yum install -y unzip \
@@ -35,23 +39,34 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
          numpy==1.19.2 && \
          # pycocotools has to be installed in separated process otherwise it fails
     pip3 install pycocotools==2.0.0 \
-         tensorflow-cpu==2.2.0 \
+         tensorflow-cpu==${TF_VERSION} \
          tensorflow-model-optimization==0.5.0
 
-RUN wget https://vault.habana.ai/artifactory/gaudi-tf-modules/"${VERSION}"/"${REVISION}"\
-/amzn2/binary/tensorflow_modules-"${VERSION}"_"${REVISION}".tgz && \
-    tar -xf tensorflow_modules-"${VERSION}"_"${REVISION}".tgz -C /usr/lib/habanalabs/. && \
+ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/
+ENV PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/
+ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
+ENV MPI_ROOT=/usr/lib/habanalabs/openmpi/
+
+# Install OpenMpi from public sources,
+# Using pip install habana-tensorflow and habana-horovod pyhon packages
+RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
+    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
+    cd openmpi-"${OPENMPI_VER}" && \
+    ./configure --prefix="/usr/lib/habanalabs/openmpi" && \
+    make -j && \
+    make install && \
+    cp LICENSE /usr/lib/habanalabs/openmpi && \
+    rm -rf openmpi-"${OPENMPI_VER}"* && \
     /sbin/ldconfig && \
-    rm -rf ~/tensorflow_modules-"${VERSION}"_"${REVISION}".tgz && \
-    echo "export TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/" | tee -a /etc/profile.d/habanalabs.sh && \
-    echo "export PYTHONPATH=/root:/usr/lib/habanalabs/" | tee -a /etc/profile.d/habanalabs.sh && \
-    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/" | tee -a /etc/profile.d/habanalabs.sh && \
-    echo "export PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/" | tee -a /etc/profile.d/habanalabs.sh && \
+    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
+        --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
+    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
+        --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
 
-ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
-RUN yum install -y openmpi openmpi-devel python3-openmpi
-ENV CC=/usr/lib64/openmpi/bin/mpicc
-ENV MPICC=/usr/lib64/openmpi/bin/mpicc
+ENV CC=/usr/lib/habanalabs/openmpi/bin/mpicc
+ENV MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc
 RUN pip3 install mpi4py --no-cache-dir
