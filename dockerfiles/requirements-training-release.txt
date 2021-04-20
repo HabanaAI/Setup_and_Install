@@ -18,5 +18,5 @@ h5py==2.10.0
 wrapt==1.12.1
 bs4==0.0.1
 tensorflow-hub==0.11.0
-PyYAML<=3.13
+PyYAML>=5.4
 dataclasses==0.8; python_version < '3.7'
