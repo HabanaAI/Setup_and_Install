@@ -102,48 +102,96 @@ rpm -qa | grep habanalabs
 <details>
 <summary>Ubuntu distributions</summary>
 
-### Setup package fetching
-1. Download and install the public key:  
-```
-curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
-```
-2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-3. Add the following content to the file:
-```
-deb https://vault.habana.ai/artifactory/debian focal main
-```
-4. Update Debian cache:  
-```
-sudo dpkg --configure -a
-sudo apt-get update
-```  
-### KMD Dependencies
-1. Install Deb libraries using the following command:  
-```
-sudo apt install dkms libelf-dev
-```
-2. Install headers:  
-```
-sudo apt install linux-headers-$(uname -r)
-```
-3. After kernel upgrade, please reboot your machine.
+* <details>
+  <summary>Ubuntu 18.04</summary>
 
-### Setup base drivers
-If the driver needs to be updated or installed on a fresh system, please use the following directions (Ubuntu 20.04):
+  ### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian bionic main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  ### KMD Dependencies
+  1. Install Deb libraries using the following command:  
+  ```
+  sudo apt install dkms libelf-dev
+  ```
+  2. Install headers:  
+  ```
+  sudo apt install linux-headers-$(uname -r)
+  ```
+  3. After kernel upgrade, please reboot your machine.
 
-1. Remove old packages habanalabs-dkms
-```
-sudo dpkg -P habanalabs-dkms
-```
-2. Download and install habanalabs-dkms
-```
-sudo apt install -y habanalabs-dkms=0.14.0-420
-```
-3. Load the driver
-```
-sudo modprobe habanalabs
-```
+  ### Setup base drivers
+  If the driver needs to be updated or installed on a fresh system, please use the following directions (Ubuntu 20.04):
 
+  1. Remove old packages habanalabs-dkms
+  ```
+  sudo dpkg -P habanalabs-dkms
+  ```
+  2. Download and install habanalabs-dkms
+  ```
+  sudo apt install -y habanalabs-dkms=0.14.0-420
+  ```
+  3. Load the driver
+  ```
+  sudo modprobe habanalabs
+  ```
+  </details>
+* <details>
+  <summary>Ubuntu 20.04</summary>
+
+  ### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian focal main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  ### KMD Dependencies
+  1. Install Deb libraries using the following command:  
+  ```
+  sudo apt install dkms libelf-dev
+  ```
+  2. Install headers:  
+  ```
+  sudo apt install linux-headers-$(uname -r)
+  ```
+  3. After kernel upgrade, please reboot your machine.
+
+  ### Setup base drivers
+  If the driver needs to be updated or installed on a fresh system, please use the following directions (Ubuntu 20.04):
+
+  1. Remove old packages habanalabs-dkms
+  ```
+  sudo dpkg -P habanalabs-dkms
+  ```
+  2. Download and install habanalabs-dkms
+  ```
+  sudo apt install -y habanalabs-dkms=0.14.0-420
+  ```
+  3. Load the driver
+  ```
+  sudo modprobe habanalabs
+  ```
+  </details>
 </details>
 
 <details>
@@ -348,64 +396,123 @@ rpm -qa | grep habana
 <details>
 <summary>Ubuntu distributions</summary>
 
-### Setup package fetching
-1. Download and install the public key:  
-```
-curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
-```
-2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-3. Add the following content to the file:
-```
-deb https://vault.habana.ai/artifactory/debian focal main
-```
-4. Update Debian cache:  
-```
-sudo dpkg --configure -a
-sudo apt-get update
-```  
-### Graph compiler and run-time installation
-To install the graph compiler and run-time, use the following command:
-```
-sudo apt install -y habanalabs-graph=0.14.0-420
-```
-### Thunk installation
-To install the thunk library, use the following command:
-```
-sudo apt install -y habanalabs-thunk=0.14.0-420
-```
-### Update FW
-To update the firmware, follow the below steps:  
-1. Install the Firmware package:
-```
-sudo apt install -y habanalabs-firmware=0.14.0-420
-```
-2. Remove the driver:
-```
-sudo rmmod habanalabs
-```
-3. Update the device’s FW:
-```
-sudo hl-fw-loader
-```
-4. Start the driver:
-```
-sudo modprobe habanalabs
-```
-### (Optional) FW tools installation
-To install the firmware tools, use the following command:
-```
-sudo apt install -y habanalabs-fw-tools=0.14.0-420
-```
+* <details>
+  <summary>Ubuntu 18.04</summary>
 
-### (Optional) qual installation
-To install hl_qual, use the following command:
-```
-sudo apt install -y habanalabs-qual=0.14.0-420
-```
+  ### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian bionic main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  ### Graph compiler and run-time installation
+  To install the graph compiler and run-time, use the following command:
+  ```
+  sudo apt install -y habanalabs-graph=0.14.0-420
+  ```
+  ### Thunk installation
+  To install the thunk library, use the following command:
+  ```
+  sudo apt install -y habanalabs-thunk=0.14.0-420
+  ```
+  ### Update FW
+  To update the firmware, follow the below steps:  
+  1. Install the Firmware package:
+  ```
+  sudo apt install -y habanalabs-firmware=0.14.0-420
+  ```
+  2. Remove the driver:
+  ```
+  sudo rmmod habanalabs
+  ```
+  3. Update the device’s FW:
+  ```
+  sudo hl-fw-loader
+  ```
+  4. Start the driver:
+  ```
+  sudo modprobe habanalabs
+  ```
+  ### (Optional) FW tools installation
+  To install the firmware tools, use the following command:
+  ```
+  sudo apt install -y habanalabs-fw-tools=0.14.0-420
+  ```
 
-### (Optional) Habana Container Runtime
-Please refer to [this](Install-habana-container-runtime-package) section if you want to install Habana Container Runtime.
+  ### (Optional) qual installation
+  To install hl_qual, use the following command:
+  ```
+  sudo apt install -y habanalabs-qual=0.14.0-420
+  ```
 
+  </details>
+* <details>
+  <summary>Ubuntu 20.04</summary>
+
+  ### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian focal main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  ### Graph compiler and run-time installation
+  To install the graph compiler and run-time, use the following command:
+  ```
+  sudo apt install -y habanalabs-graph=0.14.0-420
+  ```
+  ### Thunk installation
+  To install the thunk library, use the following command:
+  ```
+  sudo apt install -y habanalabs-thunk=0.14.0-420
+  ```
+  ### Update FW
+  To update the firmware, follow the below steps:  
+  1. Install the Firmware package:
+  ```
+  sudo apt install -y habanalabs-firmware=0.14.0-420
+  ```
+  2. Remove the driver:
+  ```
+  sudo rmmod habanalabs
+  ```
+  3. Update the device’s FW:
+  ```
+  sudo hl-fw-loader
+  ```
+  4. Start the driver:
+  ```
+  sudo modprobe habanalabs
+  ```
+  ### (Optional) FW tools installation
+  To install the firmware tools, use the following command:
+  ```
+  sudo apt install -y habanalabs-fw-tools=0.14.0-420
+  ```
+
+  ### (Optional) qual installation
+  To install hl_qual, use the following command:
+  ```
+  sudo apt install -y habanalabs-qual=0.14.0-420
+  ```
+  </details>
 </details>
 
 <details>
@@ -478,10 +585,6 @@ To install hl_qual, use the following command:
 ```
 sudo yum install habanalabs-qual-0.14.0-420* -y
 ```
-
-### (Optional) Habana Container Runtime
-Please refer to [this](Install-habana-container-runtime-package) section if you want to install Habana Container Runtime.
-
 </details>
 <details>
 <summary>Amazon linux 2 distributions</summary>
@@ -553,9 +656,6 @@ To install hl_qual, use the following command:
 ```
 sudo yum install habanalabs-qual-0.14.0-420* -y
 ```
-
-### (Optional) Habana Container Runtime
-Please refer to [this](Install-habana-container-runtime-package) section if you want to install Habana Container Runtime.
 </details>
 
 <center>
@@ -697,50 +797,103 @@ For example:
 <details>
 <summary>Ubuntu distributions</summary>
 
-#### Setup package fetching
-1. Download and install the public key:  
-```
-curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
-```
-2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-3. Add the following content to the file:
-```
-deb https://vault.habana.ai/artifactory/debian focal main
-```
-4. Update Debian cache:  
-```
-sudo dpkg --configure -a
-sudo apt-get update
-```  
-#### Install habana-container-runtime:
-Install the `habana-container-runtime` package:
-```
-sudo apt install -y habanalabs-container-runtime=0.14.0-420
-```
-#### Docker Engine setup
+* <details>
+  <summary>Ubuntu 18.04</summary>
 
-To register the `habana` runtime, use the method below that is best suited to your environment.
-You might need to merge the new argument with your existing configuration.
+  #### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian bionic main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  #### Install habana-container-runtime:
+  Install the `habana-container-runtime` package:
+  ```
+  sudo apt install -y habanalabs-container-runtime=0.14.0-420
+  ```
+  #### Docker Engine setup
 
-##### Daemon configuration file
-```bash
-sudo tee /etc/docker/daemon.json <<EOF
-{
-    "runtimes": {
-        "habana": {
-            "path": "/usr/bin/habana-container-runtime",
-            "runtimeArgs": []
-        }
-    }
-}
-EOF
-sudo systemctl restart docker
-```
+  To register the `habana` runtime, use the method below that is best suited to your environment.
+  You might need to merge the new argument with your existing configuration.
 
-You can optionally reconfigure the default runtime by adding the following to `/etc/docker/daemon.json`:
-```
-"default-runtime": "habana"
-```
+  ##### Daemon configuration file
+  ```bash
+  sudo tee /etc/docker/daemon.json <<EOF
+  {
+      "runtimes": {
+          "habana": {
+              "path": "/usr/bin/habana-container-runtime",
+              "runtimeArgs": []
+          }
+      }
+  }
+  EOF
+  sudo systemctl restart docker
+  ```
+
+  You can optionally reconfigure the default runtime by adding the following to `/etc/docker/daemon.json`:
+  ```
+  "default-runtime": "habana"
+  ```
+  </details>
+
+* <details>
+  <summary>Ubuntu 20.04</summary>
+
+  #### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian focal main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  #### Install habana-container-runtime:
+  Install the `habana-container-runtime` package:
+  ```
+  sudo apt install -y habanalabs-container-runtime=0.14.0-420
+  ```
+  #### Docker Engine setup
+
+  To register the `habana` runtime, use the method below that is best suited to your environment.
+  You might need to merge the new argument with your existing configuration.
+
+  ##### Daemon configuration file
+  ```bash
+  sudo tee /etc/docker/daemon.json <<EOF
+  {
+      "runtimes": {
+          "habana": {
+              "path": "/usr/bin/habana-container-runtime",
+              "runtimeArgs": []
+          }
+      }
+  }
+  EOF
+  sudo systemctl restart docker
+  ```
+
+  You can optionally reconfigure the default runtime by adding the following to `/etc/docker/daemon.json`:
+  ```
+  "default-runtime": "habana"
+  ```
+  </details>
 </details>
 
 <details>
@@ -908,50 +1061,103 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
 <details>
 <summary>Ubuntu distributions</summary>
 
-#### Setup package fetching
-1. Download and install the public key:  
-```
-curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
-```
-2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-3. Add the following content to the file:
-```
-deb https://vault.habana.ai/artifactory/debian focal main
-```
-4. Update Debian cache:  
-```
-sudo dpkg --configure -a
-sudo apt-get update
-```  
-#### Install habana-container-runtime:
-Install the `habana-container-runtime` package:
-```
-sudo apt install -y habanalabs-container-runtime=0.14.0-420
-```
-#### Docker Engine setup
+* <details>
+  <summary>Ubuntu 18.04</summary>
 
-To register the `habana` runtime, use the method below that is best suited to your environment.
-You might need to merge the new argument with your existing configuration.
+  #### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian bionic main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  #### Install habana-container-runtime:
+  Install the `habana-container-runtime` package:
+  ```
+  sudo apt install -y habanalabs-container-runtime=0.14.0-420
+  ```
+  #### Docker Engine setup
 
-##### Daemon configuration file
-```bash
-sudo tee /etc/docker/daemon.json <<EOF
-{
-    "runtimes": {
-        "habana": {
-            "path": "/usr/bin/habana-container-runtime",
-            "runtimeArgs": []
-        }
-    }
-}
-EOF
-sudo systemctl restart docker
-```
+  To register the `habana` runtime, use the method below that is best suited to your environment.
+  You might need to merge the new argument with your existing configuration.
 
-You can optionally reconfigure the default runtime by adding the following to `/etc/docker/daemon.json`:
-```
-"default-runtime": "habana"
-```
+  ##### Daemon configuration file
+  ```bash
+  sudo tee /etc/docker/daemon.json <<EOF
+  {
+      "runtimes": {
+          "habana": {
+              "path": "/usr/bin/habana-container-runtime",
+              "runtimeArgs": []
+          }
+      }
+  }
+  EOF
+  sudo systemctl restart docker
+  ```
+
+  You can optionally reconfigure the default runtime by adding the following to `/etc/docker/daemon.json`:
+  ```
+  "default-runtime": "habana"
+  ```
+  </details>
+
+* <details>
+  <summary>Ubuntu 20.04</summary>
+
+  #### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
+  3. Add the following content to the file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian focal main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+  #### Install habana-container-runtime:
+  Install the `habana-container-runtime` package:
+  ```
+  sudo apt install -y habanalabs-container-runtime=0.14.0-420
+  ```
+  #### Docker Engine setup
+
+  To register the `habana` runtime, use the method below that is best suited to your environment.
+  You might need to merge the new argument with your existing configuration.
+
+  ##### Daemon configuration file
+  ```bash
+  sudo tee /etc/docker/daemon.json <<EOF
+  {
+      "runtimes": {
+          "habana": {
+              "path": "/usr/bin/habana-container-runtime",
+              "runtimeArgs": []
+          }
+      }
+  }
+  EOF
+  sudo systemctl restart docker
+  ```
+
+  You can optionally reconfigure the default runtime by adding the following to `/etc/docker/daemon.json`:
+  ```
+  "default-runtime": "habana"
+  ```
+  </details>
 </details>
 
 <details>
