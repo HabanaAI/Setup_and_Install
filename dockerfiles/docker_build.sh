@@ -15,8 +15,8 @@ REVISION="420"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
-ARTIFACTORY_URL="vault.habana.ai/artifactory"
-ARTIFACTORY_REPO="docker-local"
+ARTIFACTORY_URL="vault.habana.ai"
+ARTIFACTORY_REPO="gaudi-docker"
 
 function  prepareFiles {
 
