@@ -11,17 +11,39 @@ ARG VERSION
 ARG REVISION
 # tensorflow-cpu version default set to 2.2.0
 ARG TF_VERSION=2.2.2
-ARG OPENMPI_VER=4.0.2
+ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
+ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/
+ENV PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/
+ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
+ENV MPI_ROOT=/usr/lib/habanalabs/openmpi/
 
 # Install unzip to extract pre-trained weights for BERT demo
 RUN yum install -y unzip \
-        openssh-client \
+        openssh-clients \
         openssh-server \
         git \
         bc \
         mesa-libGL && \
     yum remove openmpi -y
+
+# Install OpenMpi from public sources - it must be installed before requirements,
+# that has dependecy with mpi4py package
+RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
+    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
+    cd openmpi-"${OPENMPI_VER}" && \
+    ./configure --prefix="/usr/lib/habanalabs/openmpi" && \
+    make -j && \
+    make install && \
+    cp LICENSE /usr/lib/habanalabs/openmpi && \
+    cd - && \
+    rm -rf openmpi-"${OPENMPI_VER}"* && \
+    /sbin/ldconfig
+
+ENV CC=/usr/lib/habanalabs/openmpi/bin/mpicc
+ENV MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc
 
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py pip==19.3.1 && \
@@ -42,31 +64,12 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
          tensorflow-cpu==${TF_VERSION} \
          tensorflow-model-optimization==0.5.0
 
-ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
-ENV PYTHONPATH=/root:/usr/lib/habanalabs/
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/
-ENV PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/
-ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
-ENV MPI_ROOT=/usr/lib/habanalabs/openmpi/
-
-# Install OpenMpi from public sources,
-# Using pip install habana-tensorflow and habana-horovod pyhon packages
-RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
-    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
-    cd openmpi-"${OPENMPI_VER}" && \
-    ./configure --prefix="/usr/lib/habanalabs/openmpi" && \
-    make -j && \
-    make install && \
-    cp LICENSE /usr/lib/habanalabs/openmpi && \
-    rm -rf openmpi-"${OPENMPI_VER}"* && \
-    /sbin/ldconfig && \
-    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
+# Using pip install habana-tensorflow and habana-horovod python packages
+RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
 
-ENV CC=/usr/lib/habanalabs/openmpi/bin/mpicc
-ENV MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc
 RUN pip3 install mpi4py --no-cache-dir

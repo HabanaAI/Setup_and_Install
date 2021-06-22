@@ -10,38 +10,63 @@ FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
 ARG ARTIFACTORY_URL
+ARG OPENMPI_VER=4.0.5
 
 ENV LANG=en_US.UTF-8
 
-RUN yum update -y && yum install -y \
+RUN yum install -y \
     unzip \
-    openssh-client \
+    openssh-clients \
     curl \
-    libcurl4 \
     redhat-lsb-core \
     openmpi-devel \
-    libcairo2-dev \
+    lsof \
     cairo-devel \
-    pkg-config \
+    iproute \
     git \
+    which \
     libjpeg-devel \
     zlib-devel && \
     yum clean all
 
+RUN amazon-linux-extras install epel -y
+RUN yum install -y \
+    moreutils && \
+    yum clean all
+
 # Make Python 3.7 to be default python
 RUN rm -f /usr/bin/python || echo "Python Symlink" && \
+    sed -i 1s/python/python2/ /bin/yum && \
+    sed -i 1s/python/python2/ /usr/libexec/urlgrabber-ext-down && \
     ln -s /usr/bin/python3.7 /usr/bin/python && \
     curl --create-dirs -sSLo get-pip.py https://bootstrap.pypa.io/get-pip.py && \
     python get-pip.py pip==19.3.1 --no-warn-script-location && \
     rm -rf get-pip.py
+
+# Install openmpi version 4.0.5
+RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
+    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
+    cd openmpi-"${OPENMPI_VER}" && \
+    ./configure --prefix="/usr/lib/habanalabs/openmpi" && \
+    make -j && \
+    make install && \
+    cp LICENSE /usr/lib/habanalabs/openmpi && \
+    cd - && \
+    rm -rf openmpi-"${OPENMPI_VER}"* && \
+    /sbin/ldconfig
+
+# Set openmpi Path
+ENV MPI_ROOT=/usr/lib/habanalabs/openmpi
+ENV PATH=$MPI_ROOT/bin:$PATH
+
+# Install mpi4py version 3.0.3
+RUN MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc pip install mpi4py==3.0.3 --no-cache-dir
 
 RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /amzn2/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/ && \
-    # MPICC env variable is required only during mpi4py installation
-    env MPICC=/usr/lib64/openmpi/bin/mpicc pip install --no-cache-dir mpi4py --user && \
     pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --user --no-warn-script-location && \
     pip uninstall --yes torch && \
     pip install /root/habanalabs/pytorch_temp/*.whl --user && \
@@ -51,4 +76,3 @@ RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}
     rm -rf pytorch_modules-"${VERSION}"_"${REVISION}".tgz
 
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib:/usr/lib/habanalabs/
-ENV PATH=$PATH:/usr/lib64/openmpi/bin

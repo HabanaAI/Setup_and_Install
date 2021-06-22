@@ -24,7 +24,6 @@ RUN apt-get update && \
     ethtool=1:4.15-0ubuntu1 \
     gpg-agent=2.2.4-1ubuntu1.4 \
     libjemalloc1=3.6.0-11 \
-    python3-venv=3.6.7-1~18.04 \
     software-properties-common=0.96.24.32.14 \
     wget=1.19.4-1ubuntu2.2 && \
     apt-get autoremove && apt-get clean
@@ -37,17 +36,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     graphviz=2.40.1-2 \
     libgoogle-glog0v5=0.3.5-1 \
     libopencv-dev=3.2.0+dfsg-4ubuntu0.1 \
-    libpq-dev=10.17-0ubuntu0.18.04.* \
+    libpq-dev=10.17-0ubuntu0.18.04.1 \
     locales=2.27-3ubuntu1.4 \
     make=4.1-9.1ubuntu1 \
-    python3.6=3.6.9-1~18.04ubuntu1.4 \
-    python3.6-dev=3.6.9-1~18.04ubuntu1.4 \
-    python3.6-tk \
     protobuf-compiler=3.0.0-9.1ubuntu1 && \
     apt-get autoremove && apt-get clean
 
 RUN apt-get update && \
-    ### Install unzip to extract pre-trained weights for BERT demo
     ### Install ssh for horovod/MPI
     apt-get install -y --no-install-recommends \
     bc=1.07.1-2 \
@@ -59,18 +54,39 @@ RUN apt-get update && \
     apt-get autoremove && apt-get clean
 
 RUN locale-gen en_US.UTF-8
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-    python3.6 get-pip.py pip==19.3.1 && \
-    rm get-pip.py
-RUN pip3.6 install setuptools==41.0.0
+# Install python 3.7 as default version
+RUN apt-get update && \
+    # Install python 3.7 packages
+    apt-get install -y --no-install-recommends \
+        python3.7=3.7.5-2~18.04.* \
+        python3.7-dev=3.7.5-2~18.04.* \
+        python3.7-venv=3.7.5-2~18.04.* \
+        # there is no dedicated package distutils, tk for python 3.7
+        python3-distutils=3.6.9-1~18.04 \
+        python3-tk=3.6.9-1~18.04 && \
+    apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    # Configure alternatives
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 10 && \
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
+        update-alternatives --install /usr/bin/python python /usr/bin/python3.7 10 && \
+        update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1 && \
+    # Install pip package manager and setup tools
+        wget -q https://bootstrap.pypa.io/get-pip.py && \
+        python3 get-pip.py pip==19.3.1 && \
+        rm get-pip.py && \
+        pip3 install setuptools==41.0.0
+
+# Required symlinks for fix cannot import modues _gi, apt_pkg after python 3.7 installation in add-apt-repository script
+RUN ln -s /usr/lib/python3/dist-packages/apt_pkg.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/apt_pkg.so && \
+    ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/_gi.cpython-37m-x86_64-linux-gnu.so
 
 RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
     echo "deb https://${ARTIFACTORY_URL}/debian bionic main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/api/gpg/key/public" && \
-    apt-key add public && \
-    rm public && \
-    apt-get update
+    apt-key add public && rm public
 
-RUN apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
+RUN apt-get update && \
+    apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
-        habanalabs-graph="$VERSION"-"$REVISION"
+        habanalabs-graph="$VERSION"-"$REVISION" && \
+        apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/*

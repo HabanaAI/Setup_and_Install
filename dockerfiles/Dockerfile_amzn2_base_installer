@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # HabanaLabs Dockerfile base installer layer for Amazon Linux 2
-FROM amazonlinux:2.0.20200722.0
+FROM amazonlinux:2.0.20210421.0
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
@@ -16,6 +16,11 @@ RUN yum update -y && yum install -y \
     python3-tkinter \
     wget
 
+# Install jemalloc-3.6.0-1.el7.x86_64 package with required /lib64/libjemalloc.so.1 lib need for topologies
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+    yum install -y jemalloc && \
+    yum clean all && rm -rf /var/cache/yum
+
 # Install development tools and cmake for habana-horovod compilation sdist package
 RUN yum groupinstall -y "Development Tools"
 RUN yum install -y sudo system-lsb-core cmake
@@ -26,7 +31,7 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 \
-        habanalabs-fw-tools-"$VERSION"-"$REVISION".amzn2 \
+        habanalabs-firmware-tools-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-graph-"$VERSION"-"$REVISION".amzn2
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
