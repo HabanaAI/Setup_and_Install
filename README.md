@@ -360,7 +360,7 @@ Please ensure the following software packages are installed on your system:
 * habanalabs-firmware - installs the Gaudi Firmware.
 
 ### Optional packages:
-* habanalabs-fw-tools – installs various Firmware tools (hlml, hl-smi, etc).
+* habanalabs-firmware-tools – installs various Firmware tools (hlml, hl-smi, etc).
 * habanalabs-qual – installs the qualification application package. See See [Gaudi Qualification Library.](https://docs.habana.ai/projects/SynapeAI-Gaudi/en/latest/Qualification_Library/GAUDI_Qualification_Library.html#gaudi-qualification-library)
 * habanalabs-container-runtime - installs the container runtime library.
 
@@ -449,7 +449,7 @@ rpm -qa | grep habana
   ### (Optional) FW tools installation
   To install the firmware tools, use the following command:
   ```
-  sudo apt install -y habanalabs-fw-tools=0.15.0-547
+  sudo apt install -y habanalabs-firmware-tools=0.15.0-547
   ```
 
   ### (Optional) qual installation
@@ -508,7 +508,7 @@ rpm -qa | grep habana
   ### (Optional) FW tools installation
   To install the firmware tools, use the following command:
   ```
-  sudo apt install -y habanalabs-fw-tools=0.15.0-547
+  sudo apt install -y habanalabs-firmware-tools=0.15.0-547
   ```
 
   ### (Optional) qual installation
@@ -581,7 +581,7 @@ sudo modprobe habanalabs
 ### (Optional) FW tools installation
 To install the firmware tools, use the following command:
 ```
-sudo yum install habanalabs-fw-tools-0.15.0-547* -y
+sudo yum install habanalabs-firmware-tools-0.15.0-547* -y
 ```
 
 ### (Optional) qual installation
@@ -652,7 +652,7 @@ sudo modprobe habanalabs
 ### (Optional) FW tools installation
 To install the firmware tools, use the following command:
 ```
-sudo yum install habanalabs-fw-tools-0.15.0-547* -y
+sudo yum install habanalabs-firmware-tools-0.15.0-547* -y
 ```
 
 ### (Optional) qual installation
@@ -1589,7 +1589,7 @@ Repeat while modifying the 17:00.0 to walk through all the PCI links from listin
 (17.00.0, 18.00.0, 19.00.0, 1a.00.0, 1b.00.0, 1d.00.0, 1e.00.0, ae.00.0, af.00.0 …)
 
 ### Firmware Versions Correct
-This section requires hl-smi to be used, please refer to [this](#Install-SW-Stack) section on how to install hl-smi (Contained in habanalabs-fw-tools package).  
+This section requires hl-smi to be used, please refer to [this](#Install-SW-Stack) section on how to install hl-smi (Contained in habanalabs-firmware-tools package).  
 Check all of the card's FW versions by running the following commands:
 ```
 sudo hl-smi -q | grep FIT
@@ -1599,7 +1599,7 @@ You should see the FIT version for each of the cards installed.
 Make sure the version matches what is expected (matching the release version you installed)
 
 ### Gaudi Clock Freq
-This section requires hl-smi to be used, please refer to [this](#Install-SW-Stack) section on how to install hl-smi (Contained in habanalabs-fw-tools package).  
+This section requires hl-smi to be used, please refer to [this](#Install-SW-Stack) section on how to install hl-smi (Contained in habanalabs-firmware-tools package).  
 Check all of the card's frequencies by running the following command:
 ```
 sudo hl-smi -q | grep -A 1 'Clocks$'
