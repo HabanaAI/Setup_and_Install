@@ -12,6 +12,7 @@ ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
 ARG OPENMPI_VER=4.0.5
+ARG HABANA_PIP_VERSION="19.3.1"
 
 ENV LANG=en_US.UTF-8
 
@@ -41,11 +42,9 @@ RUN bash -c "\
         apt-get clean; \
     fi"
 
-RUN curl --create-dirs -sSLo get-pip.py https://bootstrap.pypa.io/get-pip.py && \
-    python get-pip.py pip==19.3.1 --no-warn-script-location && \
-    rm -rf get-pip.py
+RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}"
 
-# Install openmpi version 4.0.5 (SW-42854)
+# Install openmpi version 4.0.5
 RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
     tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
     cd openmpi-"${OPENMPI_VER}" && \

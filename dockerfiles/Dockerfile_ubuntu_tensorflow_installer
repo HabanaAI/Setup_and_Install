@@ -38,13 +38,11 @@ RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmp
     cd - && \
     rm -rf openmpi-"${OPENMPI_VER}"* && \
     /sbin/ldconfig
-RUN wget --no-verbose https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py pip==21.0.1 && \
-    rm -rf get-pip.py
 
 COPY requirements-training-release.txt requirements-training-release.txt
 
-RUN pip3 install -r requirements-training-release.txt && \
+RUN python3 -m pip install pip==21.0.1 && \
+    pip3 install -r requirements-training-release.txt && \
     pip3 uninstall --yes habana tensorflow && \
     # tensorflow-cpu and -model have to be installed in separated processes otherwise old version of tf will be imported
     pip3 install tensorflow-cpu==${TF_VERSION} && \

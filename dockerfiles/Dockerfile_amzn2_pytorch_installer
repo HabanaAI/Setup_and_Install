@@ -17,6 +17,7 @@ ENV LANG=en_US.UTF-8
 RUN yum install -y \
     unzip \
     openssh-clients \
+    openssh-server \
     curl \
     redhat-lsb-core \
     openmpi-devel \

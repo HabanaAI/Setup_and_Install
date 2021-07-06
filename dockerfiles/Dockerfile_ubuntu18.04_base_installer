@@ -7,6 +7,7 @@ FROM ubuntu:bionic-20210512
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG HABANA_PIP_VERSION="19.3.1"
 
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
@@ -19,50 +20,50 @@ ENV OS_NUMBER=1804
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    apt-transport-https=1.6.13 \
-    apt-utils=1.6.13 \
-    ethtool=1:4.15-0ubuntu1 \
-    gpg-agent=2.2.4-1ubuntu1.4 \
-    libjemalloc1=3.6.0-11 \
-    python3-venv=3.6.7-1~18.04 \
-    software-properties-common=0.96.24.32.14 \
-    wget=1.19.4-1ubuntu2.2 && \
+    apt-transport-https \
+    apt-utils \
+    ethtool \
+    gpg-agent \
+    libjemalloc1 \
+    python3-venv \
+    software-properties-common \
+    wget && \
     apt-get autoremove && apt-get clean
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential=12.4ubuntu1 \
-    ca-certificates=20210119~18.04.1 \
-    dkms=2.3-3ubuntu9.7 \
-    gcc=4:7.4.0-1ubuntu2.3 \
-    graphviz=2.40.1-2 \
-    libgoogle-glog0v5=0.3.5-1 \
-    libopencv-dev=3.2.0+dfsg-4ubuntu0.1 \
-    libpq-dev=10.17-0ubuntu0.18.04.* \
-    locales=2.27-3ubuntu1.4 \
-    make=4.1-9.1ubuntu1 \
-    python3.6=3.6.9-1~18.04ubuntu1.4 \
-    python3.6-dev=3.6.9-1~18.04ubuntu1.4 \
+    build-essential \
+    ca-certificates \
+    dkms \
+    gcc \
+    graphviz \
+    libgoogle-glog0v5 \
+    libopencv-dev \
+    libpq-dev \
+    locales \
+    make \
+    python3.6 \
+    python3.6-dev \
     python3.6-tk \
-    protobuf-compiler=3.0.0-9.1ubuntu1 && \
+    python3-pip \
+    protobuf-compiler && \
     apt-get autoremove && apt-get clean
 
 RUN apt-get update && \
     ### Install unzip to extract pre-trained weights for BERT demo
     ### Install ssh for horovod/MPI
     apt-get install -y --no-install-recommends \
-    bc=1.07.1-2 \
-    git=1:2.17.1-1ubuntu0.8 \
-    openssh-client=1:7.6p1-4ubuntu0.3 \
-    openssh-server=1:7.6p1-4ubuntu0.3 \
-    unzip=6.0-21ubuntu1.1 \
-    vim=2:8.0.1453-1ubuntu1.4 && \
+    bc \
+    git \
+    openssh-client \
+    openssh-server \
+    unzip \
+    vim && \
     apt-get autoremove && apt-get clean
 
 RUN locale-gen en_US.UTF-8
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-    python3.6 get-pip.py pip==19.3.1 && \
-    rm get-pip.py
-RUN pip3.6 install setuptools==41.0.0
+
+RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip3 install setuptools==41.0.0
 
 RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
     echo "deb https://${ARTIFACTORY_URL}/debian bionic main" | tee -a /etc/apt/sources.list && \

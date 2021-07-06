@@ -13,6 +13,7 @@ ARG REVISION
 ARG TF_VERSION=2.2.2
 ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
+
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/
@@ -45,24 +46,17 @@ RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmp
 ENV CC=/usr/lib/habanalabs/openmpi/bin/mpicc
 ENV MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc
 
+COPY requirements-training-release.txt requirements-training-release.txt
+
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py pip==19.3.1 && \
+    python3 get-pip.py pip==21.0.1 && \
     rm -rf get-pip.py && \
-    pip3 install gast==0.2.2 \
-         py-cpuinfo==5.0.0 \
-         requests==2.20 \
-         tensorflow_datasets==1.2.0 \
-         tensorflow-metadata==0.12.1 \
-         cython==0.29.15 \
-         imgaug==0.4.0 \
-         keras==2.3.1 \
-         cloudpickle==1.6.0 \
-         git+https://github.com/NVIDIA/dllogger.git@26a0f8f1958de2c0c460925ff6102a4d2486d6cc#egg=dllogger \
-         numpy==1.19.2 && \
-         # pycocotools has to be installed in separated process otherwise it fails
+    pip3 install -r requirements-training-release.txt && \
+    # pycocotools has to be installed in separated process otherwise it fails
     pip3 install pycocotools==2.0.0 \
          tensorflow-cpu==${TF_VERSION} \
-         tensorflow-model-optimization==0.5.0
+         tensorflow-model-optimization==0.5.0 && \
+    rm requirements-training-release.txt
 
 # Using pip install habana-tensorflow and habana-horovod python packages
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
@@ -71,5 +65,3 @@ RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
-
-RUN pip3 install mpi4py --no-cache-dir
