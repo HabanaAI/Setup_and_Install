@@ -9,8 +9,7 @@ ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
-# tensorflow-cpu version default set to 2.2.0
-ARG TF_VERSION=2.2.2
+ARG TF_VERSION=2.5.0
 ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
 
@@ -27,8 +26,7 @@ RUN yum install -y unzip \
         openssh-server \
         git \
         bc \
-        mesa-libGL && \
-    yum remove openmpi -y
+        mesa-libGL
 
 # Install OpenMpi from public sources - it must be installed before requirements,
 # that has dependecy with mpi4py package
@@ -43,7 +41,6 @@ RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmp
     rm -rf openmpi-"${OPENMPI_VER}"* && \
     /sbin/ldconfig
 
-ENV CC=/usr/lib/habanalabs/openmpi/bin/mpicc
 ENV MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc
 
 COPY requirements-training-release.txt requirements-training-release.txt
@@ -51,14 +48,13 @@ COPY requirements-training-release.txt requirements-training-release.txt
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py pip==21.0.1 && \
     rm -rf get-pip.py && \
+    pip3 install tensorflow-cpu==${TF_VERSION} \
+        tensorflow-model-optimization==0.5.0 && \
+    # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
+    pip3 install pycocotools==2.0.1 && \
     pip3 install -r requirements-training-release.txt && \
-    # pycocotools has to be installed in separated process otherwise it fails
-    pip3 install pycocotools==2.0.0 \
-         tensorflow-cpu==${TF_VERSION} \
-         tensorflow-model-optimization==0.5.0 && \
     rm requirements-training-release.txt
 
-# Using pip install habana-tensorflow and habana-horovod python packages
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
