@@ -27,6 +27,7 @@ packaging==20.9
 lvis==0.5.3
 gin-config==0.4.0
 mpi4py==3.0.3
+absl-py==0.11
 # transformer requirements
     tensorflow-probability==0.7.0
     pyglet==1.5.0

@@ -58,6 +58,8 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
-        --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
+        --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple
+
+RUN /usr/bin/ssh-keygen -A && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
-    echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
+    echo "/usr/sbin/sshd -p 3022" >> ~/.bashrc
