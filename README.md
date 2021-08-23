@@ -741,22 +741,16 @@ ${PYTHON} -m pip list | grep habana
 1. Before installing habana-tensorflow, install TensorFlow. The Habana package currently supports TensorFlow versions 2.4.1 and 2.5.0. If no TensorFlow package is available, PIP will automatically install the latest supported version.
 ```
 # Either
-${PYTHON} -m pip install tensorflow-cpu==2.4.1
-# Or
 ${PYTHON} -m pip install tensorflow-cpu==2.5.0
+# Or
+${PYTHON} -m pip install tensorflow-cpu==2.4.1
 ```
 
-2. habana-tensorflow is available in the Habana Vault. To allow PIP to search for the habana-tensorflow package, configure PIP:
+2. habana-tensorflow is available in the Habana Vault. To allow PIP to search for the habana-tensorflow package, –extra-index-url needs to be specified:
 ```
-${PYTHON} -m pip config --user set global.index https://vault.habana.ai/artifactory/api/pypi/gaudi-python
-${PYTHON} -m pip config --user set global.index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
-${PYTHON} -m pip config --user set global.trusted-host vault.habana.ai
+${PYTHON} -m pip install habana-tensorflow --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 ```
-3. Once PIP is configured, run:
-```
-${PYTHON} -m pip install habana-tensorflow
-```
-4. Run the below command to make sure the habana-tensorflow package is properly installed:
+3. Run the below command to make sure the habana-tensorflow package is properly installed:
 ```
 ${PYTHON} -c "import habana_frameworks.tensorflow as htf; print(htf.__version__)"
 ```
@@ -765,15 +759,15 @@ If everything is set up properly, the above command will print the currently ins
 ### Install habana-horovod
 Install the habana-horovod package to get multi-node support. The following lists the prerequisites for installing this package:
 
-* OpenMPI 4.0.2.
+* OpenMPI 4.0.5.
 * Stock horovod package must not be installed.
 
-1. Set up the OpenMPI 4.0.2 as shown below:
+1. Set up the OpenMPI 4.0.5 as shown below:
 ```
-wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.gz
-gunzip -c openmpi-4.0.2.tar.gz | tar xf -
-cd openmpi-4.0.2/ && ./configure --prefix=/usr/local/share/openmpi
-make -j 8 && make install && touch ~root/openmpi-4.0.2_installed
+wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz
+gunzip -c openmpi-4.0.5.tar.gz | tar xf -
+cd openmpi-4.0.5/ && ./configure --prefix=/usr/local/share/openmpi
+make -j 8 && make install && touch ~root/openmpi-4.0.5_installed
 cp LICENSE /usr/local/share/openmpi/
 
 # Necessary env flags to install habana-horovod module
@@ -782,15 +776,9 @@ export LD_LIBRARY_PATH=$MPI_ROOT/lib:$LD_LIBRARY_PATH
 export OPAL_PREFIX=$MPI_ROOT
 export PATH=$MPI_ROOT/bin:$PATH
 ```
-1. habana-horovod is also stored in Habana Vault. To allow PIP to search for the habana-horovod package, configure PIP:
+2. habana-horovod is also stored in the Habana Vault. To allow PIP to search for the habana-horovod package, –extra-index-url needs to be specified:
 ```
-${PYTHON} -m pip config --user set global.index https://vault.habana.ai/artifactory/api/pypi/gaudi-python
-${PYTHON} -m pip config --user set global.index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
-${PYTHON} -m pip config --user set global.trusted-host vault.habana.ai
-```
-3. Install habana-horovod:
-```
-${PYTHON} -m pip install habana-horovod
+${PYTHON} -m pip install habana-horovod --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 ```
 
 <br />
