@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # HabanaLabs Dockerfile base installer layer for Ubuntu 18.04
-FROM ubuntu:bionic-20210512
+FROM ubuntu:bionic
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
@@ -57,17 +57,20 @@ RUN apt-get update && \
     openssh-client \
     openssh-server \
     unzip \
-    vim && \
+    vim \
+    lsof && \
     apt-get autoremove && apt-get clean
 
 RUN locale-gen en_US.UTF-8
 
-RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+RUN python3 -m pip install --no-cache-dir pip=="${HABANA_PIP_VERSION}" && \
+    # There is no need to store pip installation files inside docker image
+    pip3 config set global.no-cache-dir false && \
     pip3 install setuptools==41.0.0
 
 RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
-    echo "deb https://${ARTIFACTORY_URL}/debian bionic main" | tee -a /etc/apt/sources.list && \
-    wget "https://${ARTIFACTORY_URL}/api/gpg/key/public" && \
+    echo "deb https://${ARTIFACTORY_URL}/artifactory/debian bionic main" | tee -a /etc/apt/sources.list && \
+    wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
     apt-key add public && \
     rm public && \
     apt-get update

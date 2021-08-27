@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # HabanaLabs Dockerfile base installer layer for Amazon Linux 2
-FROM amazonlinux:2.0.20210421.0
+FROM amazonlinux:2
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-
 RUN yum update -y && yum install -y \
     ethtool-4.8-10.amzn2.x86_64 \
     python-devel \
@@ -15,7 +14,8 @@ RUN yum update -y && yum install -y \
     python3-devel \
     python3-pip \
     python3-tkinter \
-    wget
+    wget \
+    lsof
 
 # Install jemalloc-3.6.0-1.el7.x86_64 package with required /lib64/libjemalloc.so.1 lib need for topologies
 RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
@@ -28,12 +28,18 @@ RUN yum install -y sudo system-lsb-core cmake
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "baseurl=https://${ARTIFACTORY_URL}/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=https://${ARTIFACTORY_URL}/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-graph-"$VERSION"-"$REVISION".amzn2
+
+RUN rm -f /etc/yum.repos.d/habanalabs.repo && \
+    yum clean all && rm -rf /var/cache/yum
+
+# There is no need to store pip installation files inside docker image
+RUN pip3 config set global.no-cache-dir false
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8

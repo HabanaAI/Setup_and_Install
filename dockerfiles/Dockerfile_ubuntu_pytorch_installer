@@ -22,7 +22,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     libcurl4 \
     moreutils \
-    lsof \
     iproute2 \
     libcairo2-dev \
     libglib2.0-dev \
@@ -44,20 +43,20 @@ RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}"
 RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
     tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
     cd openmpi-"${OPENMPI_VER}" && \
-    ./configure --prefix="/usr/lib/habanalabs/openmpi" && \
+    ./configure --prefix="/usr/local/openmpi" && \
     make -j && \
     make install && \
-    cp LICENSE /usr/lib/habanalabs/openmpi && \
+    cp LICENSE /usr/local/openmpi && \
     cd - && \
     rm -rf openmpi-"${OPENMPI_VER}"* && \
     /sbin/ldconfig
 
-ENV MPI_ROOT=/usr/lib/habanalabs/openmpi
+ENV MPI_ROOT=/usr/local/openmpi
 ENV PATH=$MPI_ROOT/bin:$PATH
 
-RUN MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc pip install mpi4py==3.0.3 --no-cache-dir
+RUN MPICC=/usr/local/openmpi/bin/mpicc pip install mpi4py==3.0.3 --no-cache-dir
 
-RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /ubuntu${OS_NUMBER}/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
     mkdir -p /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
@@ -73,6 +72,8 @@ RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-"${VERSION}"_"${REVISION}".tgz
 # requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
-# pytorch uses its own package "hb-torch", to avoid the conflict between two pkgs, we uninstall torch pkg
+# pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib:/usr/lib/habanalabs/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib:/usr/lib/habanalabs:/usr/local/openmpi/lib/
+
+RUN rm -rf /tmp/*

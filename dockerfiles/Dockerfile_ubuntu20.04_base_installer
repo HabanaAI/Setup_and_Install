@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # HabanaLabs Dockerfile base installer layer for Ubuntu 20.04
-FROM ubuntu:focal-20210416
+FROM ubuntu:focal
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
@@ -26,7 +26,8 @@ RUN apt-get update && \
     libjemalloc2 \
     python3-venv \
     software-properties-common \
-    wget && \
+    wget \
+    lsof && \
     apt-get autoremove && apt-get clean
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -59,14 +60,16 @@ RUN apt-get update && \
 
 RUN locale-gen en_US.UTF-8
 
-RUN pip3 install setuptools==41.0.0 \
+# There is no need to store pip installation files inside docker image
+RUN pip3 config set global.no-cache-dir false && \
+    pip3 install setuptools==41.0.0 \
     google-pasta==0.2.0 \
     requests==2.25.1 \
     urllib3==1.26.5
 
 RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
-    echo "deb https://${ARTIFACTORY_URL}/debian focal main" | tee -a /etc/apt/sources.list && \
-    wget "https://${ARTIFACTORY_URL}/api/gpg/key/public" && \
+    echo "deb https://${ARTIFACTORY_URL}/artifactory/debian focal main" | tee -a /etc/apt/sources.list && \
+    wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
     apt-key add public && \
     rm public && \
     apt-get update
@@ -74,3 +77,5 @@ RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
 RUN apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
         habanalabs-graph="$VERSION"-"$REVISION"
+
+RUN sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list

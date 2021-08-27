@@ -10,8 +10,8 @@
 : "${2?"Usage: $0 mode [base,tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.4.1, 2.5.0]"}"
 : "${2?"Usage: $0 mode [base,tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.4.1, 2.5.0]"}"
 
-VERSION="${CUSTOM_VERSION:-0.15.1}"
-REVISION="${CUSTOM_REVISION:-37}"
+VERSION="${CUSTOM_VERSION:-1.0.0}"
+REVISION="${CUSTOM_REVISION:-532}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
@@ -90,10 +90,10 @@ function buildDocker {
                DOCKERFILE="Dockerfile_amzn2_tensorflow_installer"
            fi
            TF_CPU_POSTFIX=""
-           if [[ "$TF_VERSION" == "2.2."* || "$TF_VERSION" == "2.4."* || "$TF_VERSION" == "2.5."* ]]; then
+           if [[ "$TF_VERSION" == "2.4."* || "$TF_VERSION" == "2.5."* || "$TF_VERSION" == "2.6."* ]]; then
                TF_CPU_POSTFIX="-tf-cpu-${TF_VERSION}"
            else
-               TF_VERSION="2.5.0"  # Set tensorflow-cpu==2.5.0
+               TF_VERSION="2.5.0"  # Set tensorflow-cpu==2.4.1
            fi
            BUILDARGS+=" --build-arg ARTIFACTORY_URL="$ARTIFACTORY_URL" --build-arg TF_VERSION="$TF_VERSION" --build-arg VERSION="$VERSION" --build-arg REVISION="$REVISION""
          ;;
