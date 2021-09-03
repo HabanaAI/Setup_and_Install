@@ -46,27 +46,6 @@ At the end of this flow you will be ready to continue to Habana's model referenc
 <br>
 
 ## SynapseAi Support Matrix
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-tlu0{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:left;vertical-align:middle}
-.tg .tg-efrg{background-color:#FFF;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-60od{background-color:#F2F2F2;color:#3A3A3A;text-align:right;vertical-align:middle}
-.tg .tg-sm4r{background-color:#FFF;color:#3A3A3A;font-weight:bold;text-align:center;vertical-align:top}
-.tg .tg-4i2y{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:center;vertical-align:top}
-.tg .tg-po5t{background-color:#F2F2F2;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-s1ry{background-color:#FFF;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:center;vertical-align:top}
-.tg .tg-7jin{background-color:#FFF;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
-.tg .tg-h418{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-yjv9{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
-.tg .tg-jp84{background-color:#F2F2F2;color:#3A3A3A;text-align:center;vertical-align:middle}
-.tg .tg-u1vx{background-color:#FFF;color:#3A3A3A;text-align:right;vertical-align:middle}
-.tg .tg-4p8a{background-color:#FFF;color:#3A3A3A;text-align:center;vertical-align:middle}
-.tg .tg-c1uv{background-color:#FFF;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-</style>
 <table class="tg">
 <thead>
   <tr>
@@ -195,23 +174,6 @@ Both the setup process and the execution process expect the following when instr
 </details>  
 <br>
 
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-tlu0{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:left;vertical-align:middle}
-.tg .tg-efrg{background-color:#FFF;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-4i2y{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:center;vertical-align:top}
-.tg .tg-po5t{background-color:#F2F2F2;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-7jin{background-color:#FFF;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
-.tg .tg-h418{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-yjv9{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
-.tg .tg-c1uv{background-color:#FFF;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
-.tg .tg-4p8a{background-color:#FFF;color:#3A3A3A;text-align:center;vertical-align:middle}
-.tg .tg-jp84{background-color:#F2F2F2;color:#3A3A3A;text-align:center;vertical-align:middle}
-</style>
 <table class="tg">
 <thead>
   <tr>
