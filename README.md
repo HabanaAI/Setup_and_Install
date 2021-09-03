@@ -6,6 +6,7 @@
   - [Cloud](#cloud)
   - [On Premises](#on-premises)
     - [Install Habana Driver](#install-habana-driver)
+    - [Set number of huge pages](#set-number-of-huge-pages)
     - [Bring up network interfaces](#bring-up-network-interfaces)
     - [Will you be using Docker?](#will-you-be-using-docker)
       - No Docker
@@ -43,6 +44,107 @@ A visualization of the flow is provided below to help better understand the avai
 
 At the end of this flow you will be ready to continue to Habana's model references to start running models on your system using Habana Devices.
 <br>
+
+## SynapseAi Support Matrix
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-tlu0{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:left;vertical-align:middle}
+.tg .tg-efrg{background-color:#FFF;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-60od{background-color:#F2F2F2;color:#3A3A3A;text-align:right;vertical-align:middle}
+.tg .tg-sm4r{background-color:#FFF;color:#3A3A3A;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-4i2y{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-po5t{background-color:#F2F2F2;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-s1ry{background-color:#FFF;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-7jin{background-color:#FFF;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
+.tg .tg-h418{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-yjv9{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
+.tg .tg-jp84{background-color:#F2F2F2;color:#3A3A3A;text-align:center;vertical-align:middle}
+.tg .tg-u1vx{background-color:#FFF;color:#3A3A3A;text-align:right;vertical-align:middle}
+.tg .tg-4p8a{background-color:#FFF;color:#3A3A3A;text-align:center;vertical-align:middle}
+.tg .tg-c1uv{background-color:#FFF;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+</style>
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span style="font-weight:700;color:#FFF;background-color:#0079BB">SynapseAI</span></th>
+    <th class="tg-4i2y" colspan="3"><span style="font-weight:700">1.0.0</span></th>
+    <th class="tg-4i2y" colspan="3"><span style="font-weight:700">0.15.4</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg"><span style="font-weight:700">Gaudi Firmware</span></td>
+    <td class="tg-7jin" colspan="3">0.14.10</td>
+    <td class="tg-7jin" colspan="3">0.14.10</td>
+  </tr>
+  <tr>
+    <td class="tg-h418"><span style="font-weight:700">Gaudi SPI Firmware</span></td>
+    <td class="tg-yjv9" colspan="3">0.14.10</td>
+    <td class="tg-yjv9" colspan="3">0.14.10</td>
+  </tr>
+  <tr>
+    <td class="tg-efrg"><span style="font-weight:700">Operating System</span></td>
+    <td class="tg-s1ry"><span style="font-weight:700">Ubuntu</span></td>
+    <td class="tg-s1ry"><span style="font-weight:700">Ubuntu</span></td>
+    <td class="tg-s1ry"><span style="font-weight:700">Amazon Linux 2</span></td>
+    <td class="tg-s1ry"><span style="font-weight:700">Ubuntu</span></td>
+    <td class="tg-sm4r"><span style="font-weight:700">Ubuntu</span></td>
+    <td class="tg-sm4r"><span style="font-weight:700">Amazon Linux 2</span></td>
+  </tr>
+  <tr>
+    <td class="tg-60od">Version</td>
+    <td class="tg-jp84">20.04</td>
+    <td class="tg-jp84">18.04</td>
+    <td class="tg-jp84"></td>
+    <td class="tg-jp84">20.04</td>
+    <td class="tg-jp84">18.04</td>
+    <td class="tg-jp84"></td>
+  </tr>
+  <tr>
+    <td class="tg-u1vx">Kernel</td>
+    <td class="tg-4p8a">5.4.0 and above</td>
+    <td class="tg-4p8a">4.15 and above</td>
+    <td class="tg-4p8a">5.4.0 and above</td>
+    <td class="tg-4p8a">5.4.0 and above</td>
+    <td class="tg-4p8a">4.15 and above</td>
+    <td class="tg-4p8a">5.4.0 and above</td>
+  </tr>
+  <tr>
+    <td class="tg-60od">Python</td>
+    <td class="tg-jp84">3.8</td>
+    <td class="tg-jp84">3.7</td>
+    <td class="tg-jp84">3.7</td>
+    <td class="tg-jp84">3.8</td>
+    <td class="tg-jp84">3.7</td>
+    <td class="tg-jp84">3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv"><span style="font-weight:700">Kubernetes</span></td>
+    <td class="tg-4p8a" colspan="3">1.19.7</td>
+    <td class="tg-4p8a" colspan="3">1.19.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t"><span style="font-weight:700">Docker</span></td>
+    <td class="tg-jp84" colspan="3">18.09.0</td>
+    <td class="tg-jp84" colspan="3">18.09.0</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv"><span style="font-weight:700">PyTorch</span></td>
+    <td class="tg-4p8a" colspan="3">1.8.1</td>
+    <td class="tg-4p8a" colspan="3">1.7.1</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t"><span style="font-weight:700">TensorFlow</span></td>
+    <td class="tg-jp84" colspan="3">2.5.0</td>
+    <td class="tg-jp84" colspan="3">2.5.0 and 2.4.1</td>
+  </tr>
+</tbody>
+</table>
+
 <br>
 
 <center>
@@ -93,13 +195,49 @@ Both the setup process and the execution process expect the following when instr
 </details>  
 <br>
 
-Supported Python versions per OS:
-| OS       |      Python Version      |
-|----------|:------------------------:|
-| Ubuntu 18.04   |     Python 3.7     |
-| Ubuntu 20.04   |     Python 3.8     |
-| Centos         |     Python 3.7     |
-| Amazon Linux 2 |     Python 3.7     |
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-tlu0{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:left;vertical-align:middle}
+.tg .tg-efrg{background-color:#FFF;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-4i2y{background-color:#0079BB;border-color:inherit;color:#FFF;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-po5t{background-color:#F2F2F2;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-7jin{background-color:#FFF;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
+.tg .tg-h418{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-yjv9{background-color:#F2F2F2;border-color:inherit;color:#3A3A3A;text-align:center;vertical-align:middle}
+.tg .tg-c1uv{background-color:#FFF;color:#3A3A3A;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-4p8a{background-color:#FFF;color:#3A3A3A;text-align:center;vertical-align:middle}
+.tg .tg-jp84{background-color:#F2F2F2;color:#3A3A3A;text-align:center;vertical-align:middle}
+</style>
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span style="background-color:#0079BB">OS</span></th>
+    <th class="tg-4i2y" colspan="3">Python Version</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg">Ubuntu 18.04</td>
+    <td class="tg-7jin" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-h418">Ubuntu 20.04</td>
+    <td class="tg-yjv9" colspan="3">Python 3.8</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv">Centos</td>
+    <td class="tg-4p8a" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t">Amazon Linux 2</td>
+    <td class="tg-jp84" colspan="3">Python 3.7</td>
+  </tr>
+</tbody>
+</table>
 
 <br>
 <br>
@@ -159,7 +297,7 @@ rpm -qa | grep habanalabs
 <center>
 
 ### Does the command above show the package installed?
-[Yes (Bring up network interfaces)](#Bring-up-network-interfaces) • [No (Install Habana Driver)](#Install-Habana-Driver)
+[Yes (Set number of huge pages)](#Set-number-of-huge-pages) • [No (Install Habana Driver)](#Install-Habana-Driver)
 
 </center>
 
@@ -203,7 +341,11 @@ rpm -qa | grep habanalabs
   3. After kernel upgrade, please reboot your machine.
 
   ### Setup base drivers
-  If the driver needs to be updated or installed on a fresh system, please use the following directions (Ubuntu 18.04):
+  The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+
+  On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
+
+  The below command installs both the habanalabs and habanalabs_en driver:
 
   1. Remove old packages habanalabs-dkms
   ```
@@ -212,10 +354,6 @@ rpm -qa | grep habanalabs
   2. Download and install habanalabs-dkms
   ```
   sudo apt install -y habanalabs-dkms=0.15.4-75
-  ```
-  3. Load the driver
-  ```
-  sudo modprobe habanalabs
   ```
   </details>
 * <details>
@@ -248,7 +386,11 @@ rpm -qa | grep habanalabs
   3. After kernel upgrade, please reboot your machine.
 
   ### Setup base drivers
-  If the driver needs to be updated or installed on a fresh system, please use the following directions (Ubuntu 20.04):
+  The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+
+  On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
+
+  The below command installs both the habanalabs and habanalabs_en driver:
 
   1. Remove old packages habanalabs-dkms
   ```
@@ -257,10 +399,6 @@ rpm -qa | grep habanalabs
   2. Download and install habanalabs-dkms
   ```
   sudo apt install -y habanalabs-dkms=0.15.4-75
-  ```
-  3. Load the driver
-  ```
-  sudo modprobe habanalabs
   ```
   </details>
 </details>
@@ -314,7 +452,11 @@ sudo yum install -y sudo yum-utils
 ```  
 
 ### Setup base drivers
-If the driver needs to be updated or installed on a fresh system, please use the following directions (Centos):
+The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+
+On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
+
+The below command installs both the habanalabs and habanalabs_en driver:
 
 1. Remove the previous driver package:
 ```
@@ -324,10 +466,6 @@ sudo yum remove habanalabs*
 ```
 sudo yum install habanalabs-0.15.4-75* -y
 ```
-3. Load the driver
-```
-sudo modprobe habanalabs
-```  
 </details>
 <details>
 <summary>Amazon linux 2 distributions</summary>
@@ -378,7 +516,11 @@ sudo yum install -y sudo yum-utils
 ```  
 
 ### Setup base drivers
-If the driver needs to be updated or installed on a fresh system, please use the following directions (Amazon Linux 2):
+The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+
+On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
+
+The below command installs both the habanalabs and habanalabs_en driver:
 
 1. Remove the previous driver package:
 ```
@@ -388,10 +530,6 @@ sudo yum remove habanalabs*
 ```
 sudo yum install habanalabs-0.15.4-75* -y
 ```
-3. Load the driver
-```
-sudo modprobe habanalabs
-```  
 </details>
 
 <center>
@@ -400,6 +538,37 @@ sudo modprobe habanalabs
 [Habana Driver Check](#On-Premises)
 
 </center>
+<br />
+
+---
+
+<br />
+
+## Set number of huge pages
+Some training models use huge pages. It is recommended to set the number of huge pages as provided below:
+```
+#calculate number of huge pages
+huge_pages_size=$(grep "^Hugepagesize:" /proc/meminfo | awk '{print $2}') 
+huge_pages_memory=$((110 * 1024)) # convert to kB 
+number_of_cores=$(lscpu | grep "^CPU(s):" | awk '{print $2}') 
+total_huge_pages_memory=$(($huge_pages_memory * $number_of_cores * 2)) 
+number_of_huge_pages=$(($total_huge_pages_memory / $huge_pages_size + 1)) 
+
+#set current hugepages
+sudo sysctl -w vm.nr_hugepages=$number_of_huge_pages
+#Remove old entry if exists in sysctl.conf
+sudo sed --in-place '/nr_hugepages/d' /etc/sysctl.conf
+#Insert huge pages settings to persist
+echo "vm.nr_hugepages=$number_of_huge_pages" | sudo tee -a /etc/sysctl.conf
+```
+
+<center>
+
+### Please proceed to
+[Bring up network interfaces](#Bring-up-network-interfaces)
+
+</center>
+
 <br />
 
 ---
@@ -452,6 +621,7 @@ Please ensure the following software packages are installed on your system:
 * habanalabs-firmware-tools – installs various Firmware tools (hlml, hl-smi, etc).
 * habanalabs-qual – installs the qualification application package. See See [Gaudi Qualification Library.](https://docs.habana.ai/en/latest/Qualification_Library/GAUDI_Qualification_Library.html)
 * habanalabs-container-runtime - installs the container runtime library.
+* habanalabs-aeon – installs demo’s data loader.
 
 Use the following commands to fetch current packages on the system:
 <details>
@@ -488,6 +658,8 @@ rpm -qa | grep habana
 ## Install SW Stack
 <details>
 <summary>Ubuntu distributions</summary>
+
+Installing the package with internet connection available allows the network to download and install the required dependencies for the SynapseAI package (apt get and pip install etc.).
 
 * <details>
   <summary>Ubuntu 18.04</summary>
@@ -534,6 +706,11 @@ rpm -qa | grep habana
   sudo apt install -y habanalabs-qual=0.15.4-75
   ```
 
+  ### (Optional) aeon installation
+  To install aeon, use the following command:
+  ```
+  sudo apt install -y habanalabs-aeon=0.15.4-75
+  ```
   </details>
 * <details>
   <summary>Ubuntu 20.04</summary>
@@ -579,11 +756,19 @@ rpm -qa | grep habana
   ```
   sudo apt install -y habanalabs-qual=0.15.4-75
   ```
+
+  ### (Optional) aeon installation
+  To install aeon, use the following command:
+  ```
+  sudo apt install -y habanalabs-aeon=0.15.4-75
+  ```
   </details>
 </details>
 
 <details>
 <summary>CentOS distributions</summary>
+
+Installing the package with internet connection available allows the network to download and install the required dependencies for the SynapseAI package (yum install and pip install etc.).
 
 ### Setup package fetching
 1. Create /etc/yum.repos.d/Habana-Vault.repo.
@@ -639,9 +824,17 @@ To install hl_qual, use the following command:
 ```
 sudo yum install habanalabs-qual-0.15.4-75* -y
 ```
+
+### (Optional) aeon installation
+To install aeon, use the following command:
+```
+sudo yum install habanalabs-aeon-0.15.4-75* -y
+```
 </details>
 <details>
 <summary>Amazon linux 2 distributions</summary>
+
+Installing the package with internet connection available allows the network to download and install the required dependencies for the SynapseAI package (yum install and pip install etc.).
 
 ### Setup package fetching
 1. Create /etc/yum.repos.d/Habana-Vault.repo.
@@ -697,7 +890,21 @@ To install hl_qual, use the following command:
 ```
 sudo yum install habanalabs-qual-0.15.4-75* -y
 ```
+
+### (Optional) aeon installation
+To install aeon, use the following command:
+```
+sudo yum install habanalabs-aeon-0.15.4-75* -y
+```
 </details>
+<br>
+
+#### Update Environment Variables and More:
+When the installation is complete, close the shell and re-open it. Or, run the following:
+```
+source /etc/profile.d/habanalabs.sh
+source ~/.bashrc
+```
 
 <center>
 
@@ -737,13 +944,16 @@ ${PYTHON} -m pip list | grep habana
 <br />
 
 ## Install TF/Horovod Habana python packages
-### Install habana-tensorflow
-1. Before installing habana-tensorflow, install TensorFlow. The Habana package currently supports TensorFlow versions 2.4.1 and 2.5.0. If no TensorFlow package is available, PIP will automatically install the latest supported version.
+This section describes how to obtain and install the TensorFlow software package. The package consists of two main components:  
+
+Base **habana-tensorflow** Python package - Libraries and modules needed to execute TensorFlow on a **single Gaudi** device.  
+Scale-out **habana-horovod** Python package - Libraries and modules needed to execute TensorFlow on **multiple Gaudi** devices.
+### Base Installation (Single Node)
+The habana-tensorflow package contains all the binaries and scripts to run topologies on a single-node.  
+
+1. Before installing habana-tensorflow, install supported TensorFlow version. See [Support Matrix](#SynapseAi-Support-Matrix). If no TensorFlow package is available, PIP will automatically fetch it.
 ```
-# Either
-${PYTHON} -m pip install tensorflow-cpu==2.5.0
-# Or
-${PYTHON} -m pip install tensorflow-cpu==2.4.1
+python3 -m pip install tensorflow-cpu==<supported_tf_version>
 ```
 
 2. habana-tensorflow is available in the Habana Vault. To allow PIP to search for the habana-tensorflow package, –extra-index-url needs to be specified:
@@ -756,7 +966,15 @@ ${PYTHON} -c "import habana_frameworks.tensorflow as htf; print(htf.__version__)
 ```
 If everything is set up properly, the above command will print the currently installed package version.
 
-### Install habana-horovod
+#### Note: 
+habana-tensorflow contains libraries for all supported TensorFlow versions. It is delivered under Linux tag, but the package is compatible with manylinux2010 tag (same as TensorFlow).
+<br>
+<br>
+
+### Scale-out Installation
+There are two methods of getting multi-node support - Horovod or TensorFlow distributed.
+
+#### For Horovod Distributed:
 Install the habana-horovod package to get multi-node support. The following lists the prerequisites for installing this package:
 
 * OpenMPI 4.0.5.
@@ -780,6 +998,12 @@ export PATH=$MPI_ROOT/bin:$PATH
 ```
 ${PYTHON} -m pip install habana-horovod --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 ```
+
+#### For TensorFlow Distributed:
+To get scale-out capabilities on TensorFlow distributed, no additional packages other than **habana-tensorflow** package needs to be installed. Unlike Horovod, neither tf.distribute nor HPUStrategy use/require OpenMPI at any point. Worker processes can be initialized in any way. Refer to [Model References repository](https://github.com/HabanaAI/Model-References) for an example using mpirun, as it offers process-to-core binding mechanism. Installing OpenMPI as described above in [For Horovod Distributed](For-Horovod-Distributed) is recommended.
+
+#### See also:
+To learn more about the TensorFlow distributed training on Gaudi, see [Distributed Training with TensorFlow](https://docs.habana.ai/en/latest/Tensorflow_Scaling_Guide/TensorFlow_Gaudi_Scaling_Guide.html#distributed-training-with-tensorflow).
 
 <br />
 
@@ -1696,6 +1920,15 @@ For Pytorch:
 
 ## Additional setup checks
 This section will provide some commands to help verify the software installation/update has been done properly
+
+### Check habana module
+```
+lsmod | grep habana
+```
+After running the command, a driver called habanalabs should be displayed.
+```
+habanalabs 1204224 2
+```
 
 ### Docker device check
 After launching docker please use the following to ensure you can see your devices:
