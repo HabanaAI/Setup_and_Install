@@ -7,7 +7,7 @@ FROM ubuntu:bionic
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-ARG HABANA_PIP_VERSION="21.1.1"
+ARG HABANA_PIP_VERSION="19.3.1"
 
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
@@ -25,7 +25,6 @@ RUN apt-get update && \
     ethtool \
     gpg-agent \
     libjemalloc1 \
-    python3-venv \
     software-properties-common \
     wget && \
     apt-get autoremove && apt-get clean
@@ -41,15 +40,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     locales \
     make \
-    python3.6 \
-    python3.6-dev \
-    python3.6-tk \
-    python3-pip \
     protobuf-compiler && \
     apt-get autoremove && apt-get clean
 
 RUN apt-get update && \
-    ### Install unzip to extract pre-trained weights for BERT demo
     ### Install ssh for horovod/MPI
     apt-get install -y --no-install-recommends \
     bc \
@@ -58,23 +52,45 @@ RUN apt-get update && \
     openssh-server \
     unzip \
     vim \
-    lsof && \
+    lsof \
+    python3-pip && \
     apt-get autoremove && apt-get clean
 
 RUN locale-gen en_US.UTF-8
+
+# Update default Python to 3.7 as Habana dropped support for python older than 3.7
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3.7 \
+        python3.7-dev \
+        python3.7-venv \
+        # there is no dedicated package distutils, tk for python 3.7
+        python3-distutils \
+        python3-tk && \
+    apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 10 && \
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
+        update-alternatives --install /usr/bin/python python /usr/bin/python3.7 10 && \
+        update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
 
 RUN python3 -m pip install --no-cache-dir pip=="${HABANA_PIP_VERSION}" && \
     # There is no need to store pip installation files inside docker image
     pip3 config set global.no-cache-dir false && \
     pip3 install setuptools==41.0.0
 
+# Required symlinks for fix cannot import modues _gi, apt_pkg after python 3.7 installation in add-apt-repository script
+RUN ln -s /usr/lib/python3/dist-packages/apt_pkg.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/apt_pkg.so && \
+    ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/_gi.cpython-37m-x86_64-linux-gnu.so
+
 RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
     echo "deb https://${ARTIFACTORY_URL}/artifactory/debian bionic main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
-    apt-key add public && \
-    rm public && \
-    apt-get update
+    apt-key add public && rm public
 
-RUN apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
+RUN apt-get update && \
+    apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
-        habanalabs-graph="$VERSION"-"$REVISION"
+        habanalabs-graph="$VERSION"-"$REVISION" && \
+        apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list

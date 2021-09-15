@@ -2,10 +2,11 @@
 
 ## Table of Contents
   - [Overview](#overview)
-  - [Setup Python](#setup-python)
+  - [SynapseAi Support Matrix](#synapseai-support-matrix)
   - [Cloud](#cloud)
   - [On Premises](#on-premises)
-    - [Install Habana Driver](#install-habana-driver)
+    - [Check if Habana Driver/Host Firware are installed](#on-premises)
+    - [Install Habana Driver/Host Firmware](#install-habana-driver-and-host-firmware)
     - [Set number of huge pages](#set-number-of-huge-pages)
     - [Bring up network interfaces](#bring-up-network-interfaces)
     - [Will you be using Docker?](#will-you-be-using-docker)
@@ -19,8 +20,8 @@
       - Docker
         - [Do you want to use prebuilt docker or build docker yourself?](#do-you-want-to-use-prebuilt-docker-or-build-docker-yourself)
         - [How to Build Docker Images from Habana Dockerfiles](#how-to-build-docker-images-from-habana-dockerfiles)
-        - [Pull prebuilt Docker image](#pull-prebuilt-docker-image)
-  - [Run Reference Models](#run-reference-models)
+        - [Habana Prebuilt Containers](#habana-prebuilt-containers)
+  - [Setup Complete](#setup-complete)
   - [Additional setup checks](#additional-setup-checks)
   - [Additional links](#additional-links)
   - [Additional scripts and add-ons](#additional-scripts-and-add-ons)
@@ -46,165 +47,22 @@ At the end of this flow you will be ready to continue to Habana's model referenc
 <br>
 
 ## SynapseAi Support Matrix
-<table class="tg">
-<thead>
-  <tr>
-    <th class="tg-tlu0"><span style="font-weight:700;color:#FFF;background-color:#0079BB">SynapseAI</span></th>
-    <th class="tg-4i2y" colspan="3"><span style="font-weight:700">1.0.0</span></th>
-    <th class="tg-4i2y" colspan="3"><span style="font-weight:700">0.15.4</span></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td class="tg-efrg"><span style="font-weight:700">Gaudi Firmware</span></td>
-    <td class="tg-7jin" colspan="3">0.14.10</td>
-    <td class="tg-7jin" colspan="3">0.14.10</td>
-  </tr>
-  <tr>
-    <td class="tg-h418"><span style="font-weight:700">Gaudi SPI Firmware</span></td>
-    <td class="tg-yjv9" colspan="3">0.14.10</td>
-    <td class="tg-yjv9" colspan="3">0.14.10</td>
-  </tr>
-  <tr>
-    <td class="tg-efrg"><span style="font-weight:700">Operating System</span></td>
-    <td class="tg-s1ry"><span style="font-weight:700">Ubuntu</span></td>
-    <td class="tg-s1ry"><span style="font-weight:700">Ubuntu</span></td>
-    <td class="tg-s1ry"><span style="font-weight:700">Amazon Linux 2</span></td>
-    <td class="tg-s1ry"><span style="font-weight:700">Ubuntu</span></td>
-    <td class="tg-sm4r"><span style="font-weight:700">Ubuntu</span></td>
-    <td class="tg-sm4r"><span style="font-weight:700">Amazon Linux 2</span></td>
-  </tr>
-  <tr>
-    <td class="tg-60od">Version</td>
-    <td class="tg-jp84">20.04</td>
-    <td class="tg-jp84">18.04</td>
-    <td class="tg-jp84"></td>
-    <td class="tg-jp84">20.04</td>
-    <td class="tg-jp84">18.04</td>
-    <td class="tg-jp84"></td>
-  </tr>
-  <tr>
-    <td class="tg-u1vx">Kernel</td>
-    <td class="tg-4p8a">5.4.0 and above</td>
-    <td class="tg-4p8a">4.15 and above</td>
-    <td class="tg-4p8a">5.4.0 and above</td>
-    <td class="tg-4p8a">5.4.0 and above</td>
-    <td class="tg-4p8a">4.15 and above</td>
-    <td class="tg-4p8a">5.4.0 and above</td>
-  </tr>
-  <tr>
-    <td class="tg-60od">Python</td>
-    <td class="tg-jp84">3.8</td>
-    <td class="tg-jp84">3.7</td>
-    <td class="tg-jp84">3.7</td>
-    <td class="tg-jp84">3.8</td>
-    <td class="tg-jp84">3.7</td>
-    <td class="tg-jp84">3.7</td>
-  </tr>
-  <tr>
-    <td class="tg-c1uv"><span style="font-weight:700">Kubernetes</span></td>
-    <td class="tg-4p8a" colspan="3">1.19.7</td>
-    <td class="tg-4p8a" colspan="3">1.19.7</td>
-  </tr>
-  <tr>
-    <td class="tg-po5t"><span style="font-weight:700">Docker</span></td>
-    <td class="tg-jp84" colspan="3">18.09.0</td>
-    <td class="tg-jp84" colspan="3">18.09.0</td>
-  </tr>
-  <tr>
-    <td class="tg-c1uv"><span style="font-weight:700">PyTorch</span></td>
-    <td class="tg-4p8a" colspan="3">1.8.1</td>
-    <td class="tg-4p8a" colspan="3">1.7.1</td>
-  </tr>
-  <tr>
-    <td class="tg-po5t"><span style="font-weight:700">TensorFlow</span></td>
-    <td class="tg-jp84" colspan="3">2.5.0</td>
-    <td class="tg-jp84" colspan="3">2.5.0 and 2.4.1</td>
-  </tr>
-</tbody>
-</table>
+Please refer to the [Release Notes](https://docs.habana.ai/en/latest/Release_Notes/GAUDI_Release_Notes.html#support-matrix) for the latest version of the Support Matrix, this support matrix illustrates the OS and Software structure that are used to support the SyanapseAI® Software stack.
+
+## Note on SW versioning
+Please make sure that the version of the SynapseAI software stack installation matches the version of the Docker images you are using. Our documentation on docs.habana.ai is also versioned, so select the appropriate version.  
+The Setup and Installation Github repository as well as the Model-References GitHub repository have branches for each release version. Make sure you are selecting the branch that matches the version of your SynapseAI software installation.  
+For example, if SynapseAI software version 1.0.0 is installed, then you would clone the Model-References repository like this: 
+```
+git clone -b 1.0.0 https://github.com/HabanaAI/Model-References
+```
+ 
+To identify the SynapseAI software version installed, run the hl-smi tool and look at the “Driver Version”.
 
 <br>
 
 <center>
 
-### Please proceed to the first step of setting up to use the appropriate Python
-[Setup Python](#Setup-Python)
-
-</center>
-
-<br />
-
----
-
-<br />
-
-## Setup Python
-Both the setup process and the execution process expect the following when instructing run commands:
-<details>
-<summary>Ubuntu distributions</summary>
-
-  * <details>
-    <summary>Ubuntu 18.04</summary>
-  
-    Please run the following to set python variable
-    ```
-    export PYTHON=/usr/bin/python3.7
-    ```
-  
-    </details>
-  * <details>
-    <summary>Ubuntu 20.04</summary>
-  
-    Please run the following to set python variable
-    ```
-    export PYTHON=/usr/bin/python3.8
-    ```
-    
-  </details>
-</details>
-<details>
-  <summary>CentOS/Amazon linux 2 distributions</summary>
-  
-    Please run the following to set python variable
-    ```
-    export PYTHON=/usr/bin/python3.7
-    ```
-
-</details>  
-<br>
-
-<table class="tg">
-<thead>
-  <tr>
-    <th class="tg-tlu0"><span style="background-color:#0079BB">OS</span></th>
-    <th class="tg-4i2y" colspan="3">Python Version</th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td class="tg-efrg">Ubuntu 18.04</td>
-    <td class="tg-7jin" colspan="3">Python 3.7</td>
-  </tr>
-  <tr>
-    <td class="tg-h418">Ubuntu 20.04</td>
-    <td class="tg-yjv9" colspan="3">Python 3.8</td>
-  </tr>
-  <tr>
-    <td class="tg-c1uv">Centos</td>
-    <td class="tg-4p8a" colspan="3">Python 3.7</td>
-  </tr>
-  <tr>
-    <td class="tg-po5t">Amazon Linux 2</td>
-    <td class="tg-jp84" colspan="3">Python 3.7</td>
-  </tr>
-</tbody>
-</table>
-
-<br>
-<br>
-
-<center>
 
 ### Are you using a Cloud computing instance or setting up an system on premises?
 [Cloud](#Cloud) • [On Premises](#On-Premises)
@@ -220,12 +78,11 @@ Both the setup process and the execution process expect the following when instr
 ## Cloud
 
 Please follow the directions from your cloud service provider to setup your instance.  
-If a Habana instance is selected from your cloud service provider, it will be already setup in most cases to run out of the box. 
 <br />
 
 <center>
 
-Please proceed to [Run Reference Models](#Run-Reference-Models)
+Please proceed to [Setup Complete](#Setup-Complete)
 
 </center>
 
@@ -237,11 +94,12 @@ Please proceed to [Run Reference Models](#Run-Reference-Models)
 
 ## On Premises
 
-Please ensure the driver is installed on your system using the following command:
+Please ensure the driver and host firmware are installed with version 1.0.0 on your system using the following commands:
 <details>
 <summary>Ubuntu distributions</summary>
 
 ```
+dpkg -l | grep habanalabs-firmware
 dpkg -l | grep habanalabs-dkms
 ```
 
@@ -250,6 +108,7 @@ dpkg -l | grep habanalabs-dkms
 <summary>CentOS/Amazon linux 2 distributions</summary>
 
 ```
+rpm -qa | grep habanalabs-firmware
 rpm -qa | grep habanalabs
 ```
 
@@ -259,7 +118,7 @@ rpm -qa | grep habanalabs
 <center>
 
 ### Does the command above show the package installed?
-[Yes (Set number of huge pages)](#Set-number-of-huge-pages) • [No (Install Habana Driver)](#Install-Habana-Driver)
+[Yes (Set number of huge pages)](#Set-number-of-huge-pages) • [No (Install Habana Driver/Host Firmware)](#Install-Habana-Driver-and-Host-Firmware)
 
 </center>
 
@@ -269,7 +128,7 @@ rpm -qa | grep habanalabs
 
 <br />
 
-## Install Habana Driver
+## Install Habana Driver and Host Firmware
 <details>
 <summary>Ubuntu distributions</summary>
 
@@ -281,8 +140,8 @@ rpm -qa | grep habanalabs
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian bionic main
   ```
@@ -301,9 +160,17 @@ rpm -qa | grep habanalabs
   sudo apt install linux-headers-$(uname -r)
   ```
   3. After kernel upgrade, please reboot your machine.
-
+  ### Setup host firmware
+  1. Remove old packages habanalabs-firmware
+  ```
+  sudo dpkg -P habanalabs-firmware
+  ```
+  2. Download and install habanalabs-firmware
+  ```
+  sudo apt install -y habanalabs-firmware=1.0.0-532
+  ```
   ### Setup base drivers
-  The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+  The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
 
   On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
 
@@ -326,8 +193,8 @@ rpm -qa | grep habanalabs
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian focal main
   ```
@@ -346,9 +213,17 @@ rpm -qa | grep habanalabs
   sudo apt install linux-headers-$(uname -r)
   ```
   3. After kernel upgrade, please reboot your machine.
-
+  ### Setup host firmware
+  1. Remove old packages habanalabs-firmware
+  ```
+  sudo dpkg -P habanalabs-firmware
+  ```
+  2. Download and install habanalabs-firmware
+  ```
+  sudo apt install -y habanalabs-firmware=1.0.0-532
+  ```
   ### Setup base drivers
-  The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+  The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
 
   On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
 
@@ -369,8 +244,8 @@ rpm -qa | grep habanalabs
 <summary>CentOS distributions</summary>
 
 ### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -412,9 +287,17 @@ Add yum-utils:
 ```
 sudo yum install -y sudo yum-utils
 ```  
-
+### Setup host firmware
+1. Remove the previous habanalabs-firmware package:
+```
+sudo yum remove habanalabs*
+```
+2. Download and install habanalabs-firmware
+```
+sudo yum install habanalabs-firmware-1.0.0-532* -y
+```
 ### Setup base drivers
-The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
 
 On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
 
@@ -433,8 +316,8 @@ sudo yum install habanalabs-1.0.0-532* -y
 <summary>Amazon linux 2 distributions</summary>
 
 ### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -476,9 +359,17 @@ Add yum-utils:
 ```
 sudo yum install -y sudo yum-utils
 ```  
-
+### Setup host firmware
+1. Remove the previous habanalabs-firmware package:
+```
+sudo yum remove habanalabs*
+```
+2. Download and install habanalabs-firmware
+```
+sudo yum install habanalabs-firmware--1.0.0-532* -y
+```
 ### Setup base drivers
-The **habanalabs-dkms_all** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
+The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
 
 On kernels 5.12 and later, you can load/unload the two drivers in no specific order. On kernels below 5.12, the habanalabs_en driver must be loaded before the habanalabs driver and unloaded after the habanalabs driver.
 
@@ -497,7 +388,7 @@ sudo yum install habanalabs-1.0.0-532* -y
 <center>
 
 ### Please go back and check that driver was installed
-[Habana Driver Check](#On-Premises)
+[Habana Driver/Host Firmware Check](#On-Premises)
 
 </center>
 <br />
@@ -540,11 +431,13 @@ echo "vm.nr_hugepages=$number_of_huge_pages" | sudo tee -a /etc/sysctl.conf
 ## Bring up network interfaces
 If training using multiple Gaudi cards please ensure the network interfaces are brought up.
 These interfaces need to be brought up every time the kernel module is loaded or unloaded and reloaded.
-To do so, please use the following command:
+To do so, please use the following commands:
 ```
+# manage_network_ifs.sh requires ethtool
+sudo apt-get install ethtool
 /opt/habanalabs/scripts/habanalabs/manage_network_ifs.sh --up
 ```
-For more information please refer to [This](#manage_network_ifs.sh) section
+For more information please refer to [this](#manage_network_ifssh) section
 
 <center>
 
@@ -572,17 +465,17 @@ For more information please refer to [This](#manage_network_ifs.sh) section
 <br />
 
 ## Check Habana Package Installation for no Docker
-Please ensure the following software packages are installed on your system:
+Please ensure the following software packages are installed on your system with version 1.0.0:
 ### Required packages:
-* habanalabs-dkms_all – installs the PCIe driver. (Should already be installed in previous steps)
-* habanalabs-graph-_all – installs the Graph Compiler and the run-time.
-* habanalabs-thunk-_all – installs the thunk library.
-* habanalabs-firmware - installs the Gaudi Firmware.
+* habanalabs-dkms – installs the PCIe driver. (Should already be installed in previous steps)
+* habanalabs-graph – installs the Graph Compiler and the run-time.
+* habanalabs-thunk – installs the thunk library.
+* habanalabs-firmware - installs the Gaudi Host Firmware.
 
 ### Optional packages:
 * habanalabs-firmware-tools – installs various Firmware tools (hlml, hl-smi, etc).
 * habanalabs-qual – installs the qualification application package. See See [Gaudi Qualification Library.](https://docs.habana.ai/en/latest/Qualification_Library/GAUDI_Qualification_Library.html)
-* habanalabs-container-runtime - installs the container runtime library.
+* habanalabs-container-runtime - installs the container runtime library which eases selection of devices to be mounted in the container.
 * habanalabs-aeon – installs demo’s data loader.
 
 Use the following commands to fetch current packages on the system:
@@ -621,7 +514,7 @@ rpm -qa | grep habana
 <details>
 <summary>Ubuntu distributions</summary>
 
-Installing the package with internet connection available allows the network to download and install the required dependencies for the SynapseAI package (apt get and pip install etc.).
+Installing the package with internet connection available allows the network to download and install the required dependencies for the SyanapseAI® package (apt get and pip install etc.).
 
 * <details>
   <summary>Ubuntu 18.04</summary>
@@ -631,8 +524,8 @@ Installing the package with internet connection available allows the network to 
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian bionic main
   ```
@@ -651,7 +544,7 @@ Installing the package with internet connection available allows the network to 
   ```
   sudo apt install -y habanalabs-thunk=1.0.0-532
   ```
-  ### Update FW
+  ### Host firmware installation
   Install the Firmware package:
   ```
   sudo apt install -y habanalabs-firmware=1.0.0-532
@@ -659,6 +552,8 @@ Installing the package with internet connection available allows the network to 
   ### (Optional) FW tools installation
   To install the firmware tools, use the following command:
   ```
+  # lsof required
+  sudo apt install -y lsof
   sudo apt install -y habanalabs-firmware-tools=1.0.0-532
   ```
 
@@ -682,8 +577,8 @@ Installing the package with internet connection available allows the network to 
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian focal main
   ```
@@ -702,7 +597,7 @@ Installing the package with internet connection available allows the network to 
   ```
   sudo apt install -y habanalabs-thunk=1.0.0-532
   ```
-  ### Update FW  
+  ### Host firmware installation 
   Install the Firmware package:
   ```
   sudo apt install -y habanalabs-firmware=1.0.0-532
@@ -710,6 +605,8 @@ Installing the package with internet connection available allows the network to 
   ### (Optional) FW tools installation
   To install the firmware tools, use the following command:
   ```
+  # lsof required
+  sudo apt install -y lsof
   sudo apt install -y habanalabs-firmware-tools=1.0.0-532
   ```
 
@@ -730,11 +627,11 @@ Installing the package with internet connection available allows the network to 
 <details>
 <summary>CentOS distributions</summary>
 
-Installing the package with internet connection available allows the network to download and install the required dependencies for the SynapseAI package (yum install and pip install etc.).
+Installing the package with internet connection available allows the network to download and install the required dependencies for the SyanapseAI® package (yum install and pip install etc.).
 
 ### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -770,7 +667,7 @@ To install the thunk library, use the following command:
 ```
 sudo yum install habanalabs-thunk-1.0.0-532* -y
 ```
-### Update FW
+### Host firmware installation
 Install the Firmware package:
 ```
 sudo yum install habanalabs-firmware-1.0.0-532* -y
@@ -778,6 +675,8 @@ sudo yum install habanalabs-firmware-1.0.0-532* -y
 ### (Optional) FW tools installation
 To install the firmware tools, use the following command:
 ```
+# lsof required
+sudo yum install -y lsof
 sudo yum install habanalabs-firmware-tools-1.0.0-532* -y
 ```
 
@@ -796,11 +695,11 @@ sudo yum install habanalabs-aeon-1.0.0-532* -y
 <details>
 <summary>Amazon linux 2 distributions</summary>
 
-Installing the package with internet connection available allows the network to download and install the required dependencies for the SynapseAI package (yum install and pip install etc.).
+Installing the package with internet connection available allows the network to download and install the required dependencies for the SyanapseAI® package (yum install and pip install etc.).
 
 ### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -836,7 +735,7 @@ To install the thunk library, use the following command:
 ```
 sudo yum install habanalabs-thunk-1.0.0-532* -y
 ```
-### Update FW
+### Host firmware installation
 Install the Firmware package:
 ```
 sudo yum install habanalabs-firmware-1.0.0-532* -y
@@ -844,6 +743,8 @@ sudo yum install habanalabs-firmware-1.0.0-532* -y
 ### (Optional) FW tools installation
 To install the firmware tools, use the following command:
 ```
+# lsof required
+sudo yum install -y lsof
 sudo yum install habanalabs-firmware-tools-1.0.0-532* -y
 ```
 
@@ -886,6 +787,71 @@ Please ensure the following python packages are installed on your system:
 * habana-tensorflow - Libraries and modules needed to execute TensorFlow on a single Gaudi device.
 * habana-horovod - Libraries and modules needed to execute TensorFlow on an HLS machine.
 
+### Setup Python Path
+If the packages are installed, they are usually in the below supported python interpreters.  
+Please setup the PYTHON variable before proceeding:
+<details>
+<summary>Ubuntu distributions</summary>
+
+  * <details>
+    <summary>Ubuntu 18.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.7
+    ```
+  
+    </details>
+  * <details>
+    <summary>Ubuntu 20.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.8
+    ```
+    
+  </details>
+</details>
+<details>
+  <summary>CentOS/Amazon linux 2 distributions</summary>
+  
+  Please run the following to set python variable
+  ```
+  export PYTHON=/usr/bin/python3.7
+  ```
+
+</details>  
+<br>
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span>OS</span></th>
+    <th class="tg-4i2y" colspan="3">Python Version</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg">Ubuntu 18.04</td>
+    <td class="tg-7jin" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-h418">Ubuntu 20.04</td>
+    <td class="tg-yjv9" colspan="3">Python 3.8</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv">Centos</td>
+    <td class="tg-4p8a" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t">Amazon Linux 2</td>
+    <td class="tg-jp84" colspan="3">Python 3.7</td>
+  </tr>
+</tbody>
+</table>
+
+<br>
+
 Use the following commands to fetch current python packages on the system:
 ```
 ${PYTHON} -m pip list | grep habana
@@ -895,7 +861,7 @@ ${PYTHON} -m pip list | grep habana
 <center>
 
 ### Are the required python packages installed on your system?
-[Yes](#Run-Reference-Models) • [No](#Install-TFHorovod-Habana-python-packages)
+[Yes](#Setup-Complete) • [No](#Install-TFHorovod-Habana-python-packages)
 
 </center>
 
@@ -915,7 +881,7 @@ The habana-tensorflow package contains all the binaries and scripts to run topol
 
 1. Before installing habana-tensorflow, install supported TensorFlow version. See [Support Matrix](#SynapseAi-Support-Matrix). If no TensorFlow package is available, PIP will automatically fetch it.
 ```
-python3 -m pip install tensorflow-cpu==<supported_tf_version>
+${PYTHON} -m pip install tensorflow-cpu==<supported_tf_version>
 ```
 
 2. habana-tensorflow is available in the Habana Vault. To allow PIP to search for the habana-tensorflow package, –extra-index-url needs to be specified:
@@ -946,8 +912,8 @@ Install the habana-horovod package to get multi-node support. The following list
 ```
 wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz
 gunzip -c openmpi-4.0.5.tar.gz | tar xf -
-cd openmpi-4.0.5/ && ./configure --prefix=/usr/local/share/openmpi
-make -j 8 && make install && touch ~root/openmpi-4.0.5_installed
+cd openmpi-4.0.5/ && sudo ./configure --prefix=/usr/local/share/openmpi
+sudo make -j 8 && sudo make install && touch ~root/openmpi-4.0.5_installed
 cp LICENSE /usr/local/share/openmpi/
 
 # Necessary env flags to install habana-horovod module
@@ -962,7 +928,7 @@ ${PYTHON} -m pip install habana-horovod --extra-index-url https://vault.habana.a
 ```
 
 #### For TensorFlow Distributed:
-To get scale-out capabilities on TensorFlow distributed, no additional packages other than **habana-tensorflow** package needs to be installed. Unlike Horovod, neither tf.distribute nor HPUStrategy use/require OpenMPI at any point. Worker processes can be initialized in any way. Refer to [Model References repository](https://github.com/HabanaAI/Model-References) for an example using mpirun, as it offers process-to-core binding mechanism. Installing OpenMPI as described above in [For Horovod Distributed](For-Horovod-Distributed) is recommended.
+To get scale-out capabilities on TensorFlow distributed, no additional packages other than **habana-tensorflow** package needs to be installed. Unlike Horovod, neither tf.distribute nor HPUStrategy use/require OpenMPI at any point. Worker processes can be initialized in any way. Refer to [Model References repository](https://github.com/HabanaAI/Model-References/tree/1.0.0) for an example using mpirun, as it offers process-to-core binding mechanism. Installing OpenMPI as described above in [For Horovod Distributed](For-Horovod-Distributed) is recommended.
 
 #### See also:
 To learn more about the TensorFlow distributed training on Gaudi, see [Distributed Training with TensorFlow](https://docs.habana.ai/en/latest/Tensorflow_Scaling_Guide/TensorFlow_Gaudi_Scaling_Guide.html#distributed-training-with-tensorflow).
@@ -987,6 +953,71 @@ Please ensure the following python packages are installed on your system:
 * Base Habana Pytorch package – libraries and modules needed to execute PyTorch on a single Gaudi device
 * Distributed Habana Pytorch package - libraries and modules needed to execute PyTorch on an HLS machine
 
+### Setup Python Path
+If the packages are installed, they are usually in the below supported python interpreters.  
+Please setup the PYTHON variable before proceeding:
+<details>
+<summary>Ubuntu distributions</summary>
+
+  * <details>
+    <summary>Ubuntu 18.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.7
+    ```
+  
+    </details>
+  * <details>
+    <summary>Ubuntu 20.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.8
+    ```
+    
+  </details>
+</details>
+<details>
+  <summary>CentOS/Amazon linux 2 distributions</summary>
+  
+  Please run the following to set python variable
+  ```
+  export PYTHON=/usr/bin/python3.7
+  ```
+
+</details>  
+<br>
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span>OS</span></th>
+    <th class="tg-4i2y" colspan="3">Python Version</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg">Ubuntu 18.04</td>
+    <td class="tg-7jin" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-h418">Ubuntu 20.04</td>
+    <td class="tg-yjv9" colspan="3">Python 3.8</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv">Centos</td>
+    <td class="tg-4p8a" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t">Amazon Linux 2</td>
+    <td class="tg-jp84" colspan="3">Python 3.7</td>
+  </tr>
+</tbody>
+</table>
+
+<br>
+
 Use the following commands to fetch current python packages on the system:
 ```
 ${PYTHON} -m pip list | grep habana
@@ -996,7 +1027,7 @@ Check for habana-torch and habana-torch-hcl
 <center>
 
 ### Are the required python packages installed on your system?
-[Yes](#Run-Reference-Models) • [No](#Install-PT-Habana-python-packages)
+[Yes](#Setup-Complete) • [No](#Install-PT-Habana-python-packages)
 
 </center>
 
@@ -1088,7 +1119,7 @@ Check for habana-torch and habana-torch-hcl
 <center>
 
 ### Do you want to use prebuilt docker or build docker yourself?
-[Prebuilt](#Pull-prebuilt-Docker-image) • [Build Docker](#How-to-Build-Docker-Images-from-Habana-Dockerfiles)
+[Prebuilt](#Habana-Prebuilt-Containers) • [Build Docker](#How-to-Build-Docker-Images-from-Habana-Dockerfiles)
 
 </center>
 
@@ -1104,14 +1135,16 @@ Check for habana-torch and habana-torch-hcl
 
 2. Run build script to generate Docker image
 ```
-./docker_build.sh mode [base,tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.4.1, 2.5.0]
+./docker_build.sh mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.4.1, 2.5.0]
 ```
 For example:
 ```
 ./docker_build.sh tensorflow ubuntu20.04 2.5.0
 ```
 
-### Install habana-container-runtime package
+### Install habanalabs-container-runtime package
+The Container Runtime is a modified [runc](https://github.com/opencontainers/runc) that installs the Container Runtime library.  This provides you the ability to select the devices to be mounted in the container.   With its help, you only need to specify the indices of the devices for the container, and the container runtime will handle the rest things properly. The container runtime can support both docker and kubernetes.
+
 <details>
 <summary>Ubuntu distributions</summary>
 
@@ -1123,8 +1156,8 @@ For example:
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian bionic main
   ```
@@ -1133,8 +1166,8 @@ For example:
   sudo dpkg --configure -a
   sudo apt-get update
   ```  
-  #### Install habana-container-runtime:
-  Install the `habana-container-runtime` package:
+  #### Install habanalabs-container-runtime:
+  Install the `habanalabs-container-runtime` package:
   ```
   sudo apt install -y habanalabs-container-runtime=1.0.0-532
   ```
@@ -1184,8 +1217,8 @@ For example:
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian focal main
   ```
@@ -1194,8 +1227,8 @@ For example:
   sudo dpkg --configure -a
   sudo apt-get update
   ```  
-  #### Install habana-container-runtime:
-  Install the `habana-container-runtime` package:
+  #### Install habanalabs-container-runtime:
+  Install the `habanalabs-container-runtime` package:
   ```
   sudo apt install -y habanalabs-container-runtime=1.0.0-532
   ```
@@ -1242,8 +1275,8 @@ For example:
 <summary>CentOS distributions</summary>
 
 #### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -1269,8 +1302,8 @@ yum search habana
 ```
 This will search for and list all packages with the word Habana.
 
-#### Install habana-container-runtime:
-Install the `habana-container-runtime` package:
+#### Install habanalabs-container-runtime:
+Install the `habanalabs-container-runtime` package:
 ```
 sudo yum install habanalabs-container-runtime-1.0.0-532* -y
 ```
@@ -1316,8 +1349,8 @@ It will look similar to this:
 <summary>Amazon linux distributions</summary>
 
 #### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -1343,8 +1376,8 @@ yum search habana
 ```
 This will search for and list all packages with the word Habana.
 
-#### Install habana-container-runtime:
-Install the `habana-container-runtime` package:
+#### Install habanalabs-container-runtime:
+Install the `habanalabs-container-runtime` package:
 ```
 sudo yum install habanalabs-container-runtime-1.0.0-532* -y
 ```
@@ -1394,20 +1427,16 @@ It will look similar to this:
 ```
 ### Run docker command
 **NOTE:** Modify below image name path $OS to match the OS chosen when building [ubuntu18.04,ubuntu20.04,amzn2]  
-**NOTE:** Modify below image name path $MODE to match the mode chosen when building [base,tensorflow,pytorch]  
+**NOTE:** Modify below image name path $MODE to match the mode chosen when building [tensorflow,pytorch]  
 **NOTE:** Modify below image name path $TF_VERSION to match the TF version chosen when building [2.4.1, 2.5.0]  
 
-Base:
-```
-docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/${SYNAPSE_BUILT_VERSION}/${OS}_${PYTHON_VERSION}/habanalabs/base-installer:${SYNAPSE_BUILT_VERSION}-${SYNAPSE_BUILT_REVISION}"
-```
 TF:
 ```
-docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/${SYNAPSE_BUILT_VERSION}/${OS}/habanalabs/tensorflow-installer-tf-cpu-${TF_VERSION}:${SYNAPSE_BUILT_VERSION}-${SYNAPSE_BUILT_REVISION}
+docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/${OS}/habanalabs/tensorflow-installer-tf-cpu-${TF_VERSION}:1.0.0-532
 ```
 PT:
 ```
-docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/${SYNAPSE_BUILT_VERSION}/${OS}/habanalabs/pytorch-installer:${SYNAPSE_BUILT_VERSION}-${SYNAPSE_BUILT_REVISION}
+docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.0/${OS}/habanalabs/pytorch-installer:1.0.0-532
 ```
 
 **OPTIONAL:** Add the following flag to mount a local host share folder to the docker in order to be able to transfer files out of docker:
@@ -1418,9 +1447,75 @@ docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_va
 
 <br />
 
+### Setup Python Path
+The packages are installed in the below listed python interpreters.  
+Please setup the PYTHON variable inside the docker if you would like to refer to the model-references:
+<details>
+<summary>Ubuntu distributions</summary>
+
+  * <details>
+    <summary>Ubuntu 18.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.7
+    ```
+  
+    </details>
+  * <details>
+    <summary>Ubuntu 20.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.8
+    ```
+    
+  </details>
+</details>
+<details>
+  <summary>CentOS/Amazon linux 2 distributions</summary>
+  
+  Please run the following to set python variable
+  ```
+  export PYTHON=/usr/bin/python3.7
+  ```
+
+</details>  
+<br>
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span>OS</span></th>
+    <th class="tg-4i2y" colspan="3">Python Version</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg">Ubuntu 18.04</td>
+    <td class="tg-7jin" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-h418">Ubuntu 20.04</td>
+    <td class="tg-yjv9" colspan="3">Python 3.8</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv">Centos</td>
+    <td class="tg-4p8a" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t">Amazon Linux 2</td>
+    <td class="tg-jp84" colspan="3">Python 3.7</td>
+  </tr>
+</tbody>
+</table>
+
+<br>
+<br>
+
 <center>
 
-Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
+Setup complete, please proceed to [Setup Complete](#Setup-Complete)
 
 </center>
 
@@ -1430,9 +1525,11 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
 
 <br />
 
-## Pull prebuilt Docker image
+## Habana Prebuilt Containers
 
-### Install habana-container-runtime package
+### Install habanalabs-container-runtime package
+The Container Runtime is a modified [runc](https://github.com/opencontainers/runc) that installs the Container Runtime library.  This provides you the ability to select the devices to be mounted in the container.   With its help, you only need to specify the indices of the devices for the container, and the container runtime will handle the rest things properly. The container runtime can support both docker and kubernetes.
+
 <details>
 <summary>Ubuntu distributions</summary>
 
@@ -1444,8 +1541,8 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian bionic main
   ```
@@ -1454,8 +1551,8 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
   sudo dpkg --configure -a
   sudo apt-get update
   ```  
-  #### Install habana-container-runtime:
-  Install the `habana-container-runtime` package:
+  #### Install habanalabs-container-runtime:
+  Install the `habanalabs-container-runtime` package:
   ```
   sudo apt install -y habanalabs-container-runtime=1.0.0-532
   ```
@@ -1505,8 +1602,8 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
   ```
   curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
   ```
-  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list.
-  3. Add the following content to the file:
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
   ```
   deb https://vault.habana.ai/artifactory/debian focal main
   ```
@@ -1515,8 +1612,8 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
   sudo dpkg --configure -a
   sudo apt-get update
   ```  
-  #### Install habana-container-runtime:
-  Install the `habana-container-runtime` package:
+  #### Install habanalabs-container-runtime:
+  Install the `habanalabs-container-runtime` package:
   ```
   sudo apt install -y habanalabs-container-runtime=1.0.0-532
   ```
@@ -1563,8 +1660,8 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
 <summary>CentOS distributions</summary>
 
 #### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -1590,8 +1687,8 @@ yum search habana
 ```
 This will search for and list all packages with the word Habana.
 
-#### Install habana-container-runtime:
-Install the `habana-container-runtime` package:
+#### Install habanalabs-container-runtime:
+Install the `habanalabs-container-runtime` package:
 ```
 sudo yum install habanalabs-container-runtime-1.0.0-532* -y
 ```
@@ -1637,8 +1734,8 @@ It will look similar to this:
 <summary>Amazon linux distributions</summary>
 
 #### Setup package fetching
-1. Create /etc/yum.repos.d/Habana-Vault.repo.
-2. Add the following content to the file:
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
 ```
 [vault]
 
@@ -1664,8 +1761,8 @@ yum search habana
 ```
 This will search for and list all packages with the word Habana.
 
-#### Install habana-container-runtime:
-Install the `habana-container-runtime` package:
+#### Install habanalabs-container-runtime:
+Install the `habanalabs-container-runtime` package:
 ```
 sudo yum install habanalabs-container-runtime-1.0.0-532* -y
 ```
@@ -1730,6 +1827,10 @@ It will look similar to this:
   ```
   docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
   ```
+  **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
+  ```
+  sudo apt install -y lsof
+  ```
 
   </details>
 * <details>
@@ -1743,6 +1844,11 @@ It will look similar to this:
   ```
   docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
   ```
+  **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
+  ```
+  sudo apt install -y lsof
+  ```
+
 * <details>
   <summary>Pytorch</summary>
 
@@ -1772,6 +1878,10 @@ It will look similar to this:
   ```
   docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
   ```
+  **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
+  ```
+  sudo apt install -y lsof
+  ```
 
   </details>
 * <details>
@@ -1784,6 +1894,10 @@ It will look similar to this:
   ### Run docker
   ```
   docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  ```
+  **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
+  ```
+  sudo apt install -y lsof
   ```
 
   </details>
@@ -1816,6 +1930,10 @@ It will look similar to this:
   ```
   docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
   ```
+  **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
+  ```
+  sudo yum install -y lsof
+  ```
 
   </details>
 * <details>
@@ -1828,6 +1946,10 @@ It will look similar to this:
   ### Run docker
   ```
   docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  ```
+  **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
+  ```
+  sudo yum install -y lsof
   ```
 
   </details>
@@ -1851,11 +1973,78 @@ It will look similar to this:
 ```
 -v $HOME/shared:/root/shared
 ```
+
 <br />
+
+### Setup Python Path
+The packages are installed in the below listed python interpreters.  
+Please setup the PYTHON variable inside the docker if you would like to refer to the model-references:
+<details>
+<summary>Ubuntu distributions</summary>
+
+  * <details>
+    <summary>Ubuntu 18.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.7
+    ```
+  
+    </details>
+  * <details>
+    <summary>Ubuntu 20.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.8
+    ```
+    
+  </details>
+</details>
+<details>
+  <summary>CentOS/Amazon linux 2 distributions</summary>
+  
+  Please run the following to set python variable
+  ```
+  export PYTHON=/usr/bin/python3.7
+  ```
+
+</details>  
+<br>
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span>OS</span></th>
+    <th class="tg-4i2y" colspan="3">Python Version</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg">Ubuntu 18.04</td>
+    <td class="tg-7jin" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-h418">Ubuntu 20.04</td>
+    <td class="tg-yjv9" colspan="3">Python 3.8</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv">Centos</td>
+    <td class="tg-4p8a" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t">Amazon Linux 2</td>
+    <td class="tg-jp84" colspan="3">Python 3.7</td>
+  </tr>
+</tbody>
+</table>
+
+<br>
+<br>
 
 <center>
 
-Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
+Setup complete, please proceed to [Setup Complete](#Setup-Complete)
 
 </center>
 
@@ -1865,14 +2054,14 @@ Setup complete, please proceed to [Run Reference Models](#Run-Reference-Models)
 
 <br />
 
-## Run Reference Models
+## Setup Complete
 Congratulations! Your system should now be setup and ready to run models!
 
-Please refer to our Model-References Github pages for model refernces and how to run them.   
+If you would like, you can refer to our Model-References Github pages for references models and how to run them.   
 Tensorflow:  
-[Model References Tensorflow](https://github.com/HabanaAI/Model-References/tree/master/TensorFlow)  
+[Model References Tensorflow](https://github.com/HabanaAI/Model-References/tree/1.0.0/TensorFlow)  
 For Pytorch:  
-[Model References Pytorch](https://github.com/HabanaAI/Model-References/tree/master/PyTorch)
+[Model References Pytorch](https://github.com/HabanaAI/Model-References/tree/1.0.0/PyTorch)
 
 <br />
 
