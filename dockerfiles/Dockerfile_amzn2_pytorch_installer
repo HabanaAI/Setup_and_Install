@@ -35,10 +35,16 @@ RUN yum install -y \
     moreutils && \
     yum clean all
 
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py pip==21.0.1 --no-warn-script-location && \
+# Make Python 3.7 to be default python
+RUN rm -f /usr/bin/python || echo "Python Symlink" && \
+    sed -i 1s/python/python2/ /bin/yum && \
+    sed -i 1s/python/python2/ /usr/libexec/urlgrabber-ext-down && \
+    ln -s /usr/bin/python3.7 /usr/bin/python && \
+    curl --create-dirs -sSLo get-pip.py https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py pip==19.3.1 --no-warn-script-location && \
     rm -rf get-pip.py
 
+# Install openmpi version 4.0.5
 RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
     tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
     cd openmpi-"${OPENMPI_VER}" && \
@@ -50,24 +56,23 @@ RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmp
     rm -rf openmpi-"${OPENMPI_VER}"* && \
     /sbin/ldconfig
 
+# Set openmpi Path
 ENV MPI_ROOT=/usr/lib/habanalabs/openmpi
 ENV PATH=$MPI_ROOT/bin:$PATH
 
-RUN MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc pip3 install mpi4py==3.0.3 --no-cache-dir
+# Install mpi4py version 3.0.3
+RUN MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc pip install mpi4py==3.0.3 --no-cache-dir
 
 RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /amzn2/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/ && \
-    pip3 install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --user --no-warn-script-location && \
-    pip3 uninstall --yes torch && \
-    pip3 install /root/habanalabs/pytorch_temp/*.whl --user && \
+    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --user --no-warn-script-location && \
+    pip uninstall --yes torch && \
+    pip install /root/habanalabs/pytorch_temp/*.whl --user && \
     /sbin/ldconfig && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
-    pip3 uninstall -y pillow && \
-    pip3 uninstall -y pillow-simd && \
-    pip3 install pillow-simd==7.0.0.post3 --user && \
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-"${VERSION}"_"${REVISION}".tgz
 

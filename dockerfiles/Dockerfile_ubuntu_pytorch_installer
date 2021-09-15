@@ -23,13 +23,14 @@ RUN apt-get update && apt-get install -y \
     libcurl4 \
     moreutils \
     lsof \
-    iproute2 \
     libcairo2-dev \
     libglib2.0-dev \
     libselinux1-dev \
-    libpcre2-dev && \
+    libpcre2-dev \
+    iproute2 && \
     apt-get clean
 
+# Make Python 3.x to be default python depending on OS version
 RUN bash -c "\
     if [[ $BASE_NAME == *"ubuntu18.04"* ]]; then \
         rm -rf /usr/bin/python /usr/bin/python3m; \
@@ -37,10 +38,13 @@ RUN bash -c "\
         ln -s /usr/bin/python3.7m /usr/bin/python3m; \
     else \
         ln -s /usr/bin/python3.8 /usr/bin/python; \
+        apt-get update; apt install -y libcairo2-dev; \
+        apt-get clean; \
     fi"
 
 RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}"
 
+# Install openmpi version 4.0.5
 RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
     tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
     cd openmpi-"${OPENMPI_VER}" && \
@@ -52,9 +56,11 @@ RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmp
     rm -rf openmpi-"${OPENMPI_VER}"* && \
     /sbin/ldconfig
 
+# Set openmpi Path
 ENV MPI_ROOT=/usr/lib/habanalabs/openmpi
 ENV PATH=$MPI_ROOT/bin:$PATH
 
+# Install mpi4py version 3.0.3 for both u18 & u20
 RUN MPICC=/usr/lib/habanalabs/openmpi/bin/mpicc pip install mpi4py==3.0.3 --no-cache-dir
 
 RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
@@ -67,9 +73,6 @@ RUN wget "https://${ARTIFACTORY_URL}"/gaudi-pt-modules/"${VERSION}"/"${REVISION}
     pip install /root/habanalabs/pytorch_temp/*.whl --user && \
     /sbin/ldconfig && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
-    pip uninstall -y pillow && \
-    pip uninstall -y pillow-simd && \
-    pip install pillow-simd==7.0.0.post3 --user && \
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-"${VERSION}"_"${REVISION}".tgz
 # requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg

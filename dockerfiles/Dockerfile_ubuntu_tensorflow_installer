@@ -9,16 +9,21 @@ ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
-ARG TF_VERSION=2.5.0
+ARG TF_VERSION=2.4.1
 ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
 
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
-ENV PYTHONPATH=/usr/lib/habanalabs/:/root
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/:/root
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs/openmpi/lib/
 ENV PATH=$PATH:/usr/lib/habanalabs/openmpi/bin/
 ENV OPAL_PREFIX=/usr/lib/habanalabs/openmpi/
 ENV MPI_ROOT=/usr/lib/habanalabs/openmpi/
+
+RUN apt-get update && \
+    apt-get remove openmpi-bin -y && \
+    apt-get autoremove --purge openmpi-bin -y && \
+    apt-get clean
 
 # Install OpenMpi from public sources - it must be installed before requirements,
 # that has dependecy with mpi4py package
@@ -36,13 +41,16 @@ RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmp
 COPY requirements-training-release.txt requirements-training-release.txt
 
 RUN python3 -m pip install pip==21.0.1 && \
-    pip3 install tensorflow-cpu==${TF_VERSION} \
-        tensorflow-model-optimization==0.5.0 && \
+    pip3 install -r requirements-training-release.txt && \
+    pip3 uninstall --yes habana tensorflow && \
+    # tensorflow-cpu and -model have to be installed in separated processes otherwise old version of tf will be imported
+    pip3 install tensorflow-cpu==${TF_VERSION} && \
+    pip3 install tensorflow-model-optimization==0.5.0 && \
     # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
     pip3 install pycocotools==2.0.1 && \
-    pip3 install -r requirements-training-release.txt && \
     rm requirements-training-release.txt
 
+# Using pip install habana-tensorflow and habana-horovod python packages
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/api/pypi/gaudi-python/simple && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
