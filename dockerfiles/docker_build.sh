@@ -6,12 +6,12 @@
 #
 # HabanaLabs script for building docker images
 
-: "${1?"Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.0]"}"
-: "${2?"Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.0]"}"
-: "${2?"Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.0]"}"
+: "${1?"Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.1, 2.6.0]"}"
+: "${2?"Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.1, 2.6.0]"}"
+: "${2?"Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.1, 2.6.0]"}"
 
-VERSION="${CUSTOM_VERSION:-1.0.0}"
-REVISION="${CUSTOM_REVISION:-532}"
+VERSION="${CUSTOM_VERSION:-1.0.1}"
+REVISION="${CUSTOM_REVISION:-81}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
@@ -41,7 +41,7 @@ function buildDocker {
         tensorflow)
         if [ -z "$5" ]; then
             echo "Provide TF_VERSION argument"
-            echo "Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.0]"
+            echo "Usage: $0 mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.1, 2.6.0]"
             exit 1
         fi
         DOCKERFILE="Dockerfile_ubuntu_tensorflow_installer"

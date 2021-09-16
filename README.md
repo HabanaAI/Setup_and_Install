@@ -52,9 +52,9 @@ Please refer to the [Release Notes](https://docs.habana.ai/en/latest/Release_Not
 ## Note on SW versioning
 Please make sure that the version of the SynapseAI software stack installation matches the version of the Docker images you are using. Our documentation on docs.habana.ai is also versioned, so select the appropriate version.  
 The Setup and Installation Github repository as well as the Model-References GitHub repository have branches for each release version. Make sure you are selecting the branch that matches the version of your SynapseAI software installation.  
-For example, if SynapseAI software version 1.0.0 is installed, then you would clone the Model-References repository like this: 
+For example, if SynapseAI software version 1.0.1 is installed, then you would clone the Model-References repository like this: 
 ```
-git clone -b 1.0.0 https://github.com/HabanaAI/Model-References
+git clone -b 1.0.1 https://github.com/HabanaAI/Model-References
 ```
  
 To identify the SynapseAI software version installed, run the hl-smi tool and look at the “Driver Version”.
@@ -94,7 +94,7 @@ Please proceed to [Setup Complete](#Setup-Complete)
 
 ## On Premises
 
-Please ensure the driver and host firmware are installed with version 1.0.0 on your system using the following commands:
+Please ensure the driver and host firmware are installed with version 1.0.1 on your system using the following commands:
 <details>
 <summary>Ubuntu distributions</summary>
 
@@ -167,7 +167,7 @@ rpm -qa | grep habanalabs
   ```
   2. Download and install habanalabs-firmware
   ```
-  sudo apt install -y habanalabs-firmware=1.0.0-532
+  sudo apt install -y habanalabs-firmware=1.0.1-81
   ```
   ### Setup base drivers
   The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
@@ -182,7 +182,7 @@ rpm -qa | grep habanalabs
   ```
   2. Download and install habanalabs-dkms
   ```
-  sudo apt install -y habanalabs-dkms=1.0.0-532
+  sudo apt install -y habanalabs-dkms=1.0.1-81
   ```
   </details>
 * <details>
@@ -220,7 +220,7 @@ rpm -qa | grep habanalabs
   ```
   2. Download and install habanalabs-firmware
   ```
-  sudo apt install -y habanalabs-firmware=1.0.0-532
+  sudo apt install -y habanalabs-firmware=1.0.1-81
   ```
   ### Setup base drivers
   The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
@@ -235,7 +235,7 @@ rpm -qa | grep habanalabs
   ```
   2. Download and install habanalabs-dkms
   ```
-  sudo apt install -y habanalabs-dkms=1.0.0-532
+  sudo apt install -y habanalabs-dkms=1.0.1-81
   ```
   </details>
 </details>
@@ -294,7 +294,7 @@ sudo yum remove habanalabs*
 ```
 2. Download and install habanalabs-firmware
 ```
-sudo yum install habanalabs-firmware-1.0.0-532* -y
+sudo yum install habanalabs-firmware-1.0.1-81* -y
 ```
 ### Setup base drivers
 The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
@@ -309,7 +309,7 @@ sudo yum remove habanalabs*
 ```
 2. Download and install new driver:
 ```
-sudo yum install habanalabs-1.0.0-532* -y
+sudo yum install habanalabs-1.0.1-81* -y
 ```
 </details>
 <details>
@@ -366,7 +366,7 @@ sudo yum remove habanalabs*
 ```
 2. Download and install habanalabs-firmware
 ```
-sudo yum install habanalabs-firmware--1.0.0-532* -y
+sudo yum install habanalabs-firmware-1.0.1-81* -y
 ```
 ### Setup base drivers
 The **habanalabs-dkms** package installs both the habanalabs and habanalabs_en (Ethernet) drivers. If automation scripts are used, the scripts must be modified to load/unload both drivers.
@@ -381,7 +381,7 @@ sudo yum remove habanalabs*
 ```
 2. Download and install new driver:
 ```
-sudo yum install habanalabs-1.0.0-532* -y
+sudo yum install habanalabs-1.0.1-81* -y
 ```
 </details>
 
@@ -465,7 +465,7 @@ For more information please refer to [this](#manage_network_ifssh) section
 <br />
 
 ## Check Habana Package Installation for no Docker
-Please ensure the following software packages are installed on your system with version 1.0.0:
+Please ensure the following software packages are installed on your system with version 1.0.1:
 ### Required packages:
 * habanalabs-dkms – installs the PCIe driver. (Should already be installed in previous steps)
 * habanalabs-graph – installs the Graph Compiler and the run-time.
@@ -537,36 +537,36 @@ Installing the package with internet connection available allows the network to 
   ### Graph compiler and run-time installation
   To install the graph compiler and run-time, use the following command:
   ```
-  sudo apt install -y habanalabs-graph=1.0.0-532
+  sudo apt install -y habanalabs-graph=1.0.1-81
   ```
   ### Thunk installation
   To install the thunk library, use the following command:
   ```
-  sudo apt install -y habanalabs-thunk=1.0.0-532
+  sudo apt install -y habanalabs-thunk=1.0.1-81
   ```
   ### Host firmware installation
   Install the Firmware package:
   ```
-  sudo apt install -y habanalabs-firmware=1.0.0-532
+  sudo apt install -y habanalabs-firmware=1.0.1-81
   ```
   ### (Optional) FW tools installation
   To install the firmware tools, use the following command:
   ```
   # lsof required
   sudo apt install -y lsof
-  sudo apt install -y habanalabs-firmware-tools=1.0.0-532
+  sudo apt install -y habanalabs-firmware-tools=1.0.1-81
   ```
 
   ### (Optional) qual installation
   To install hl_qual, use the following command:
   ```
-  sudo apt install -y habanalabs-qual=1.0.0-532
+  sudo apt install -y habanalabs-qual=1.0.1-81
   ```
 
   ### (Optional) aeon installation
   To install aeon, use the following command:
   ```
-  sudo apt install -y habanalabs-aeon=1.0.0-532
+  sudo apt install -y habanalabs-aeon=1.0.1-81
   ```
   </details>
 * <details>
@@ -590,36 +590,36 @@ Installing the package with internet connection available allows the network to 
   ### Graph compiler and run-time installation
   To install the graph compiler and run-time, use the following command:
   ```
-  sudo apt install -y habanalabs-graph=1.0.0-532
+  sudo apt install -y habanalabs-graph=1.0.1-81
   ```
   ### Thunk installation
   To install the thunk library, use the following command:
   ```
-  sudo apt install -y habanalabs-thunk=1.0.0-532
+  sudo apt install -y habanalabs-thunk=1.0.1-81
   ```
   ### Host firmware installation 
   Install the Firmware package:
   ```
-  sudo apt install -y habanalabs-firmware=1.0.0-532
+  sudo apt install -y habanalabs-firmware=1.0.1-81
   ```
   ### (Optional) FW tools installation
   To install the firmware tools, use the following command:
   ```
   # lsof required
   sudo apt install -y lsof
-  sudo apt install -y habanalabs-firmware-tools=1.0.0-532
+  sudo apt install -y habanalabs-firmware-tools=1.0.1-81
   ```
 
   ### (Optional) qual installation
   To install hl_qual, use the following command:
   ```
-  sudo apt install -y habanalabs-qual=1.0.0-532
+  sudo apt install -y habanalabs-qual=1.0.1-81
   ```
 
   ### (Optional) aeon installation
   To install aeon, use the following command:
   ```
-  sudo apt install -y habanalabs-aeon=1.0.0-532
+  sudo apt install -y habanalabs-aeon=1.0.1-81
   ```
   </details>
 </details>
@@ -660,36 +660,36 @@ This will search for and list all packages with the word Habana.
 ### Graph compiler and run-time installation
 To install the graph compiler and run-time, use the following command:
 ```
-sudo yum install habanalabs-graph-1.0.0-532* -y
+sudo yum install habanalabs-graph-1.0.1-81* -y
 ```
 ### Thunk installation
 To install the thunk library, use the following command:
 ```
-sudo yum install habanalabs-thunk-1.0.0-532* -y
+sudo yum install habanalabs-thunk-1.0.1-81* -y
 ```
 ### Host firmware installation
 Install the Firmware package:
 ```
-sudo yum install habanalabs-firmware-1.0.0-532* -y
+sudo yum install habanalabs-firmware-1.0.1-81* -y
 ```
 ### (Optional) FW tools installation
 To install the firmware tools, use the following command:
 ```
 # lsof required
 sudo yum install -y lsof
-sudo yum install habanalabs-firmware-tools-1.0.0-532* -y
+sudo yum install habanalabs-firmware-tools-1.0.1-81* -y
 ```
 
 ### (Optional) qual installation
 To install hl_qual, use the following command:
 ```
-sudo yum install habanalabs-qual-1.0.0-532* -y
+sudo yum install habanalabs-qual-1.0.1-81* -y
 ```
 
 ### (Optional) aeon installation
 To install aeon, use the following command:
 ```
-sudo yum install habanalabs-aeon-1.0.0-532* -y
+sudo yum install habanalabs-aeon-1.0.1-81* -y
 ```
 </details>
 <details>
@@ -728,36 +728,36 @@ This will search for and list all packages with the word Habana.
 ### Graph compiler and run-time installation
 To install the graph compiler and run-time, use the following command:
 ```
-sudo yum install habanalabs-graph-1.0.0-532* -y
+sudo yum install habanalabs-graph-1.0.1-81* -y
 ```
 ### Thunk installation
 To install the thunk library, use the following command:
 ```
-sudo yum install habanalabs-thunk-1.0.0-532* -y
+sudo yum install habanalabs-thunk-1.0.1-81* -y
 ```
 ### Host firmware installation
 Install the Firmware package:
 ```
-sudo yum install habanalabs-firmware-1.0.0-532* -y
+sudo yum install habanalabs-firmware-1.0.1-81* -y
 ```
 ### (Optional) FW tools installation
 To install the firmware tools, use the following command:
 ```
 # lsof required
 sudo yum install -y lsof
-sudo yum install habanalabs-firmware-tools-1.0.0-532* -y
+sudo yum install habanalabs-firmware-tools-1.0.1-81* -y
 ```
 
 ### (Optional) qual installation
 To install hl_qual, use the following command:
 ```
-sudo yum install habanalabs-qual-1.0.0-532* -y
+sudo yum install habanalabs-qual-1.0.1-81* -y
 ```
 
 ### (Optional) aeon installation
 To install aeon, use the following command:
 ```
-sudo yum install habanalabs-aeon-1.0.0-532* -y
+sudo yum install habanalabs-aeon-1.0.1-81* -y
 ```
 </details>
 <br>
@@ -928,7 +928,7 @@ ${PYTHON} -m pip install habana-horovod --extra-index-url https://vault.habana.a
 ```
 
 #### For TensorFlow Distributed:
-To get scale-out capabilities on TensorFlow distributed, no additional packages other than **habana-tensorflow** package needs to be installed. Unlike Horovod, neither tf.distribute nor HPUStrategy use/require OpenMPI at any point. Worker processes can be initialized in any way. Refer to [Model References repository](https://github.com/HabanaAI/Model-References/tree/1.0.0) for an example using mpirun, as it offers process-to-core binding mechanism. Installing OpenMPI as described above in [For Horovod Distributed](For-Horovod-Distributed) is recommended.
+To get scale-out capabilities on TensorFlow distributed, no additional packages other than **habana-tensorflow** package needs to be installed. Unlike Horovod, neither tf.distribute nor HPUStrategy use/require OpenMPI at any point. Worker processes can be initialized in any way. Refer to [Model References repository](https://github.com/HabanaAI/Model-References/tree/1.0.1) for an example using mpirun, as it offers process-to-core binding mechanism. Installing OpenMPI as described above in [For Horovod Distributed](For-Horovod-Distributed) is recommended.
 
 #### See also:
 To learn more about the TensorFlow distributed training on Gaudi, see [Distributed Training with TensorFlow](https://docs.habana.ai/en/latest/Tensorflow_Scaling_Guide/TensorFlow_Gaudi_Scaling_Guide.html#distributed-training-with-tensorflow).
@@ -1047,9 +1047,9 @@ Check for habana-torch and habana-torch-hcl
 
   Please run the following to install Habana Pytorch
   ```
-  wget https://vault.habana.ai/artifactory/gaudi-pt-modules/1.0.0/532/ubuntu1804/binary/pytorch_modules-1.0.0_532.tgz
+  wget https://vault.habana.ai/artifactory/gaudi-pt-modules/1.0.1/81/ubuntu1804/binary/pytorch_modules-1.0.1_81.tgz
   mkdir -p /root/habanalabs/pytorch_temp
-  tar -xf pytorch_modules-1.0.0_532.tgz -C /root/habanalabs/pytorch_temp/.
+  tar -xf pytorch_modules-1.0.1_81.tgz -C /root/habanalabs/pytorch_temp/.
   mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/
   ${PYTHON} -m pip install --no-cache-dir -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location
   ${PYTHON} -m pip uninstall --yes torch
@@ -1057,7 +1057,7 @@ Check for habana-torch and habana-torch-hcl
   /sbin/ldconfig
   echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
   rm -rf /root/habanalabs/pytorch_temp/
-  rm -rf pytorch_modules-1.0.0_532.tgz
+  rm -rf pytorch_modules-1.0.1_81.tgz
   ```
 
   </details>
@@ -1066,9 +1066,9 @@ Check for habana-torch and habana-torch-hcl
 
   Please run the following to install Habana Pytorch
   ```
-  wget https://vault.habana.ai/artifactory/gaudi-pt-modules/1.0.0/532/ubuntu2004/binary/pytorch_modules-1.0.0_532.tgz
+  wget https://vault.habana.ai/artifactory/gaudi-pt-modules/1.0.1/81/ubuntu2004/binary/pytorch_modules-1.0.1_81.tgz
   mkdir -p /root/habanalabs/pytorch_temp
-  tar -xf pytorch_modules-1.0.0_532.tgz -C /root/habanalabs/pytorch_temp/.
+  tar -xf pytorch_modules-1.0.1_81.tgz -C /root/habanalabs/pytorch_temp/.
   mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/
   ${PYTHON} -m pip install --no-cache-dir -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location
   ${PYTHON} -m pip uninstall --yes torch
@@ -1076,7 +1076,7 @@ Check for habana-torch and habana-torch-hcl
   /sbin/ldconfig
   echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
   rm -rf /root/habanalabs/pytorch_temp/
-  rm -rf pytorch_modules-1.0.0_532.tgz
+  rm -rf pytorch_modules-1.0.1_81.tgz
   ```
   
   </details>
@@ -1086,9 +1086,9 @@ Check for habana-torch and habana-torch-hcl
 
   Please run the following to install Habana Pytorch
   ```
-  wget https://vault.habana.ai/artifactory/gaudi-pt-modules/1.0.0/532/amzn2/binary/pytorch_modules-1.0.0_532.tgz
+  wget https://vault.habana.ai/artifactory/gaudi-pt-modules/1.0.1/81/amzn2/binary/pytorch_modules-1.0.1_81.tgz
   mkdir -p /root/habanalabs/pytorch_temp
-  tar -xf pytorch_modules-1.0.0_532.tgz -C /root/habanalabs/pytorch_temp/.
+  tar -xf pytorch_modules-1.0.1_81.tgz -C /root/habanalabs/pytorch_temp/.
   mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/
   ${PYTHON} -m pip install --no-cache-dir -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location
   ${PYTHON} -m pip uninstall --yes torch
@@ -1096,7 +1096,7 @@ Check for habana-torch and habana-torch-hcl
   /sbin/ldconfig
   echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
   rm -rf /root/habanalabs/pytorch_temp/
-  rm -rf pytorch_modules-1.0.0_532.tgz
+  rm -rf pytorch_modules-1.0.1_81.tgz
   ```
 
 </details>
@@ -1135,11 +1135,11 @@ Check for habana-torch and habana-torch-hcl
 
 2. Run build script to generate Docker image
 ```
-./docker_build.sh mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.4.1, 2.5.0]
+./docker_build.sh mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,amzn2] tf_version [2.5.1, 2.6.0]
 ```
 For example:
 ```
-./docker_build.sh tensorflow ubuntu20.04 2.5.0
+./docker_build.sh tensorflow ubuntu20.04 2.6.0
 ```
 
 ### Install habanalabs-container-runtime package
@@ -1169,7 +1169,7 @@ The Container Runtime is a modified [runc](https://github.com/opencontainers/run
   #### Install habanalabs-container-runtime:
   Install the `habanalabs-container-runtime` package:
   ```
-  sudo apt install -y habanalabs-container-runtime=1.0.0-532
+  sudo apt install -y habanalabs-container-runtime=1.0.1-81
   ```
   #### Docker Engine setup
 
@@ -1230,7 +1230,7 @@ The Container Runtime is a modified [runc](https://github.com/opencontainers/run
   #### Install habanalabs-container-runtime:
   Install the `habanalabs-container-runtime` package:
   ```
-  sudo apt install -y habanalabs-container-runtime=1.0.0-532
+  sudo apt install -y habanalabs-container-runtime=1.0.1-81
   ```
   #### Docker Engine setup
 
@@ -1305,7 +1305,7 @@ This will search for and list all packages with the word Habana.
 #### Install habanalabs-container-runtime:
 Install the `habanalabs-container-runtime` package:
 ```
-sudo yum install habanalabs-container-runtime-1.0.0-532* -y
+sudo yum install habanalabs-container-runtime-1.0.1-81* -y
 ```
 #### Docker Engine setup
 
@@ -1379,7 +1379,7 @@ This will search for and list all packages with the word Habana.
 #### Install habanalabs-container-runtime:
 Install the `habanalabs-container-runtime` package:
 ```
-sudo yum install habanalabs-container-runtime-1.0.0-532* -y
+sudo yum install habanalabs-container-runtime-1.0.1-81* -y
 ```
 ### Docker Engine setup
 
@@ -1428,15 +1428,15 @@ It will look similar to this:
 ### Run docker command
 **NOTE:** Modify below image name path $OS to match the OS chosen when building [ubuntu18.04,ubuntu20.04,amzn2]  
 **NOTE:** Modify below image name path $MODE to match the mode chosen when building [tensorflow,pytorch]  
-**NOTE:** Modify below image name path $TF_VERSION to match the TF version chosen when building [2.4.1, 2.5.0]  
+**NOTE:** Modify below image name path $TF_VERSION to match the TF version chosen when building [2.5.1, 2.6.0]  
 
 TF:
 ```
-docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/${OS}/habanalabs/tensorflow-installer-tf-cpu-${TF_VERSION}:1.0.0-532
+docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.1/${OS}/habanalabs/tensorflow-installer-tf-cpu-${TF_VERSION}:1.0.1-81
 ```
 PT:
 ```
-docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.0/${OS}/habanalabs/pytorch-installer:1.0.0-532
+docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.1/${OS}/habanalabs/pytorch-installer:1.0.1-81
 ```
 
 **OPTIONAL:** Add the following flag to mount a local host share folder to the docker in order to be able to transfer files out of docker:
@@ -1554,7 +1554,7 @@ The Container Runtime is a modified [runc](https://github.com/opencontainers/run
   #### Install habanalabs-container-runtime:
   Install the `habanalabs-container-runtime` package:
   ```
-  sudo apt install -y habanalabs-container-runtime=1.0.0-532
+  sudo apt install -y habanalabs-container-runtime=1.0.1-81
   ```
   #### Docker Engine setup
 
@@ -1615,7 +1615,7 @@ The Container Runtime is a modified [runc](https://github.com/opencontainers/run
   #### Install habanalabs-container-runtime:
   Install the `habanalabs-container-runtime` package:
   ```
-  sudo apt install -y habanalabs-container-runtime=1.0.0-532
+  sudo apt install -y habanalabs-container-runtime=1.0.1-81
   ```
   #### Docker Engine setup
 
@@ -1690,7 +1690,7 @@ This will search for and list all packages with the word Habana.
 #### Install habanalabs-container-runtime:
 Install the `habanalabs-container-runtime` package:
 ```
-sudo yum install habanalabs-container-runtime-1.0.0-532* -y
+sudo yum install habanalabs-container-runtime-1.0.1-81* -y
 ```
 #### Docker Engine setup
 
@@ -1764,7 +1764,7 @@ This will search for and list all packages with the word Habana.
 #### Install habanalabs-container-runtime:
 Install the `habanalabs-container-runtime` package:
 ```
-sudo yum install habanalabs-container-runtime-1.0.0-532* -y
+sudo yum install habanalabs-container-runtime-1.0.1-81* -y
 ```
 ### Docker Engine setup
 
@@ -1817,48 +1817,47 @@ It will look similar to this:
 <summary>Ubuntu 20.04</summary>
 
 * <details>
-  <summary>TF 2.4.1</summary>
+  <summary>TF 2.6.0</summary>
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.6.0:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.1/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.6.0:1.0.1-81
   ```
   **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
   ```
   sudo apt install -y lsof
   ```
-
   </details>
 * <details>
-  <summary>TF 2.5.0</summary>
+  <summary>TF 2.5.1</summary>
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.5.1:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.1/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.5.1:1.0.1-81
   ```
   **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
   ```
   sudo apt install -y lsof
   ```
-
+  </details>
 * <details>
   <summary>Pytorch</summary>
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/pytorch-installer:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/ubuntu20.04/habanalabs/pytorch-installer:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu20.04/habanalabs/pytorch-installer:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.1/ubuntu20.04/habanalabs/pytorch-installer:1.0.1-81
   ```
 
   </details>
@@ -1868,15 +1867,15 @@ It will look similar to this:
 <summary>Ubuntu 18.04</summary>
 
 * <details>
-  <summary>TF 2.4.1</summary>
+  <summary>TF 2.6.0</summary>
 
-  ### Pull docker  
+  ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.6.0:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.1/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.6.0:1.0.1-81
   ```
   **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
   ```
@@ -1885,15 +1884,15 @@ It will look similar to this:
 
   </details>
 * <details>
-  <summary>TF 2.5.0</summary>
+  <summary>TF 2.5.1</summary>
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.5.1:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.1/ubuntu18.04/habanalabs/tensorflow-installer-tf-cpu-2.5.1:1.0.1-81
   ```
   **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
   ```
@@ -1906,11 +1905,11 @@ It will look similar to this:
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/pytorch-installer:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/ubuntu18.04/habanalabs/pytorch-installer:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.0/ubuntu18.04/habanalabs/pytorch-installer:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.1/ubuntu18.04/habanalabs/pytorch-installer:1.0.1-81
   ```
 
   </details>
@@ -1920,15 +1919,15 @@ It will look similar to this:
 <summary>Amazon Linux 2</summary>
 
 * <details>
-  <summary>TF 2.4.1</summary>
- 
-  ### Pull docker 
+  <summary>TF 2.6.0</summary>
+
+  ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.6.0:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.4.1:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.1/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.6.0:1.0.1-81
   ```
   **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
   ```
@@ -1937,15 +1936,15 @@ It will look similar to this:
 
   </details>
 * <details>
-  <summary>TF 2.5.0</summary>
+  <summary>TF 2.5.1</summary>
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.5.1:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.5.0:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host vault.habana.ai/gaudi-docker/1.0.1/amzn2/habanalabs/tensorflow-installer-tf-cpu-2.5.1:1.0.1-81
   ```
   **NOTE:** Once inside the docker, run the following if you would like to use firmware tools:
   ```
@@ -1958,11 +1957,11 @@ It will look similar to this:
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/pytorch-installer:1.0.0-532
+  docker pull vault.habana.ai/gaudi-docker/1.0.1/amzn2/habanalabs/pytorch-installer:1.0.1-81
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.0/amzn2/habanalabs/pytorch-installer:1.0.0-532
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.0.1/amzn2/habanalabs/pytorch-installer:1.0.1-81
   ```
 
   </details>
@@ -2059,9 +2058,9 @@ Congratulations! Your system should now be setup and ready to run models!
 
 If you would like, you can refer to our Model-References Github pages for references models and how to run them.   
 Tensorflow:  
-[Model References Tensorflow](https://github.com/HabanaAI/Model-References/tree/1.0.0/TensorFlow)  
+[Model References Tensorflow](https://github.com/HabanaAI/Model-References/tree/1.0.1/TensorFlow)  
 For Pytorch:  
-[Model References Pytorch](https://github.com/HabanaAI/Model-References/tree/1.0.0/PyTorch)
+[Model References Pytorch](https://github.com/HabanaAI/Model-References/tree/1.0.1/PyTorch)
 
 <br />
 
