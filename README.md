@@ -4,6 +4,9 @@
   - [Overview](#overview)
   - [SynapseAi Support Matrix](#synapseai-support-matrix)
   - [Cloud](#cloud)
+    - [AWS Deep Learning AMI](#aws-deep-learning-ami)
+    - [Habana Deep Learning AMI from AWS Marketplace](#habana-deep-learning-ami-from-aws-marketplace)
+    - [Build Your Own AMI](#build-your-own-ami)
   - [On Premises](#on-premises)
     - [Check if Habana Driver/Host Firware are installed](#on-premises)
     - [Install Habana Driver/Host Firmware](#install-habana-driver-and-host-firmware)
@@ -21,10 +24,19 @@
         - [Do you want to use prebuilt docker or build docker yourself?](#do-you-want-to-use-prebuilt-docker-or-build-docker-yourself)
         - [How to Build Docker Images from Habana Dockerfiles](#how-to-build-docker-images-from-habana-dockerfiles)
         - [Habana Prebuilt Containers](#habana-prebuilt-containers)
+        - [AWS Deep Learning Containers](#aws-deep-learning-containers)
   - [Setup Complete](#setup-complete)
   - [Additional setup checks](#additional-setup-checks)
   - [Additional links](#additional-links)
   - [Additional scripts and add-ons](#additional-scripts-and-add-ons)
+
+<br />
+
+---
+
+<br />
+
+By installing, copying, accessing, or using the software, you agree to be legally bound by the terms and conditions of the Habana software license agreement [defined here](https://habana.ai/habana-outbound-software-license-agreement/).
 
 <br />
 
@@ -47,17 +59,10 @@ At the end of this flow you will be ready to continue to Habana's model referenc
 <br>
 
 ## SynapseAi Support Matrix
-Please refer to the [Release Notes](https://docs.habana.ai/en/latest/Release_Notes/GAUDI_Release_Notes.html#support-matrix) for the latest version of the Support Matrix, this support matrix illustrates the OS and Software structure that are used to support the SyanapseAI® Software stack.
+Please refer to the [Release Notes](https://docs.habana.ai/en/v1.0.1/Release_Notes/GAUDI_Release_Notes.html#support-matrix) for the latest version of the Support Matrix, this support matrix illustrates the OS and Software structure that are used to support the SyanapseAI® Software stack.
 
 ## Note on SW versioning
-Please make sure that the version of the SynapseAI software stack installation matches the version of the Docker images you are using. Our documentation on docs.habana.ai is also versioned, so select the appropriate version.  
-The Setup and Installation Github repository as well as the Model-References GitHub repository have branches for each release version. Make sure you are selecting the branch that matches the version of your SynapseAI software installation.  
-For example, if SynapseAI software version 1.0.1 is installed, then you would clone the Model-References repository like this: 
-```
-git clone -b 1.0.1 https://github.com/HabanaAI/Model-References
-```
- 
-To identify the SynapseAI software version installed, run the hl-smi tool and look at the “Driver Version”.
+The following documentation and packages correspond to the latest software release version from Habana: 1.0.1-81.  While using with this existing build, it is recommended to use the corresponding 1.0.1 Docker images and Models from the Habana Model-References repository.
 
 <br>
 
@@ -82,7 +87,147 @@ Please follow the directions from your cloud service provider to setup your inst
 
 <center>
 
-Please proceed to [Setup Complete](#Setup-Complete)
+There are currently three paths that can be taken when using cloud service. Please select a path  
+[AWS Deep Learning AMI](#AWS-Deep-Learning-AMI) • [Habana Deep Learning AMI from AWS Marketplace](#Habana-Deep-Learning-AMI-from-AWS-Marketplace) • [Build Your Own AMI](#Build-Your-Own-AMI)
+
+</center>
+
+<br />
+
+---
+
+<br />
+
+## AWS Deep Learning AMI
+
+When using the AWS DLAMI everything is pre-setup for execution.
+<br />
+
+<center>
+
+You can either run directly on the DLAMI using Habana Model-Refereneces, or launch a container for training  
+[Setup python path to run directly on DLAMI using Habana Model-Refereneces](#Setup-Python) • [Run using containers](#Do-you-want-to-use-prebuilt-docker-or-build-docker-yourself)
+
+</center>
+
+<br />
+
+---
+
+<br />
+
+## Setup Python
+The packages are installed in the below listed python interpreters.  
+Please setup the PYTHON variable if you would like to refer to the model-references:
+<details>
+<summary>Ubuntu distributions</summary>
+
+  * <details>
+    <summary>Ubuntu 18.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.7
+    ```
+  
+    </details>
+  * <details>
+    <summary>Ubuntu 20.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.8
+    ```
+    
+  </details>
+</details>
+<details>
+  <summary>CentOS/Amazon linux 2 distributions</summary>
+  
+  Please run the following to set python variable
+  ```
+  export PYTHON=/usr/bin/python3.7
+  ```
+
+</details>  
+<br>
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span>OS</span></th>
+    <th class="tg-4i2y" colspan="3">Python Version</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg">Ubuntu 18.04</td>
+    <td class="tg-7jin" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-h418">Ubuntu 20.04</td>
+    <td class="tg-yjv9" colspan="3">Python 3.8</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv">Centos</td>
+    <td class="tg-4p8a" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t">Amazon Linux 2</td>
+    <td class="tg-jp84" colspan="3">Python 3.7</td>
+  </tr>
+</tbody>
+</table>
+
+<br>
+<br>
+
+<center>
+
+Setup complete, please proceed to [Setup Complete](#Setup-Complete)
+
+</center>
+
+<br />
+
+---
+
+<br />
+
+## Habana Deep Learning AMI from AWS Marketplace
+
+<center>
+
+**--- Coming Soon ---**
+
+</center>
+
+When using the Habana Deep Learning AMI from AWS Marketplace, you can either directly use containers or install a framework and proceed from there to run directly on the AMI. 
+<br />
+
+<center>
+
+[Run using containers](#Do-you-want-to-use-prebuilt-docker-or-build-docker-yourself) • [Install Tensorflow and run directly on DLAMI](#Check-TFHorovod-Habana-packages) • [Install Pytorch and run directly on DLAMI](#Check-PT-Habana-packages)
+
+</center>
+
+<br />
+
+---
+
+<br />
+
+## Build Your Own AMI
+
+When building your own AMI, please follow the full setup flow to setup AMI.  
+In the following, you will be redirected to the On Premises instructions to follow the full setup flow.  
+Optionally you can also follow the [aws-habana-baseami-pipeline](https://github.com/aws-samples/aws-habana-baseami-pipeline) repo as a reference to building your own AMI.
+<br />
+
+<center>
+
+Please proceed to one of the following  
+[On Premises Full Setup](#On-Premises) • [aws-habana-baseami-pipeline](https://github.com/aws-samples/aws-habana-baseami-pipeline)
 
 </center>
 
@@ -290,7 +435,7 @@ sudo yum install -y sudo yum-utils
 ### Setup host firmware
 1. Remove the previous habanalabs-firmware package:
 ```
-sudo yum remove habanalabs*
+sudo yum remove habanalabs-firmware*
 ```
 2. Download and install habanalabs-firmware
 ```
@@ -362,7 +507,7 @@ sudo yum install -y sudo yum-utils
 ### Setup host firmware
 1. Remove the previous habanalabs-firmware package:
 ```
-sudo yum remove habanalabs*
+sudo yum remove habanalabs-firmware*
 ```
 2. Download and install habanalabs-firmware
 ```
@@ -400,19 +545,12 @@ sudo yum install habanalabs-1.0.1-81* -y
 ## Set number of huge pages
 Some training models use huge pages. It is recommended to set the number of huge pages as provided below:
 ```
-#calculate number of huge pages
-huge_pages_size=$(grep "^Hugepagesize:" /proc/meminfo | awk '{print $2}') 
-huge_pages_memory=$((110 * 1024)) # convert to kB 
-number_of_cores=$(lscpu | grep "^CPU(s):" | awk '{print $2}') 
-total_huge_pages_memory=$(($huge_pages_memory * $number_of_cores * 2)) 
-number_of_huge_pages=$(($total_huge_pages_memory / $huge_pages_size + 1)) 
-
 #set current hugepages
-sudo sysctl -w vm.nr_hugepages=$number_of_huge_pages
+sudo sysctl -w vm.nr_hugepages=15000
 #Remove old entry if exists in sysctl.conf
 sudo sed --in-place '/nr_hugepages/d' /etc/sysctl.conf
 #Insert huge pages settings to persist
-echo "vm.nr_hugepages=$number_of_huge_pages" | sudo tee -a /etc/sysctl.conf
+echo "vm.nr_hugepages=15000" | sudo tee -a /etc/sysctl.conf
 ```
 
 <center>
@@ -474,7 +612,7 @@ Please ensure the following software packages are installed on your system with 
 
 ### Optional packages:
 * habanalabs-firmware-tools – installs various Firmware tools (hlml, hl-smi, etc).
-* habanalabs-qual – installs the qualification application package. See See [Gaudi Qualification Library.](https://docs.habana.ai/en/latest/Qualification_Library/GAUDI_Qualification_Library.html)
+* habanalabs-qual – installs the qualification application package. See See [Gaudi Qualification Library.](https://docs.habana.ai/en/v1.0.1/Qualification_Library/GAUDI_Qualification_Library.html)
 * habanalabs-container-runtime - installs the container runtime library which eases selection of devices to be mounted in the container.
 * habanalabs-aeon – installs demo’s data loader.
 
@@ -876,6 +1014,138 @@ This section describes how to obtain and install the TensorFlow software package
 
 Base **habana-tensorflow** Python package - Libraries and modules needed to execute TensorFlow on a **single Gaudi** device.  
 Scale-out **habana-horovod** Python package - Libraries and modules needed to execute TensorFlow on **multiple Gaudi** devices.
+
+<br />
+
+---
+
+<br />
+
+The following example scripts include instructions from the steps [Base Installation (Single Node)](#Base-Installation-Single-Node) and [Scale-out Installation](#Scale-out-Installation) that can be used for your reference. The scripts install TF 2.5.1.
+
+Ubuntu 18.04 example script [u18_tensorflow_installation.sh](https://github.com/HabanaAI/Setup_and_Install/blob/r1.0.1/installation_scripts/u18_tensorflow_installation.sh).
+
+AmazonLinux2 example script [al2_tensorflow_installation.sh](https://github.com/HabanaAI/Setup_and_Install/blob/r1.0.1/installation_scripts/al2_tensorflow_installation.sh).
+
+<br />
+
+---
+
+<br />
+
+### Setup package fetching
+<details>
+<summary>Ubuntu distributions</summary>
+
+* <details>
+  <summary>Ubuntu 18.04</summary>
+
+  ### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian bionic main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+
+  </details>
+* <details>
+  <summary>Ubuntu 20.04</summary>
+
+  ### Setup package fetching
+  1. Download and install the public key:  
+  ```
+  curl -X GET https://vault.habana.ai/artifactory/api/gpg/key/public | sudo apt-key add -
+  ```
+  2. Create an apt source file /etc/apt/sources.list.d/artifactory.list
+  3. Add the following content to the artifactory.list file:
+  ```
+  deb https://vault.habana.ai/artifactory/debian focal main
+  ```
+  4. Update Debian cache:  
+  ```
+  sudo dpkg --configure -a
+  sudo apt-get update
+  ```  
+
+  </details>
+</details>
+
+<details>
+<summary>CentOS distributions</summary>
+
+### Setup package fetching
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
+```
+[vault]
+
+name=Habana Vault
+
+baseurl=https://vault.habana.ai/artifactory/centos7
+
+enabled=1
+
+gpgcheck=0
+
+gpgkey=https://vault.habana.ai/artifactory/centos7/repodata/repomod.xml.key
+
+repo_gpgcheck=0
+```
+3. Update YUM cache by running the following command:
+```
+sudo yum makecache
+```
+4. Verify correct binding by running the following command:
+```
+yum search habana
+```
+This will search for and list all packages with the word Habana.
+
+</details>
+<details>
+<summary>Amazon linux 2 distributions</summary>
+
+### Setup package fetching
+1. Create this file: /etc/yum.repos.d/Habana-Vault.repo
+2. Add the following content to the Habana-Vault.repo file:
+```
+[vault]
+
+name=Habana Vault
+
+baseurl=https://vault.habana.ai/artifactory/AmazonLinux2
+
+enabled=1
+
+gpgcheck=0
+
+gpgkey=https://vault.habana.ai/artifactory/AmazonLinux2/repodata/repomod.xml.key
+
+repo_gpgcheck=0
+```
+3. Update YUM cache by running the following command:
+```
+sudo yum makecache
+```
+4. Verify correct binding by running the following command:
+```
+yum search habana
+```
+This will search for and list all packages with the word Habana.
+
+</details>
+<br>
+<br>
+
 ### Base Installation (Single Node)
 The habana-tensorflow package contains all the binaries and scripts to run topologies on a single-node.  
 
@@ -886,13 +1156,16 @@ ${PYTHON} -m pip install tensorflow-cpu==<supported_tf_version>
 
 2. habana-tensorflow is available in the Habana Vault. To allow PIP to search for the habana-tensorflow package, –extra-index-url needs to be specified:
 ```
-${PYTHON} -m pip install habana-tensorflow --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install habana-tensorflow==1.0.1.81 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 ```
 3. Run the below command to make sure the habana-tensorflow package is properly installed:
 ```
 ${PYTHON} -c "import habana_frameworks.tensorflow as htf; print(htf.__version__)"
 ```
 If everything is set up properly, the above command will print the currently installed package version.
+
+<br>
+<br>
 
 #### Note: 
 habana-tensorflow contains libraries for all supported TensorFlow versions. It is delivered under Linux tag, but the package is compatible with manylinux2010 tag (same as TensorFlow).
@@ -908,7 +1181,22 @@ Install the habana-horovod package to get multi-node support. The following list
 * OpenMPI 4.0.5.
 * Stock horovod package must not be installed.
 
-1. Set up the OpenMPI 4.0.5 as shown below:
+1. Install packages required to compile OpenMPI and Habana Horovod.   
+
+For Ubuntu 18:
+```
+sudo apt install -y python3.7-dev
+sudo apt install -y wget
+```
+For AmazonLinux2:
+```
+sudo yum groupinstall -y "Development Tools"
+sudo yum install -y system-lsb-core cmake
+sudo yum install -y wget
+sudo yum install -y python3-devel
+```
+
+2. Set up the OpenMPI 4.0.5 as shown below:
 ```
 wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz
 gunzip -c openmpi-4.0.5.tar.gz | tar xf -
@@ -922,16 +1210,72 @@ export LD_LIBRARY_PATH=$MPI_ROOT/lib:$LD_LIBRARY_PATH
 export OPAL_PREFIX=$MPI_ROOT
 export PATH=$MPI_ROOT/bin:$PATH
 ```
-2. habana-horovod is also stored in the Habana Vault. To allow PIP to search for the habana-horovod package, –extra-index-url needs to be specified:
+Install mpi4py binding
 ```
-${PYTHON} -m pip install habana-horovod --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+python3 -m pip install mpi4py==3.0.3
 ```
-
-#### For TensorFlow Distributed:
-To get scale-out capabilities on TensorFlow distributed, no additional packages other than **habana-tensorflow** package needs to be installed. Unlike Horovod, neither tf.distribute nor HPUStrategy use/require OpenMPI at any point. Worker processes can be initialized in any way. Refer to [Model References repository](https://github.com/HabanaAI/Model-References/tree/1.0.1) for an example using mpirun, as it offers process-to-core binding mechanism. Installing OpenMPI as described above in [For Horovod Distributed](For-Horovod-Distributed) is recommended.
+3. habana-horovod is also stored in the Habana Vault. To allow PIP to search for the habana-horovod package, –extra-index-url needs to be specified:
+```
+${PYTHON} -m pip install habana-horovod==1.0.1.81 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+```
 
 #### See also:
-To learn more about the TensorFlow distributed training on Gaudi, see [Distributed Training with TensorFlow](https://docs.habana.ai/en/latest/Tensorflow_Scaling_Guide/TensorFlow_Gaudi_Scaling_Guide.html#distributed-training-with-tensorflow).
+To learn more about the TensorFlow distributed training on Gaudi, see [Distributed Training with TensorFlow](https://docs.habana.ai/en/v1.0.1/Tensorflow_Scaling_Guide/TensorFlow_Gaudi_Scaling_Guide.html#distributed-training-with-tensorflow).
+<br>
+<br>
+
+### Model references requirements
+Habana provides a number of model references optimized to run on Gaudi. Those models are available in the [Model-References](https://github.com/HabanaAI/Model-References/tree/1.0.1/) page.  
+Many of the references require additional 3rd party packages, not provided by Habana. This chapter describes the process of installing them.  
+Packages required by the model references are of two types:  
+* System packages, installed with OS packet manager (e.g. apt in case of Ubuntu)
+* Python packages, installed with pip tools
+
+There are 3 required system packages:  
+* libjemalloc
+* protobuf-compiler
+* libGL
+
+<details>
+<summary>Ubuntu 18.04</summary>
+
+```
+sudo apt install -y libjemalloc1
+sudo apt install -y protobuf-compiler
+sudo apt install -y libgl1
+```
+
+#### Note: 
+An example script for Ubuntu18 installing these OS packages is available for your reference: [u18_tensorflow_models_dependencies_installation.sh](https://github.com/HabanaAI/Setup_and_Install/blob/r1.0.1/installation_scripts/u18_tensorflow_models_dependencies_installation.sh)
+<br>
+<br>
+</details>
+
+<details>
+<summary>Amazon linux 2 distributions</summary>
+
+```
+sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo yum install -y jemalloc
+sudo yum install -y mesa-libGL
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+sudo unzip protoc-3.6.1-linux-x86_64.zip -d /usr/local/protoc
+rm -rf protoc-3.6.1-linux-x86_64.zip
+```
+
+#### Note: 
+An example script for AmazonLinux2 installing these OS packages is available for your reference: [al2_tensorflow_models_dependencies_installation.sh](https://github.com/HabanaAI/Setup_and_Install/blob/r1.0.1/installation_scripts/al2_tensorflow_models_dependencies_installation.sh)
+<br>
+
+</details>
+<br>
+
+Python dependencies are gatehered in [model_requirements.txt](https://github.com/HabanaAI/Setup_and_Install/blob/r1.0.1/installation_scripts/model_requirements.txt)
+
+Download the file and invoke:
+```
+python3 -m pip install -r model_requirements.txt
+```
 
 <br />
 
@@ -1119,7 +1463,7 @@ Check for habana-torch and habana-torch-hcl
 <center>
 
 ### Do you want to use prebuilt docker or build docker yourself?
-[Prebuilt](#Habana-Prebuilt-Containers) • [Build Docker](#How-to-Build-Docker-Images-from-Habana-Dockerfiles)
+[Prebuilt](#Habana-Prebuilt-Containers-or-AWS-Deep-Learning-Containers) • [Build Docker](#How-to-Build-Docker-Images-from-Habana-Dockerfiles)
 
 </center>
 
@@ -1518,6 +1862,17 @@ Please setup the PYTHON variable inside the docker if you would like to refer to
 Setup complete, please proceed to [Setup Complete](#Setup-Complete)
 
 </center>
+
+<br />
+
+---
+
+<br />
+
+## Habana Prebuilt Containers or AWS Deep Learning Containers
+
+### Use Habana Prebuilt Containers or AWS Deep Learning Containers?
+[Habana Prebuilt Containers](#Habana-Prebuilt-Containers) • [AWS Deep Learning Containers](#AWS-Deep-Learning-Containers)
 
 <br />
 
@@ -2053,6 +2408,93 @@ Setup complete, please proceed to [Setup Complete](#Setup-Complete)
 
 <br />
 
+## AWS Deep Learning Containers
+
+Please refer to the following instructions on how to setup and use AWS Deep Learning Containers:
+[AWS Available Deep Learning Containers Images](https://github.com/aws/deep-learning-containers/blob/master/available_images.md#habana-training-containers)
+
+
+### Setup Python Path
+The packages are installed in the below listed python interpreters.  
+Please setup the PYTHON variable inside the docker if you would like to refer to the model-references:
+<details>
+<summary>Ubuntu distributions</summary>
+
+  * <details>
+    <summary>Ubuntu 18.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.7
+    ```
+  
+    </details>
+  * <details>
+    <summary>Ubuntu 20.04</summary>
+  
+    Please run the following to set python variable
+    ```
+    export PYTHON=/usr/bin/python3.8
+    ```
+    
+  </details>
+</details>
+<details>
+  <summary>CentOS/Amazon linux 2 distributions</summary>
+  
+  Please run the following to set python variable
+  ```
+  export PYTHON=/usr/bin/python3.7
+  ```
+
+</details>  
+<br>
+
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-tlu0"><span>OS</span></th>
+    <th class="tg-4i2y" colspan="3">Python Version</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-efrg">Ubuntu 18.04</td>
+    <td class="tg-7jin" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-h418">Ubuntu 20.04</td>
+    <td class="tg-yjv9" colspan="3">Python 3.8</td>
+  </tr>
+  <tr>
+    <td class="tg-c1uv">Centos</td>
+    <td class="tg-4p8a" colspan="3">Python 3.7</td>
+  </tr>
+  <tr>
+    <td class="tg-po5t">Amazon Linux 2</td>
+    <td class="tg-jp84" colspan="3">Python 3.7</td>
+  </tr>
+</tbody>
+</table>
+
+<br>
+<br>
+
+
+<br />
+
+<center>
+
+Setup complete, please proceed to [Setup Complete](#Setup-Complete)
+
+</center>
+
+<br />
+
+---
+
+<br />
+
 ## Setup Complete
 Congratulations! Your system should now be setup and ready to run models!
 
@@ -2131,7 +2573,7 @@ This will list each card's frequency. Please make sure they are set as expected.
 
 ### habanalabs-qual
 For some qualification tests, please refer to the following document on how to run and use habanalabs-qual:  
-[GAUDI_Qualification_Library](https://docs.habana.ai/en/latest/Qualification_Library/GAUDI_Qualification_Library.html)
+[GAUDI_Qualification_Library](https://docs.habana.ai/en/v1.0.1/Qualification_Library/GAUDI_Qualification_Library.html)
 
 ### CPU Performance Settings
 Check that the CPU setting are set to performance:
@@ -2151,10 +2593,10 @@ echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governo
 
 ## Additional links
 For any additional information about installation, please refer to the following link:  
-[Installation Guide](https://docs.habana.ai/en/latest/Installation_Guide/GAUDI_Installation_Guide.html)
+[Installation Guide](https://docs.habana.ai/en/v1.0.1/Installation_Guide/GAUDI_Installation_Guide.html)
 
 For any additional debugging assistance, please refer to the following link:  
-[Debugging Guide](https://docs.habana.ai/en/latest/Debugging_Guide/Debugging_Guide.html)
+[Debugging Guide](https://docs.habana.ai/en/v1.0.1/Debugging_Guide/Debugging_Guide.html)
 
 <br />
 
@@ -2164,7 +2606,8 @@ For any additional debugging assistance, please refer to the following link:
 
 ## Additional scripts and add-ons
 ### manage_network_ifs.sh
-This script is used to bring up, take down, set IPs, unset IPs and check for status of the Habana network interfaces.
+This script is used to bring up, take down, set IPs, unset IPs and check for status of the Habana network interfaces.  
+The script is installed as part of the habanalabs-dkms package in the following path: "/opt/habanalabs/scripts/habanalabs/manage_network_ifs.sh". 
 
 The following is the usage of the script:
 
