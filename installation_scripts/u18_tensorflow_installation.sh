@@ -31,6 +31,7 @@ echo "export OPAL_PREFIX=${MPI_ROOT}" | sudo tee -a /etc/profile.d/habanalabs.sh
 echo 'export LD_LIBRARY_PATH=${MPI_ROOT}/lib:${LD_LIBRARY_PATH}' | sudo tee -a /etc/profile.d/habanalabs.sh
 echo 'export PATH=${MPI_ROOT}/bin:${PATH}' | sudo tee -a /etc/profile.d/habanalabs.sh
 
+sudo apt update
 sudo apt install -y python3.7-dev # mpi4py
 sudo apt install -y wget
 
@@ -49,11 +50,11 @@ wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"$
 python3 -m pip install mpi4py==3.0.3
 
 #install base tensorflow package
-python3 -m pip install tensorflow-cpu==2.5.1
-#instal Habana tensorflow bridge & Horovod
-python3 -m pip install habana-tensorflow==1.0.1.81 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
-python3 -m pip install habana-horovod==1.0.1.81 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+python3 -m pip install tensorflow-cpu==2.6.0
+#install Habana tensorflow bridge & Horovod
+python3 -m pip install habana-tensorflow==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+python3 -m pip install habana-horovod==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 
 source /etc/profile.d/habanalabs.sh
-python3 -c 'import tensorflow as tf;import habana_frameworks.tensorflow as htf;htf.library_loader.load_habana_module();x = tf.constant(2);y = x + x;assert y.numpy() == 4, "Sanity check failed: Wrong Add output";assert "HPU" in y.device, "Sanity check failed: Operation not executed on Habana";print("Sanity check passed")'
+python3 -c 'import tensorflow as tf;import habana_frameworks.tensorflow as htf;htf.load_habana_module();x = tf.constant(2);y = x + x;assert y.numpy() == 4, "Sanity check failed: Wrong Add output";assert "HPU" in y.device, "Sanity check failed: Operation not executed on Habana";print("Sanity check passed")'
 

@@ -53,3 +53,6 @@ transformers==4.6.1
 # retinanet requirements
 scikit-learn==0.24.2
 seqeval==1.2.2
+
+# orange_online requirements
+pathlib2==2.3.6

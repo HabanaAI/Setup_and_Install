@@ -7,6 +7,7 @@ ARG BASE_NAME
 ARG VERSION
 ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
+ARG PT_VERSION
 ARG VERSION
 ARG REVISION
 ARG BASE_NAME
@@ -26,7 +27,8 @@ RUN apt-get update && apt-get install -y \
     libcairo2-dev \
     libglib2.0-dev \
     libselinux1-dev \
-    libpcre2-dev && \
+    libpcre2-dev \
+    libjpeg-dev && \
     apt-get clean
 
 RUN bash -c "\
@@ -57,23 +59,22 @@ ENV PATH=$MPI_ROOT/bin:$PATH
 RUN MPICC=/usr/local/openmpi/bin/mpicc pip install mpi4py==3.0.3 --no-cache-dir
 
 RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
-/ubuntu${OS_NUMBER}/binary/pytorch_modules-"${VERSION}"_"${REVISION}".tgz && \
+/ubuntu${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir -p /root/habanalabs/pytorch_temp && \
-    tar -xf pytorch_modules-"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
-    mv /root/habanalabs/pytorch_temp/*.so /usr/lib/habanalabs/ && \
-    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --user --no-warn-script-location && \
+    tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
+    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \
     pip uninstall --yes torch && \
-    pip install /root/habanalabs/pytorch_temp/*.whl --user && \
+    pip install /root/habanalabs/pytorch_temp/*.whl && \
     /sbin/ldconfig && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     pip uninstall -y pillow && \
     pip uninstall -y pillow-simd && \
-    pip install pillow-simd==7.0.0.post3 --user && \
+    pip install pillow-simd==7.0.0.post3 && \
     rm -rf /root/habanalabs/pytorch_temp/ && \
-    rm -rf pytorch_modules-"${VERSION}"_"${REVISION}".tgz
+    rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 # requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
 # pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib:/usr/lib/habanalabs:/usr/local/openmpi/lib/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs:/usr/local/openmpi/lib/
 
 RUN rm -rf /tmp/*

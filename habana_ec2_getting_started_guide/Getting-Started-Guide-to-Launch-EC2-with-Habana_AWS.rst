@@ -67,7 +67,7 @@ Pull Habana Docker Images
 =========================
 
 Follow the guide located at
-https://github.com/HabanaAI/Setup_and_Install/tree/r1.0.1#pull-and-run-commands to
+https://github.com/HabanaAI/Setup_and_Install/tree/r1.1.0#pull-and-run-commands to
 pull and run the Habana Docker Images for Tensorflow and Pytorch.
 
 Release Notes for Habana Amazon Machine Images on AWS
@@ -93,7 +93,7 @@ Versioning
 
 Here is the Release Notes of the Gaudi Architecture and software
 
-https://docs.habana.ai/en/v1.0.1/Release_Notes/GAUDI_Release_Notes.html
+https://docs.habana.ai/en/v1.1.0/Release_Notes/GAUDI_Release_Notes.html
 
 Image Name
 ~~~~~~~~~~

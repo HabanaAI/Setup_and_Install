@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for Amazon Linux 2
+# HabanaLabs Dockerfile PyTorch installer layer for RHEL 8.3
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -12,35 +12,31 @@ ARG VERSION
 ARG REVISION
 ARG ARTIFACTORY_URL
 ARG OPENMPI_VER=4.0.5
+ARG HABANA_PIP_VERSION="21.0.1"
 
+ENV SETUPTOOLS_VERSION=41.0.0
 ENV LANG=en_US.UTF-8
 
-RUN yum install -y \
+RUN dnf install -y \
     unzip \
     openssh-clients \
     openssh-server \
     curl \
     redhat-lsb-core \
-    openmpi-devel \
     cairo-devel \
     iproute \
     git \
     which \
     libjpeg-devel \
+    python38-devel \
     zlib-devel && \
-    yum clean all
+    dnf clean all && rm -rf /var/cache/yum
 
-RUN amazon-linux-extras install epel -y
-RUN yum install -y \
-    moreutils && \
-    yum clean all
-
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py pip==21.0.1 --no-warn-script-location && \
-    rm -rf get-pip.py
+RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip3 install setuptools=="${SETUPTOOLS_VERSION}"
 
 RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
-    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
+    tar -xf openmpi-"${OPENMPI_VER}".tar.gz && \
     cd openmpi-"${OPENMPI_VER}" && \
     ./configure --prefix="/usr/local/openmpi" && \
     make -j && \
@@ -56,7 +52,7 @@ ENV PATH=$MPI_ROOT/bin:$PATH
 RUN MPICC=/usr/local/openmpi/bin/mpicc pip3 install mpi4py==3.0.3 --no-cache-dir
 
 RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
-/amzn2/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
+/rhel83/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     pip3 install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \

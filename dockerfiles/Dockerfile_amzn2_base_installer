@@ -18,7 +18,7 @@ RUN yum update -y && yum install -y \
     lsof
 
 # Install jemalloc-3.6.0-1.el7.x86_64 package with required /lib64/libjemalloc.so.1 lib need for topologies
-RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm && \
     yum install -y jemalloc && \
     yum clean all && rm -rf /var/cache/yum
 
@@ -33,7 +33,8 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
 
 RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".amzn2 \
-        habanalabs-graph-"$VERSION"-"$REVISION".amzn2
+        habanalabs-graph-"$VERSION"-"$REVISION".amzn2 \
+        habanalabs-aeon-"$VERSION"-"$REVISION".amzn2
 
 RUN rm -f /etc/yum.repos.d/habanalabs.repo && \
     yum clean all && rm -rf /var/cache/yum

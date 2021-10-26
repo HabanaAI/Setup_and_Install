@@ -1,0 +1,63 @@
+# Copyright (c) 2021 Habana Labs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile base installer layer for RedHat 8.3
+FROM registry.access.redhat.com/ubi8/ubi:8.3
+ARG ARTIFACTORY_URL
+ARG VERSION
+ARG REVISION
+
+RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
+    dnf clean all && rm -rf /var/cache/yum
+
+RUN echo "[appstream]" > /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
+    echo "name=CentOS Linux 8 - AppStream" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
+    echo "mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=AppStream&infra=\$infra" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
+    echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo
+
+RUN dnf install -y \
+    sudo \
+    redhat-lsb-core \
+    wget \
+    gcc \
+    gcc-c++ \
+    glibc \
+    glibc-headers \
+    glibc-devel \
+    cpp \
+    clang \
+    llvm \
+    jemalloc \
+    cmake3 \
+    libarchive && \
+    dnf clean all && rm -rf /var/cache/yum
+
+RUN dnf module install python38 -y && \
+    rm -f /etc/alternatives/python3 && \
+    ln -s /usr/bin/python3.8 /etc/alternatives/python3 && \
+    rm -f /etc/alternatives/pip3 && \
+    ln -s /usr/bin/pip3.8 /etc/alternatives/pip3
+
+RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
+    echo "name=Habana RH8 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.3" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.3/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+
+RUN echo "[powertools]" > /etc/yum.repos.d/powertools.repo && \
+    echo "name=powertools" >> /etc/yum.repos.d/powertools.repo && \
+    echo "baseurl=http://mirror.centos.org/centos/8-stream/PowerTools/x86_64/os/"  >> /etc/yum.repos.d/powertools.repo && \
+    echo "gpgcheck=0" >> /etc/yum.repos.d/powertools.repo
+
+RUN dnf install -y habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
+        habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
+        habanalabs-graph-"$VERSION"-"$REVISION".el8 \
+        habanalabs-aeon-"$VERSION"-"$REVISION".el8
+
+RUN rm -f /etc/yum.repos.d/habanalabs.repo && rm -rf /tmp/* && \
+    dnf clean all && rm -rf /var/cache/yum
+
+RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
+RUN export LANG=en_US.UTF-8
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
+ENV HABANA_LOGS=/var/log/habana_logs/

@@ -9,7 +9,8 @@ ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
-ARG TF_VERSION=2.5.1
+ARG TF_MINOR
+ARG TF_VERSION=2.5.0
 ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
 
@@ -55,11 +56,12 @@ COPY requirements-training-release.txt requirements-training-release.txt
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py pip==21.0.1 && \
     rm -rf get-pip.py && \
-    pip3 install -r requirements-training-release.txt && \
     pip3 install tensorflow-cpu==${TF_VERSION} \
-         tensorflow-model-optimization==0.5.0 && \
+        tensorflow_text==${TF_MINOR} \
+        tensorflow-model-optimization==0.5.0 && \
     # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
     pip3 install pycocotools==2.0.1 && \
+    pip3 install -r requirements-training-release.txt && \
     rm requirements-training-release.txt
 
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \

@@ -1,0 +1,44 @@
+# Copyright (c) 2021 Habana Labs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile base installer layer for Centos 8
+
+FROM centos:8
+ARG ARTIFACTORY_URL
+ARG VERSION
+ARG REVISION
+
+RUN dnf update -y && dnf install -y \
+    python38 \
+    python38-devel \
+    python38-tkinter \
+    wget \
+    sudo \
+    cmake \
+    lsof \
+    epel-release && \
+    dnf install -y jemalloc && \
+    dnf groupinstall -y "Development Tools" && \
+    dnf clean all && rm -rf /var/cache/dnf && \
+    # Layer saving files to /tmp
+    rm -rf /tmp/*
+
+RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
+    echo "name=Habana CentOS 8.3 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/centos" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/centos/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+
+# some dependent packages for habanalabs-aeon can only be installed from 8-stream PowerTools
+RUN sed -i 's/\$releasever/8-stream/g' /etc/yum.repos.d/CentOS-Linux-PowerTools.repo
+
+RUN dnf install -y --enablerepo=powertools habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
+        habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
+        habanalabs-graph-"$VERSION"-"$REVISION".el8 \
+        habanalabs-aeon-"$VERSION"-"$REVISION".el8 && \
+    dnf clean all && rm -rf /var/cache/dnf
+
+RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
+RUN export LANG=en_US.UTF-8
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
+ENV HABANA_LOGS=/var/log/habana_logs/

@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile Tensorflow installer layer for Ubuntu18.04/Ubuntu20.04
+# HabanaLabs Dockerfile Tensorflow installer layer for CentOS 8.3
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -13,13 +13,26 @@ ARG TF_MINOR
 ARG TF_VERSION=2.5.0
 ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
+ARG HABANA_PIP_VERSION="21.1.1"
 
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
-ENV PYTHONPATH=/usr/lib/habanalabs/:/root
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
 ENV PATH=$PATH:/usr/local/openmpi/bin/
 ENV OPAL_PREFIX=/usr/local/openmpi/
 ENV MPI_ROOT=/usr/local/openmpi/
+
+# Install unzip to extract pre-trained weights for BERT demo
+RUN dnf install -y unzip \
+        openssh-clients \
+        openssh-server \
+        git \
+        bc \
+        mesa-libGL && \
+    dnf clean all && rm -rf /var/cache/dnf
+
+RUN dnf --enablerepo=powertools install -y protobuf-devel && \
+    dnf clean all && rm -rf /var/cache/dnf
 
 # Install OpenMpi from public sources - it must be installed before requirements,
 # that has dependecy with mpi4py package
@@ -38,8 +51,10 @@ ENV MPICC=/usr/local/openmpi/bin/mpicc
 
 COPY requirements-training-release.txt requirements-training-release.txt
 
-RUN python3 -m pip install pip==21.0.1 && \
-    pip3 install tensorflow-cpu==${TF_VERSION} \
+RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip3 install setuptools==41.0.0
+
+RUN pip3 install tensorflow-cpu==${TF_VERSION} \
         tensorflow_text==${TF_MINOR} \
         tensorflow-model-optimization==0.5.0 && \
     # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
@@ -50,8 +65,8 @@ RUN python3 -m pip install pip==21.0.1 && \
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
-        --index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \
-    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
-    echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
+        --index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple
 
-RUN rm -rf /tmp/*
+RUN /usr/bin/ssh-keygen -A && \
+    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
+    echo "/usr/sbin/sshd -p 3022" >> ~/.bashrc

@@ -23,9 +23,10 @@ RUN apt-get update && \
     apt-transport-https \
     apt-utils \
     ethtool \
+    gnupg \
     gpg-agent \
     libjemalloc1 \
-    software-properties-common \
+    lsb-release \
     wget && \
     apt-get autoremove && apt-get clean
 
@@ -36,11 +37,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     graphviz \
     libgoogle-glog0v5 \
-    libopencv-dev \
     libpq-dev \
     locales \
     make \
-    protobuf-compiler && \
+    protobuf-compiler \
+    libgl1 && \
     apt-get autoremove && apt-get clean
 
 RUN apt-get update && \
@@ -78,19 +79,14 @@ RUN python3 -m pip install --no-cache-dir pip=="${HABANA_PIP_VERSION}" && \
     pip3 config set global.no-cache-dir false && \
     pip3 install setuptools==41.0.0
 
-# Required symlinks for fix cannot import modues _gi, apt_pkg after python 3.7 installation in add-apt-repository script
-RUN ln -s /usr/lib/python3/dist-packages/apt_pkg.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/apt_pkg.so && \
-    ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/gi/_gi.cpython-37m-x86_64-linux-gnu.so
-
-RUN yes '' | add-apt-repository ppa:deadsnakes/ppa && \
-    echo "deb https://${ARTIFACTORY_URL}/artifactory/debian bionic main" | tee -a /etc/apt/sources.list && \
+RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian bionic main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
     apt-key add public && rm public
 
 RUN apt-get update && \
     apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
-        habanalabs-graph="$VERSION"-"$REVISION" && \
-        apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
+        habanalabs-graph="$VERSION"-"$REVISION" \
+        habanalabs-aeon="$VERSION"-"$REVISION" && \
+        apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
