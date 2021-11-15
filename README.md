@@ -17,9 +17,9 @@
         - [Check Habana Package Installation for no Docker](#check-habana-package-installation-for-no-docker)
         - [Install SW Stack](#install-sw-stack)
         - [Check TF/Horovod Habana packages](#check-tfhorovod-habana-packages)
-        - [Install TF/Horovod Habana python packages](#install-tfhorovod-habana-python-packages)
+        - [Install TF/Horovod Habana packages](#install-tfhorovod-habana-packages)
         - [Check PT Habana packages](#check-pt-habana-packages)
-        - [Install PT Habana python packages](#install-pt-habana-python-packages)
+        - [Install PT Habana packages](#install-pt-habana-packages)
       - Docker
         - [Do you want to use prebuilt docker or build docker yourself?](#do-you-want-to-use-prebuilt-docker-or-build-docker-yourself)
         - [How to Build Docker Images from Habana Dockerfiles](#how-to-build-docker-images-from-habana-dockerfiles)
@@ -195,12 +195,6 @@ Setup complete, please proceed to [Setup Complete](#Setup-Complete)
 <br />
 
 ## Habana Deep Learning AMI from AWS Marketplace
-
-<center>
-
-**--- Coming Soon ---**
-
-</center>
 
 When using the Habana Deep Learning AMI from AWS Marketplace, you can either directly use containers or install a framework and proceed from there to run directly on the AMI. 
 <br />
@@ -999,7 +993,7 @@ ${PYTHON} -m pip list | grep habana
 <center>
 
 ### Are the required python packages installed on your system?
-[Yes](#Setup-Complete) • [No](#Install-TFHorovod-Habana-python-packages)
+[Yes](#Setup-Complete) • [No](#Install-TFHorovod-Habana-packages)
 
 </center>
 
@@ -1009,7 +1003,7 @@ ${PYTHON} -m pip list | grep habana
 
 <br />
 
-## Install TF/Horovod Habana python packages
+## Install TF/Horovod Habana packages
 This section describes how to obtain and install the TensorFlow software package. The package consists of two main components:  
 
 Base **habana-tensorflow** Python package - Libraries and modules needed to execute TensorFlow on a **single Gaudi** device.  
@@ -1021,7 +1015,9 @@ Scale-out **habana-horovod** Python package - Libraries and modules needed to ex
 
 <br />
 
-The following example scripts include instructions from the steps [Base Installation (Single Node)](#Base-Installation-Single-Node) and [Scale-out Installation](#Scale-out-Installation) that can be used for your reference. The scripts install TF 2.5.0.
+The following example scripts include instructions from the steps [Base Installation (Single Node)](#Base-Installation-Single-Node) and [Scale-out Installation](#Scale-out-Installation) that can be used for your reference. The scripts install TF 2.5.0.  
+The scripts are using Python3 from ``/usr/bin/`` with version according to the [Support Matrix](#SynapseAi-Support-Matrix).  
+Make sure, that Python3 is installed there, and if not, update the bash scripts with appropriate ``PYTHON=<path>``.
 
 Ubuntu 18.04 example script [u18_tensorflow_installation.sh](https://github.com/HabanaAI/Setup_and_Install/blob/r0.15.4/installation_scripts/u18_tensorflow_installation.sh).
 
@@ -1149,14 +1145,19 @@ This will search for and list all packages with the word Habana.
 ### Base Installation (Single Node)
 The habana-tensorflow package contains all the binaries and scripts to run topologies on a single-node.  
 
-1. Before installing habana-tensorflow, install supported TensorFlow version. See [Support Matrix](#SynapseAi-Support-Matrix). If no TensorFlow package is available, PIP will automatically fetch it.
+
+1. All the steps listed below are using to ``${PYTHON}`` environment variable, which must be set to appropriate version of Python, according to [Support Matrix](#SynapseAi-Support-Matrix).  
 ```
-${PYTHON} -m pip install tensorflow-cpu==<supported_tf_version>
+export PYTHON=/usr/bin/python<VER> # i.e. for U18 it's PYTHON=/usr/bin/python3.7
+```
+2. Before installing habana-tensorflow, install supported TensorFlow version. See [Support Matrix](#SynapseAi-Support-Matrix). If no TensorFlow package is available, PIP will automatically fetch it.
+```
+${PYTHON} -m pip install --user tensorflow-cpu==<supported_tf_version>
 ```
 
 2. habana-tensorflow is available in the Habana Vault. To allow PIP to search for the habana-tensorflow package, –extra-index-url needs to be specified:
 ```
-${PYTHON} -m pip install habana-tensorflow==0.15.4.75 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install --user habana-tensorflow==0.15.4.75 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 ```
 3. Run the below command to make sure the habana-tensorflow package is properly installed:
 ```
@@ -1214,11 +1215,11 @@ export PATH=$MPI_ROOT/bin:$PATH
 ```
 Install mpi4py binding
 ```
-python3 -m pip install mpi4py==3.0.3
+${PYTHON} -m pip install --user mpi4py==3.0.3
 ```
 3. habana-horovod is also stored in the Habana Vault. To allow PIP to search for the habana-horovod package, –extra-index-url needs to be specified:
 ```
-${PYTHON} -m pip install habana-horovod==0.15.4.75 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install --user habana-horovod==0.15.4.75 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 ```
 
 #### See also:
@@ -1276,7 +1277,7 @@ Python dependencies are gatehered in [model_requirements.txt](https://github.com
 
 Download the file and invoke:
 ```
-python3 -m pip install -r model_requirements.txt
+${PYTHON} -m pip install --user -r model_requirements.txt
 ```
 
 <br />
@@ -1373,7 +1374,7 @@ Check for habana-torch and habana-torch-hcl
 <center>
 
 ### Are the required python packages installed on your system?
-[Yes](#Setup-Complete) • [No](#Install-PT-Habana-python-packages)
+[Yes](#Setup-Complete) • [No](#Install-PT-Habana-packages)
 
 </center>
 
@@ -1383,7 +1384,7 @@ Check for habana-torch and habana-torch-hcl
 
 <br />
 
-## Install PT Habana python packages
+## Install PT Habana packages
 ### Install Habana Pytorch
 <details>
 <summary>Ubuntu distributions</summary>
