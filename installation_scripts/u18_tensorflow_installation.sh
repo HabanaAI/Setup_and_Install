@@ -26,6 +26,7 @@ export MPI_ROOT=/usr/local/openmpi
 export LD_LIBRARY_PATH=$MPI_ROOT/lib:$LD_LIBRARY_PATH
 export OPAL_PREFIX=$MPI_ROOT
 export PATH=$MPI_ROOT/bin:$PATH
+export PYTHON=/usr/bin/python3.7
 echo "export MPI_ROOT=${MPI_ROOT}" | sudo tee -a /etc/profile.d/habanalabs.sh
 echo "export OPAL_PREFIX=${MPI_ROOT}" | sudo tee -a /etc/profile.d/habanalabs.sh
 echo 'export LD_LIBRARY_PATH=${MPI_ROOT}/lib:${LD_LIBRARY_PATH}' | sudo tee -a /etc/profile.d/habanalabs.sh
@@ -47,14 +48,17 @@ wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"$
     rm -rf openmpi-"${OPENMPI_VER}"* && \
     sudo /sbin/ldconfig
 
-python3 -m pip install mpi4py==3.0.3
+${PYTHON} -m pip install --user mpi4py==3.0.3
 
+# workaround for broken dependency in TF2.6.0 after release of TF packages for version 2.7.0
+${PYTHON} -m pip install --user tensorflow-estimator==2.6.0
+${PYTHON} -m pip install --user tensorboard==2.6.0
+${PYTHON} -m pip install --user keras==2.6.0
 #install base tensorflow package
-python3 -m pip install tensorflow-cpu==2.6.0
+${PYTHON} -m pip install --user tensorflow-cpu==2.6.0
 #install Habana tensorflow bridge & Horovod
-python3 -m pip install habana-tensorflow==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
-python3 -m pip install habana-horovod==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install --user habana-tensorflow==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install --user habana-horovod==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 
 source /etc/profile.d/habanalabs.sh
-python3 -c 'import tensorflow as tf;import habana_frameworks.tensorflow as htf;htf.load_habana_module();x = tf.constant(2);y = x + x;assert y.numpy() == 4, "Sanity check failed: Wrong Add output";assert "HPU" in y.device, "Sanity check failed: Operation not executed on Habana";print("Sanity check passed")'
-
+${PYTHON} -c 'import tensorflow as tf;import habana_frameworks.tensorflow as htf;htf.load_habana_module();x = tf.constant(2);y = x + x;assert y.numpy() == 4, "Sanity check failed: Wrong Add output";assert "HPU" in y.device, "Sanity check failed: Operation not executed on Habana";print("Sanity check passed")'

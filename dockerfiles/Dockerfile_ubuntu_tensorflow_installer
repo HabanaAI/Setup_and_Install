@@ -10,7 +10,7 @@ FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
 ARG TF_MINOR
-ARG TF_VERSION=2.5.0
+ARG TF_VERSION=2.6.0
 ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
 
@@ -39,7 +39,10 @@ ENV MPICC=/usr/local/openmpi/bin/mpicc
 COPY requirements-training-release.txt requirements-training-release.txt
 
 RUN python3 -m pip install pip==21.0.1 && \
-    pip3 install tensorflow-cpu==${TF_VERSION} \
+    pip3 install tensorflow-estimator==${TF_MINOR} \
+        tensorboard==${TF_MINOR} \
+        keras==${TF_MINOR} \
+        tensorflow-cpu==${TF_VERSION} \
         tensorflow_text==${TF_MINOR} \
         tensorflow-model-optimization==0.5.0 && \
     # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
