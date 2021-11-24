@@ -23,6 +23,7 @@ RUN dnf install -y \
     openssh-server \
     curl \
     redhat-lsb-core \
+    openmpi-devel \
     cairo-devel \
     iproute \
     git \

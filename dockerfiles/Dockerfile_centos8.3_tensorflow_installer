@@ -9,8 +9,7 @@ ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
-ARG TF_MINOR
-ARG TF_VERSION=2.6.0
+ARG TF_VERSION
 ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
 ARG HABANA_PIP_VERSION="21.1.1"
@@ -50,20 +49,18 @@ RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmp
 ENV MPICC=/usr/local/openmpi/bin/mpicc
 
 COPY requirements-training-release.txt requirements-training-release.txt
+COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
     pip3 install setuptools==41.0.0
 
-RUN pip3 install tensorflow-estimator==${TF_MINOR} \
-        tensorboard==${TF_MINOR} \
-        keras==${TF_MINOR} \
-        tensorflow-cpu==${TF_VERSION} \
-        tensorflow_text==${TF_MINOR} \
+RUN pip3 install tensorflow-cpu==${TF_VERSION} \
         tensorflow-model-optimization==0.5.0 && \
+    pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \
     # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
     pip3 install pycocotools==2.0.1 && \
     pip3 install -r requirements-training-release.txt && \
-    rm requirements-training-release.txt
+    rm requirements-training-release.txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
         --index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \

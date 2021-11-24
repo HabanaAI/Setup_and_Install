@@ -19,6 +19,7 @@ RUN dnf update -y && dnf install -y \
     lsof \
     epel-release && \
     dnf install -y jemalloc && \
+    dnf install -y https://repo.almalinux.org/almalinux/8/AppStream/x86_64/os/Packages/java-1.8.0-openjdk-headless-1.8.0.312.b07-1.el8_4.x86_64.rpm && \
     dnf groupinstall -y "Development Tools" && \
     dnf clean all && rm -rf /var/cache/dnf && \
     # Layer saving files to /tmp

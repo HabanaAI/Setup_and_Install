@@ -6,11 +6,11 @@
 #
 # HabanaLabs script for building docker images
 
-: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.5.1, 2.6.0])"}"
-: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.5.1, 2.6.0])"}"
+: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.5.2, 2.6.2, 2.7.0])"}"
+: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.5.2, 2.6.2, 2.7.0])"}"
 
-VERSION="${CUSTOM_VERSION:-1.1.0}"
-REVISION="${CUSTOM_REVISION:-614}"
+VERSION="${CUSTOM_VERSION:-1.1.1}"
+REVISION="${CUSTOM_REVISION:-94}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
@@ -22,10 +22,10 @@ ARTIFACTORY_REPO="gaudi-docker"
 case $MODE in
     tensorflow)
         case $TF_VERSION in
-            2.5.1|2.6.0);;
+            2.5.2|2.6.2|2.7.0);;
             *)
                 echo "Provide correct TF_VERSION argument"
-                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.5.1, 2.6.0]"
+                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.5.2, 2.6.2, 2.7.0]"
                 exit 1;;
         esac
     ;;
@@ -80,9 +80,8 @@ function buildDocker {
                 *)
             esac
                 TF_CPU_POSTFIX="-tf-cpu-${TF_VERSION}"
-                TF_MINOR=${TF_VERSION%.*}.0
                 IMAGE_NAME="${ARTIFACTORY_URL}/${ARTIFACTORY_REPO}/${VERSION}/${OS}/habanalabs/${MODE}-installer${TF_CPU_POSTFIX}:${VERSION}-${REVISION}"
-                BUILDARGS+=" --build-arg ARTIFACTORY_URL="$ARTIFACTORY_URL" --build-arg TF_VERSION="$TF_VERSION" --build-arg TF_MINOR="$TF_MINOR" --build-arg VERSION="$VERSION" --build-arg REVISION="$REVISION""
+                BUILDARGS+=" --build-arg ARTIFACTORY_URL="$ARTIFACTORY_URL" --build-arg TF_VERSION="$TF_VERSION" --build-arg VERSION="$VERSION" --build-arg REVISION="$REVISION""
         ;;
         pytorch)
             case $OS in
@@ -112,7 +111,6 @@ echo "REVISION: $REVISION"
 echo "MODE: $MODE"
 echo "OS: $OS"
 echo "TF_VERSION: $TF_VERSION"
-echo "TF_MINOR: $TF_MINOR"
 echo "PT_VERSION: $PT_VERSION"
 echo "ARTIFACTORY_REPO: $ARTIFACTORY_REPO"
 echo "---------------------------------------------"

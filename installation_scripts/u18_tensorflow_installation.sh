@@ -36,29 +36,32 @@ sudo apt update
 sudo apt install -y python3.7-dev # mpi4py
 sudo apt install -y wget
 
-wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
-    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
-    cd openmpi-"${OPENMPI_VER}" && \
-    sudo apt install -y libnuma-dev && \
-    ./configure --prefix=$MPI_ROOT && \
-    make -j && \
-    sudo make install && \
-    sudo touch ~root/openmpi-4.0.5_installed && \
-    cd - && \
-    rm -rf openmpi-"${OPENMPI_VER}"* && \
-    sudo /sbin/ldconfig
+if [[ `${MPI_ROOT}/bin/mpirun --version` == *"$OPENMPI_VER"* ]]; then
+    echo "OpenMPI found. Skipping installation."
+else
+    echo "OpenMPI not found. Installing OpenMPI ${OPENMPI_VER}.."
+    wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
+        tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
+        cd openmpi-"${OPENMPI_VER}" && \
+        sudo apt install -y libnuma-dev && \
+        ./configure --prefix=$MPI_ROOT && \
+        make -j && \
+        sudo make install && \
+        sudo touch ~root/openmpi-4.0.5_installed && \
+        cd - && \
+        rm -rf openmpi-"${OPENMPI_VER}"* && \
+        sudo /sbin/ldconfig
+fi
 
 ${PYTHON} -m pip install --user mpi4py==3.0.3
 
-# workaround for broken dependency in TF2.6.0 after release of TF packages for version 2.7.0
-${PYTHON} -m pip install --user tensorflow-estimator==2.6.0
-${PYTHON} -m pip install --user tensorboard==2.6.0
-${PYTHON} -m pip install --user keras==2.6.0
 #install base tensorflow package
-${PYTHON} -m pip install --user tensorflow-cpu==2.6.0
+${PYTHON} -m pip install --user tensorflow-cpu==2.6.2
+#install tensorflow-io package with no deps, as it has broken dependency on tensorflow and would try to install non-cpu package
+${PYTHON} -m pip install --user --no-deps tensorflow-io==0.21.0 tensorflow-io-gcs-filesystem==0.21.0
 #install Habana tensorflow bridge & Horovod
-${PYTHON} -m pip install --user habana-tensorflow==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
-${PYTHON} -m pip install --user habana-horovod==1.1.0.614 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install --user habana-tensorflow==1.1.1.94 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install --user habana-horovod==1.1.1.94 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 
 source /etc/profile.d/habanalabs.sh
 ${PYTHON} -c 'import tensorflow as tf;import habana_frameworks.tensorflow as htf;htf.load_habana_module();x = tf.constant(2);y = x + x;assert y.numpy() == 4, "Sanity check failed: Wrong Add output";assert "HPU" in y.device, "Sanity check failed: Operation not executed on Habana";print("Sanity check passed")'
