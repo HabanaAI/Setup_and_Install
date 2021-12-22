@@ -9,10 +9,6 @@ ARG VERSION
 ARG REVISION
 ARG HABANA_PIP_VERSION="19.3.1"
 
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
-ENV LC_CTYPE=en_US.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
@@ -26,9 +22,17 @@ RUN apt-get update && \
     gnupg \
     gpg-agent \
     libjemalloc1 \
+    locales \
     lsb-release \
     wget && \
     apt-get autoremove && apt-get clean
+
+RUN locale-gen en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV LC_CTYPE=en_US.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -36,12 +40,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dkms \
     gcc \
     graphviz \
+    libgl1 \
     libgoogle-glog0v5 \
     libpq-dev \
-    locales \
     make \
-    protobuf-compiler \
-    libgl1 && \
+    protobuf-compiler && \
     apt-get autoremove && apt-get clean
 
 RUN apt-get update && \
@@ -49,25 +52,23 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     bc \
     git \
+    lsof \
     openssh-client \
     openssh-server \
+    python3-pip \
     unzip \
-    vim \
-    lsof \
-    python3-pip && \
+    vim && \
     apt-get autoremove && apt-get clean
-
-RUN locale-gen en_US.UTF-8
 
 # Update default Python to 3.7 as Habana dropped support for python older than 3.7
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python3.7 \
         python3.7-dev \
-        python3.7-venv \
         # there is no dedicated package distutils, tk for python 3.7
         python3-distutils \
-        python3-tk && \
+        python3-tk \
+        python3.7-venv && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
         update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 10 && \
         update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \

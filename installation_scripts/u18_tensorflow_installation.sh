@@ -55,13 +55,15 @@ fi
 
 ${PYTHON} -m pip install --user mpi4py==3.0.3
 
-#install base tensorflow package
-${PYTHON} -m pip install --user tensorflow-cpu==2.6.2
-#install tensorflow-io package with no deps, as it has broken dependency on tensorflow and would try to install non-cpu package
-${PYTHON} -m pip install --user --no-deps tensorflow-io==0.21.0 tensorflow-io-gcs-filesystem==0.21.0
-#install Habana tensorflow bridge & Horovod
-${PYTHON} -m pip install --user habana-tensorflow==1.1.1.94 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
-${PYTHON} -m pip install --user habana-horovod==1.1.1.94 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+# uninstall any existing versions of packages
+${PYTHON} -m pip uninstall -y habana-horovod habana-tensorflow tensorflow-cpu
+# install base tensorflow package
+${PYTHON} -m pip install --user tensorflow-cpu==2.7.0
+# install tensorflow-io package with no deps, as it has broken dependency on tensorflow and would try to install non-cpu package
+${PYTHON} -m pip install --user --no-deps tensorflow-io==0.22.0 tensorflow-io-gcs-filesystem==0.22.0
+# install Habana tensorflow bridge & Horovod
+${PYTHON} -m pip install --user habana-tensorflow==1.2.0.585 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+${PYTHON} -m pip install --user habana-horovod==1.2.0.585 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
 
 source /etc/profile.d/habanalabs.sh
 ${PYTHON} -c 'import tensorflow as tf;import habana_frameworks.tensorflow as htf;htf.load_habana_module();x = tf.constant(2);y = x + x;assert y.numpy() == 4, "Sanity check failed: Wrong Add output";assert "HPU" in y.device, "Sanity check failed: Operation not executed on Habana";print("Sanity check passed")'

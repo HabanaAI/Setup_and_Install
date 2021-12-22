@@ -22,31 +22,27 @@ RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
 
 RUN dnf install -y \
-    sudo \
-    redhat-lsb-core \
-    wget \
+    clang \
+    cmake3 \
+    cpp \
     gcc \
     gcc-c++ \
     glibc \
     glibc-headers \
     glibc-devel \
-    cpp \
-    clang \
-    llvm \
     jemalloc \
-    cmake3 \
+    libarchive \
+    llvm \
+    redhat-lsb-core \
     kernel-tools \
     kernel-tools-libs \
-    libarchive && \
+    wget && \
     dnf clean all && rm -rf /var/cache/yum
 
 RUN dnf update -y glib2 systemd
 
 RUN dnf module install python38 -y && \
-    rm -f /etc/alternatives/python3 && \
-    ln -s /usr/bin/python3.8 /etc/alternatives/python3 && \
-    rm -f /etc/alternatives/pip3 && \
-    ln -s /usr/bin/pip3.8 /etc/alternatives/pip3
+    dnf clean all && rm -rf /var/cache/yum
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana RH8 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \

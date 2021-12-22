@@ -1,1 +1,0 @@
-#No need to install tensorflow_io for tf-cpu 2.5.X, but build script require this file to proceed

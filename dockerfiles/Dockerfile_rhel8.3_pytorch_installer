@@ -25,12 +25,17 @@ RUN dnf install -y \
     redhat-lsb-core \
     openmpi-devel \
     cairo-devel \
+    numactl-devel \
     iproute \
     git \
     which \
     libjpeg-devel \
     python38-devel \
-    zlib-devel && \
+    zlib-devel \
+    cpupowerutils \
+    lapack-devel \
+    blas-devel \
+    numactl && \
     dnf clean all && rm -rf /var/cache/yum
 
 RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
@@ -57,7 +62,9 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     pip3 install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \
+    pip3 install /root/habanalabs/pytorch_temp/torchvision*.whl && \
     pip3 uninstall --yes torch && \
+    rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
     pip3 install /root/habanalabs/pytorch_temp/*.whl && \
     /sbin/ldconfig && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
@@ -67,6 +74,6 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/habanalabs:/usr/local/openmpi/lib/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
 
 RUN rm -rf /tmp/*

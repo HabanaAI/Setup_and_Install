@@ -50,7 +50,6 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/pr
     unzip protoc-3.6.1-linux-x86_64.zip -d /usr/local/protoc && \
     rm -rf protoc-3.6.1-linux-x86_64.zip
 
-COPY requirements-training-release.txt requirements-training-release.txt
 COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
@@ -59,15 +58,19 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     pip3 install tensorflow-cpu==${TF_VERSION} \
         tensorflow-model-optimization==0.5.0 && \
     pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \
-    # pycocotools has to be installed in separated process otherwise it fails with 'numpy.ufunc size changed'
-    pip3 install pycocotools==2.0.1 && \
-    pip3 install -r requirements-training-release.txt && \
-    rm requirements-training-release.txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
+    rm requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
+
+# For AML/CentOS/RHEL OS'es TFIO_DATAPATH have to be specified to import tensorflow_io lib correctly
+ENV TFIO_DATAPATH=/usr/local/lib64/python3.7/site-packages/
+
+# For AML/CentOS/RHEL ca-cert file is expected exactly under /etc/ssl/certs/ca-certificates.crt
+# otherwise curl will fail during access to S3 AWS storage
+RUN ln -s /etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
 
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
-        --index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \
+        --extra-index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
-        --index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple
+        --extra-index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple
 
 RUN /usr/bin/ssh-keygen -A && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
