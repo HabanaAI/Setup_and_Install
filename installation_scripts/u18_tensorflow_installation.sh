@@ -53,6 +53,10 @@ else
         sudo /sbin/ldconfig
 fi
 
+# due to changes in Setuptools 60.x, we need to make sure to install older version of package
+# (version chosen to be consistent with dockerfiles)
+${PYTHON} -m pip install --user setuptools==41.0.0
+
 ${PYTHON} -m pip install --user mpi4py==3.0.3
 
 # uninstall any existing versions of packages

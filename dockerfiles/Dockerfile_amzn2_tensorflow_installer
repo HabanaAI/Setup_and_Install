@@ -55,6 +55,7 @@ COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py pip==21.0.1 && \
     rm -rf get-pip.py && \
+    pip3 install setuptools==41.0.0 && \
     pip3 install tensorflow-cpu==${TF_VERSION} \
         tensorflow-model-optimization==0.5.0 && \
     pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \

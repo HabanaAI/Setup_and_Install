@@ -19,7 +19,7 @@
         - [Check TF/Horovod Habana packages](#check-tfhorovod-habana-packages)
         - [Install TF/Horovod Habana packages](#install-tfhorovod-habana-packages)
         - [Check PT Habana packages](#check-pt-habana-packages)
-        - [Install PT Habana packages](#install-pt-habana-packages)
+        - [Install PT Habana packages](#install-pytorch-habana-packages)
       - Docker
         - [Do you want to use prebuilt docker or build docker yourself?](#do-you-want-to-use-prebuilt-docker-or-build-docker-yourself)
         - [How to Build Docker Images from Habana Dockerfiles](#how-to-build-docker-images-from-habana-dockerfiles)
@@ -1157,7 +1157,18 @@ export PYTHON=/usr/bin/python<VER> # i.e. for U18 it's PYTHON=/usr/bin/python3.7
 ```
 2. Before installing habana-tensorflow, install supported TensorFlow version. See [Support Matrix](#SynapseAi-Support-Matrix). If no TensorFlow package is available, PIP will automatically fetch it.
 
+#### <a id="tf-setuptools-issue"></a>Note:
+Setuptools release 60.x (and later) revealed an issue in Habana-TensorFlow package.
+TensorFlow package is automatically fetching the latest available version of Setuptools from PyPi because dependant TensorBoard requires version ``>=41.0.0``.
+In order to avoid problems, there are two options:
+* explicitly install Setuptools with version **higher equal** 41.0.0 and **less** than 60.0.0
+or
+* when running any script using the Habana-Tensorflow package, set environment variable: ``SETUPTOOLS_USE_DISTUTILS=stdlib``.
+
+<br>
+
 ```
+# install TensorFlow
 ${PYTHON} -m pip install --user tensorflow-cpu==<supported_tf_version>
 ```
 
@@ -1248,6 +1259,14 @@ Install the habana-horovod package to get multi-node support. The following list
   ```
   ${PYTHON} -m pip install --user habana-horovod==1.2.0.585 --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
   ```
+
+#### Note:
+habana-horovod installation is also affected by [issue](#tf-setuptools-issue) found in habana-tensorflow. In order to install habana-horovod successfully, there are two options:
+* explicitly install Setuptools with version **higher equal** 41.0.0 and **less** than 60.0.0
+or
+* set environment variable: ``SETUPTOOLS_USE_DISTUTILS=stdlib`` before habana-horovod installation.
+
+<br>
 
 #### See also:
 To learn more about the TensorFlow distributed training on Gaudi, see [Distributed Training with TensorFlow](https://docs.habana.ai/en/v1.2.0/Tensorflow_Scaling_Guide/TensorFlow_Gaudi_Scaling_Guide.html#distributed-training-with-tensorflow).
@@ -1401,7 +1420,7 @@ Check for for the packages listed above
 <center>
 
 ### Are the required python packages installed on your system?
-[Yes](#Setup-Complete) • [No](#install-pt-habana-packages)
+[Yes](#Setup-Complete) • [No](#install-pytorch-habana-packages)
 
 </center>
 
@@ -1416,6 +1435,7 @@ Check for for the packages listed above
 ---
 
 <br />
+
 Download and execute  bash script to setup Habana PyTorch environment [pytorch_installation.sh](https://github.com/HabanaAI/Setup_and_Install/blob/r1.2.0/installation_scripts/pytorch/pytorch_installation.sh)
 It will complete below steps
 - Autodetect OS type and supported python version for which Habana PyTorch wheel packages are present in Vault
@@ -1723,7 +1743,7 @@ docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_va
 ```
 PT:
 ```
-docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/${OS}/habanalabs/pytorch-installer:1.2.0-585
+docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/${OS}/habanalabs/pytorch-installer-1.10.0:1.2.0-585
 ```
 
 **OPTIONAL:** Add the following flag to mount a local host share folder to the docker in order to be able to transfer files out of docker:
@@ -2094,11 +2114,11 @@ You might need to merge the new argument with your existing configuration.
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.2.0/ubuntu20.04/habanalabs/pytorch-installer:1.2.0-585
+  docker pull vault.habana.ai/gaudi-docker/1.2.0/ubuntu20.04/habanalabs/pytorch-installer-1.10.0:1.2.0-585
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/ubuntu20.04/habanalabs/pytorch-installer:1.2.0-585
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/ubuntu20.04/habanalabs/pytorch-installer-1.10.0:1.2.0-585
   ```
 
   </details>
@@ -2146,11 +2166,11 @@ You might need to merge the new argument with your existing configuration.
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.2.0/ubuntu18.04/habanalabs/pytorch-installer:1.2.0-585
+  docker pull vault.habana.ai/gaudi-docker/1.2.0/ubuntu18.04/habanalabs/pytorch-installer-1.10.0:1.2.0-585
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/ubuntu18.04/habanalabs/pytorch-installer:1.2.0-585
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/ubuntu18.04/habanalabs/pytorch-installer-1.10.0:1.2.0-585
   ```
 
   </details>
@@ -2198,11 +2218,11 @@ You might need to merge the new argument with your existing configuration.
 
   ### Pull docker
   ```
-  docker pull vault.habana.ai/gaudi-docker/1.2.0/amzn2/habanalabs/pytorch-installer:1.2.0-585
+  docker pull vault.habana.ai/gaudi-docker/1.2.0/amzn2/habanalabs/pytorch-installer-1.10.0:1.2.0-585
   ```
   ### Run docker
   ```
-  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/amzn2/habanalabs/pytorch-installer:1.2.0-585
+  docker run -it --runtime=habana -e HABANA_VISIBLE_DEVICES=all -e OMPI_MCA_btl_vader_single_copy_mechanism=none --cap-add=sys_nice --net=host --ipc=host vault.habana.ai/gaudi-docker/1.2.0/amzn2/habanalabs/pytorch-installer-1.10.0:1.2.0-585
   ```
 
   </details>
