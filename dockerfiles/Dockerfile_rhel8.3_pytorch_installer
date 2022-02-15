@@ -1,4 +1,4 @@
-# Copyright (c) 2021 HabanaLabs, Ltd.
+# Copyright (c) 2022 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -75,5 +75,4 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
-
 RUN rm -rf /tmp/*

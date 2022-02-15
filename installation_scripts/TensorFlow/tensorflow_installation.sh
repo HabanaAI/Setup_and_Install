@@ -1,6 +1,6 @@
 #!/bin/bash
 # *****************************************************************************
-# Copyright (c) 2021 Habana Labs, Ltd. an Intel Company
+# Copyright (c) 2022 Habana Labs, Ltd. an Intel Company
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
@@ -21,28 +21,17 @@
 ###################################################################################################
 
 CMDLINE_USAGE="$0 $*"
-REF_PACKAGE="habanalabs-firmware"
-#ARTIFACTORY_URL=artifactory-kfs.habana-labs.com
-ARTIFACTORY_URL=vault.habana.ai
+REF_PACKAGE="habanalabs-graph" # Synapse GC and Runtime
 OPENMPI_VER=4.0.5
 HABANA_PIP_VERSION="21.1.1"
 SETUPTOOLS_VERSION=41.0.0
 MPI_ROOT="/usr/local/openmpi"
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
-PT_SHARED_LIB_DIR="/usr/lib/habanalabs"
 PATH=$MPI_ROOT/bin:$PATH
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
-PT_HABANA_PACKAGES="torch habana_torch habana_torch_dataloader \
-                    habana_dataloader transformers fairseq \
-                    pytorch_lightning torchvision gather2d_cpp \
-                    hmp hb_custom habanaOptimizerSparseAdagrad_cpp \
-                    hb_torch habana_torch_hcl habanaOptimizerSparseSgd_cpp \
-                    preproc_cpp habana_torch_dataloader habana_torch \
-                    HabanaEmbeddingBag_cpp"
-
-PT_HABANA_SHARED_LIBS="libhabana_pytorch_plugin.so libpytorch_synapse_helpers.so \
-                _py_pytorch_synapse_logger.so pytorch_synapse_logger.so \
-                hb_torch*.so"
+TF_HABANA_PACKAGES="habana_tensorflow habana_horovod"
+KNOWN_TF_PACKAGES="tensorflow tensorflow-cpu tensorflow-gpu intel-tensorflow"
+TF_RECOMMENDED_PKG="tensorflow-cpu==2.7.1"
 
 [ -f ${PROFILE_FILE} ] && source ${PROFILE_FILE}
 ###################################################################################################
@@ -51,14 +40,16 @@ PT_HABANA_SHARED_LIBS="libhabana_pytorch_plugin.so libpytorch_synapse_helpers.so
 
 function help()
 {
-    echo -e "Help :Setting up VM for Execution of Pytorch in Gaudi"
+    echo -e "Help: Setting up execution of TensorFlow for Gaudi"
     echo -e "############################################################"
-    echo -e "  -v <software version>          - Habana software version eg 1.2.0"
-    echo -e "  -b <build/revision>             - Habana build number eg: 148 in 1.2.0-148"
-    echo -e "  -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel79/rhel83/centos83>"
-    echo -e "  -ndep                           - dont install rpm/deb dependecies"
-    echo -e "  -sys                            - eg: install python packages without --user"
-    echo -e "  -u                              - eg: install python packages with --user"
+    echo -e "The script sets up environment for recommended TensorFlow version: ${TF_RECOMMENDED_PKG}."
+    echo -e "It auto-detects OS and installed Habana SynapseAI."
+    echo -e "List of optional parameters:"
+    echo -e "  --tf <tf package>              - full TensorFlow package name and version to install via PIP. (default: '${TF_RECOMMENDED_PKG}')"
+    echo -e "                                   I.e. 'tensorflow-cpu==<ver>'. Alternatively, it can be path to remotely located package (as accepted by PIP)."
+    echo -e "  --ndeps                        - don't install rpm/deb dependencies"
+    echo -e "  --extra_deps                   - install extra model references' rpm/deb dependencies"
+    echo -e "  --pip_user <true/false>        - force pip install with or without --user flag. (default: --user is added if USER is not root)"
 }
 command -v sudo 2>&1 > /dev/null
 if [ $? -ne 0 ] || [ $UID -eq 0 ]; then
@@ -85,19 +76,23 @@ __get_os_ver()
     fi
     if [[ ($__os == 'ubuntu' && $__os_v == '20.04') ]]; then
         __os_version="ubuntu2004"
+        __is_ubuntu="true"
     elif [[ ($__os == 'ubuntu' && $__os_v == '18.04') ]]; then
         __os_version="ubuntu1804"
+        __is_ubuntu="true"
     elif [[ ( $__os == 'rhel' && $__os_v == '8' ) ]]; then
         __os_version="rhel83"
-    elif [[ ( $__os == 'rhel' && $__os_v == '7' ) ]]; then
-        __os_version="rhel79"
+        __is_ubuntu="false"
     elif [[ ( $__os == 'centos' && $__os_v == '8' ) ]]; then
         __os_version="centos83"
+        __is_ubuntu="false"
     elif [[ ( $__os == 'amazon' && $__os_v == '2' ) ]]; then
         __os_version="amzn2"
+        __is_ubuntu="false"
     else
-        echo "Unble to detect Operating system automatically"
+        echo "Unable to detect Operating system automatically"
         help
+        echo "${CMDLINE_USAGE}"
         exit 1
     fi
 }
@@ -107,18 +102,15 @@ __get_os_ver()
 ###################################################################################################
 __get_python_ver()
 {
-    if [[ ($__os_version == "ubuntu2004" ) || \
+    if [[ ($__os_version == "ubuntu1804" ) || \
+        ( $__os_version == "amnz2" ) || \
+        ( $__os_version == "ubuntu2004" ) || \
         ( $__os_version == "rhel83" ) || \
         ( $__os_version == "centos83" ) \
     ]]; then
         __python_ver="3.8"
-    elif [[ ($__os_version == "ubuntu1804" ) || \
-        ( $__os_version == "amnz2" ) || \
-        ( $__os_version == "rhel79" ) \
-    ]]; then
-        __python_ver="3.7"
     else
-        __python_ver="3.7"
+        __python_ver="3.8" # the default supported is 3.8 for now, but if/else is left for later extensions
     fi
     if [ "z${PYTHON}" == "z" ]; then
         PYTHON=python${__python_ver}
@@ -127,7 +119,7 @@ __get_python_ver()
     if [ $? -ne 0 ]; then
         echo "${PYTHON} not found"
         echo "please export PYTHON variable. e.g. "
-        echo "export PYTHON=/<path>/python3.x"
+        echo "export PYTHON=/<path>/python3.8"
         echo "${CMDLINE_USAGE}"
         exit 1
     fi
@@ -139,13 +131,12 @@ if [ $UID -ne 0 ]; then
 else
    __python_user_opt=""
 fi
-__python_user_opt="--user"
-__pt_install_deps="true"
+__install_deps="true"
+__install_model_deps="false"
 
 ###################################################################################################
 #    command line parsing
 #    Parse each argument to setup the variables
-#    Required for versions of openmpi, pip and other pytorch packages
 ###################################################################################################
 while [ -n "$1" ];
 do
@@ -158,27 +149,27 @@ do
             shift
             __build_no=$1
             ;;
-        -os)
+        --os)
             shift
             __os_version=$1
             ;;
-        -pt)
+        --tf)
             shift
-            __pt_version=$1
+            __tf_pkg=$1
             ;;
-        -pv)
+        --pip_user)
             shift
-            __python_version=$1
-            PYTHON=python${__python_ver}
+            if [ "z${1}" == "ztrue" ]; then
+                __python_user_opt="--user"
+            else
+                __python_user_opt=""
+            fi
             ;;
-        -sys)
-            __python_user_opt=""
+        --ndeps)
+            __install_deps="false"
             ;;
-        -u)
-            __python_user_opt="--user"
-            ;;
-        -ndep)
-            __pt_install_deps="false"
+        --extra_deps)
+            __install_model_deps="true"
             ;;
         -h | --help)
             help
@@ -205,7 +196,7 @@ __get_habana_version()
             __sw_version=${ver}
         fi
         ;;
-      amzn2 | rhel79 | rhel83 | centos83)
+      amzn2 | rhel83 | centos83)
         pkgname=$(rpm -q ${REF_PACKAGE})
         if [ $? -eq 0 ]; then
             __sw_version="$(echo $pkgname | awk '{ print $3 }' FS='-')"
@@ -213,9 +204,15 @@ __get_habana_version()
         ;;
       *)
         echo "Unknown OS ${__os_version}"
+        echo "${CMDLINE_USAGE}"
         exit 1
         ;;
     esac
+    if [ "z${__sw_version}" == "z" ]; then
+        echo "Unable to detect SynapseAI version. Check if ${REF_PACKAGE} is installed."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+    fi
 }
 
 ###################################################################################################
@@ -238,9 +235,15 @@ __get_habana_build()
         ;;
       *)
         echo "Unknown OS ${__os_version}"
+        echo "${CMDLINE_USAGE}"
         exit 1
         ;;
     esac
+    if [ "z${__build_no}" == "z" ]; then
+        echo "Unable to detect SynapseAI build number. Check if ${REF_PACKAGE} is installed."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+    fi
 }
 
 ###################################################################################################
@@ -263,64 +266,78 @@ if [ "z${__build_no}" == "z" ]; then
     __get_habana_build
 fi
 
-__sw_version=${__sw_version:-1.2.0}
-__build_no=${__build_no:-585}
+__tf_pkg=${__tf_pkg:-${TF_RECOMMENDED_PKG}}
 
 if [ "z${__sw_version}" == "z" ]; then
     echo "Habana software version is not specified"
     help
+    echo "${CMDLINE_USAGE}"
     exit 1
 fi
 if [ "z${__build_no}" == "z" ]; then
     echo "Habana build number is not specified"
     help
+    echo "${CMDLINE_USAGE}"
     exit 1
 fi
 
 
 ###################################################################################################
-#    remove pytorch shared libraries
-###################################################################################################
-
-rem_pt_shared_libs()
-{
-    for shfile in ${PT_HABANA_SHARED_LIBS}
-    do
-        rm -f ${PT_SHARED_LIB_DIR}/${shfile}
-    done
-}
-
-###################################################################################################
 #    uninstall existing python packages if any
+#    Args... : list of packages to uninstall
 ###################################################################################################
 
-uninstall_habana_py_pkgs()
+uninstall_py_pkgs()
 {
-    for pkg in ${PT_HABANA_PACKAGES}
+    for pkg in $@
     do
         ${PYTHON} -m pip show ${pkg} 2>&1 > /dev/null
         if [ $? -eq 0 ]; then
             ${PYTHON} -m pip uninstall --yes ${pkg}
         fi
     done
-    rem_pt_shared_libs
 }
 
 ###################################################################################################
-#    set env required for pytorch
+#    install tf python packages
+###################################################################################################
+
+install_tf_habana_py_pkgs()
+{
+    for pkg in ${TF_HABANA_PACKAGES}
+    do
+        ${PYTHON} -m pip install ${pkg}==${__sw_version}.${__build_no} ${__python_user_opt}
+        if [ $? -ne 0 ]; then
+            echo "Failed to install ${pkg}."
+            echo "${CMDLINE_USAGE}"
+            exit 1
+        fi
+    done
+}
+
+###################################################################################################
+#    set env required for TensorFlow
 ###################################################################################################
 setup_envs()
 {
-    ${SUDO} sed -i '/#>>>> PT Habana starts/,/#<<<< PT Habana ends/d' ${PROFILE_FILE}
-    echo "#>>>> PT Habana starts" | ${SUDO} tee -a ${PROFILE_FILE}
+    ${SUDO} sed -i '/#>>>> TF Habana starts/,/#<<<< TF Habana ends/d' ${PROFILE_FILE}
+    echo "#>>>> TF Habana starts" | ${SUDO} tee -a ${PROFILE_FILE}
     echo "export MPI_ROOT=${MPI_ROOT}" | ${SUDO} tee -a ${PROFILE_FILE}
     echo "export OPAL_PREFIX=${MPI_ROOT}" | ${SUDO} tee -a ${PROFILE_FILE}
     echo 'export LD_LIBRARY_PATH=${MPI_ROOT}/lib:${LD_LIBRARY_PATH}' | ${SUDO} tee -a ${PROFILE_FILE}
     echo 'export PATH=${MPI_ROOT}/bin:${PATH}' | ${SUDO} tee -a ${PROFILE_FILE}
-    echo "#<<<< PT Habana ends" | ${SUDO} tee -a ${PROFILE_FILE}
-}
+    if [ "z$__is_ubuntu" == "zfalse" ]; then
+        # For AML/CentOS/RHEL OS'es TFIO_DATAPATH have to be specified to import tensorflow_io lib correctly
+        echo "export TFIO_DATAPATH=`${PYTHON} -c 'import tensorflow_io as tfio; import os; print(os.path.dirname(os.path.dirname(tfio.__file__)))'`/" | ${SUDO} tee -a ${PROFILE_FILE}
+        # For AML/CentOS/RHEL ca-cert file is expected exactly under /etc/ssl/certs/ca-certificates.crt
+        # otherwise curl will fail during access to S3 AWS storage
+        if [[ ! -f /etc/ssl/certs/ca-certificates.crt ]]; then
+            ${SUDO} ln -s /etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
+        fi
+    fi
+    echo "#<<<< TF Habana ends" | ${SUDO} tee -a ${PROFILE_FILE}
 
-export LANG=en_US.UTF-8
+}
 
 ###################################################################################################
 #    compile_install_openmpi
@@ -331,8 +348,9 @@ compile_install_openmpi()
     if [[ `${MPI_ROOT}/bin/mpirun --version` == *"$OPENMPI_VER"* ]]; then
         echo "OpenMPI found. Skipping installation."
     else
+        echo "OpenMPI not found. Installing OpenMPI ${OPENMPI_VER}.."
         wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz
-        tar -xvf openmpi-"${OPENMPI_VER}".tar.gz
+        tar -xf openmpi-"${OPENMPI_VER}".tar.gz
         cd openmpi-"${OPENMPI_VER}"
         ./configure --prefix="${MPI_ROOT}"
         make -j
@@ -349,147 +367,47 @@ compile_install_openmpi()
 ###################################################################################################
 #    install_ubuntu_dep_pkgs
 ###################################################################################################
-install_ubuntu18_dep_pkgs()
+install_ubuntu_dep_pkgs()
 {
     set -e
     HABANA_PIP_VERSION="19.3.1"
     ${SUDO} apt-get update && ${SUDO} apt-get install -y \
-    unzip \
-    openssh-client \
-    curl \
-    libcurl4 \
-    moreutils \
-    iproute2 \
-    libcairo2-dev \
-    libglib2.0-dev \
-    libselinux1-dev \
-    libnuma-dev \
-    libpcre2-dev \
-    libjpeg-dev \
-    liblapack-dev \
-    libblas-dev \
-    python3-dev \
-    libpython3.7-dev \
-    numactl && \
-    ${SUDO} apt-get clean
+    wget \
+    python3.8-dev
+
     ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
+    ${PYTHON} -m pip install setuptools=="${SETUPTOOLS_VERSION}" ${__python_user_opt}
     set +e
 }
 
-install_ubuntu20_dep_pkgs()
+install_extra_ubuntu_pkgs()
 {
+    LIBJEMALLOC="libjemalloc1"
+    if [[ ($__os_version == "ubuntu2004" )]]; then
+        LIBJEMALLOC="libjemalloc2"
+    fi
     set -e
-    HABANA_PIP_VERSION="19.3.1"
     ${SUDO} apt-get update && ${SUDO} apt-get install -y \
-    unzip \
-    openssh-client \
-    curl \
-    libcurl4 \
-    moreutils \
-    iproute2 \
-    libcairo2-dev \
-    libglib2.0-dev \
-    libselinux1-dev \
-    libnuma-dev \
-    libpcre2-dev \
-    libjpeg-dev \
-    liblapack-dev \
-    libblas-dev \
-    python3-dev \
-    numactl && \
-    ${SUDO} apt-get clean
-    ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
+    ${LIBJEMALLOC} \
+    protobuf-compiler \
+    libgl1
     set +e
 }
 
 ###################################################################################################
-#    install_rhel83_dep_pkgs
+#    install_rhel83_or_centos83_dep_pkgs
 ###################################################################################################
-install_rhel83_dep_pkgs()
+install_rhel83_or_centos83_dep_pkgs()
 {
     set -e
     ${SUDO} dnf install -y \
-    unzip \
-    openssh-clients \
-    openssh-server \
-    curl \
     redhat-lsb-core \
-    openmpi-devel \
-    cairo-devel \
-    numactl-devel \
-    iproute \
-    git \
-    which \
-    libjpeg-devel \
-    python38-devel \
-    zlib-devel \
-    cpupowerutils \
-    lapack-devel \
-    blas-devel \
-    numactl && \
-    ${SUDO} dnf clean all && ${SUDO} rm -rf /var/cache/yum
-
-    ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
-    ${PYTHON} -m pip install setuptools=="${SETUPTOOLS_VERSION}" ${__python_user_opt}
-    set +e
-}
-
-
-###################################################################################################
-#    install_rhel79_dep_pkgs
-###################################################################################################
-install_rhel79_dep_pkgs()
-{
-    set -e
-    ${SUDO} yum install -y \
-    unzip \
-    openssh-clients \
-    openssh-server \
-    curl \
-    redhat-lsb-core \
-    openmpi-devel \
-    cairo-devel \
-    iproute \
-    git \
-    which \
-    libjpeg-devel \
-    zlib-devel \
-    lapack-devel \
-    blas-devel \
-    numactl && \
-    ${SUDO} yum clean all
-
-    ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
-    ${PYTHON} -m pip install setuptools=="${SETUPTOOLS_VERSION}" ${__python_user_opt}
-    set +e
-}
-
-
-###################################################################################################
-#    install_centos83_dep_pkgs
-###################################################################################################
-install_centos83_dep_pkgs()
-{
-    set -e
-    ${SUDO} dnf install -y --enablerepo=powertools \
-    libffi-devel \
-    unzip \
-    openssh-clients \
-    openssh-server \
-    curl \
-    redhat-lsb-core \
-    openmpi-devel \
-    numactl-devel \
-    cairo-devel \
-    iproute \
-    git \
-    which \
-    libjpeg-devel \
-    zlib-devel \
-    lapack-devel \
-    blas-devel \
-    numactl && \
+    cmake \
+    wget \
+    perl \
+    python38-devel
     ${SUDO} dnf clean all
+
     ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
     ${PYTHON} -m pip install setuptools=="${SETUPTOOLS_VERSION}" ${__python_user_opt}
     set +e
@@ -502,28 +420,9 @@ install_amzn2_dep_pkgs()
 {
     set -e
     ${SUDO} yum install -y \
-    unzip \
-    python3-devel \
-    openssh-clients \
-    openssh-server \
-    curl \
     redhat-lsb-core \
-    openmpi-devel \
-    numactl-devel \
-    cairo-devel \
-    iproute \
-    git \
-    which \
-    libjpeg-devel \
-    zlib-devel \
-    lapack-devel \
-    blas-devel \
-    sox \
-    numactl && \
-    ${SUDO} yum clean all
-
-    ${SUDO} amazon-linux-extras install epel -y
-    ${SUDO} yum install -y moreutils && ${SUDO} yum clean all
+    cmake \
+    wget
 
     wget https://bootstrap.pypa.io/get-pip.py && \
     ${PYTHON} get-pip.py pip==21.0.1 --no-warn-script-location && \
@@ -532,48 +431,89 @@ install_amzn2_dep_pkgs()
 }
 
 ###################################################################################################
-#    install_pt_habana_pkgs
+#    install_yum_or_dnf_extra_pkgs takes one input arg, "dnf" or "yum"
 ###################################################################################################
-install_pt_habana_pkgs()
+install_yum_or_dnf_extra_pkgs()
 {
-    uninstall_habana_py_pkgs
+    set -e
 
-    PT_PKGS="habanalabs/pytorch_temp"
-    mkdir -p ${PT_PKGS}
-    if [ ${ARTIFACTORY_URL} == "vault.habana.ai" ]; then
-        DIR_URL="https://${ARTIFACTORY_URL}/artifactory/gaudi-pt-modules/${SW_VERSION}/${REVISION}/${__os_version}/binary"
+    case ${__os_version} in
+    amzn2)
+        $1 list installed | grep "epel-release.noarch" || \
+        ${SUDO} $1 install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        ;;
+    centos83)
+        ${SUDO} $1 install -y epel-release
+        ;;
+    rhel83)
+        ${SUDO} $1 install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+        ;;
+    *)
+        echo "Unexpected OS ${__os_version} inside install_yum_or_dnf_extra_pkgs() func."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+        ;;
+    esac
+
+    ${SUDO} $1 install -y \
+    jemalloc \
+    mesa-libGL
+    ${SUDO} $1 clean all
+
+    if [[ `/usr/local/protoc/bin/protoc --version` == *"3.6.1"* ]]; then
+        echo "Protoc 3.6.1 found. Skipping installation."
     else
-        DIR_URL="https://${ARTIFACTORY_URL}/artifactory/sw-build-meta-manifest/${SW_VERSION}/${REVISION}/${__os_version}/binary"
+        wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+        ${SUDO} unzip protoc-3.6.1-linux-x86_64.zip -d /usr/local/protoc
+        ${SUDO} rm -rf protoc-3.6.1-linux-x86_64.zip
     fi
-    PYTORCH_MODULE=$(wget -q ${DIR_URL} -O - | grep -o  "pytorch_modules.*${SW_VERSION}_${REVISION}.tgz" | awk '{print $1}' FS='">')
-    if [ "z$PYTORCH_MODULE" == "z" ]; then
-        echo "tar file pytorch_modules.*${SW_VERSION}_${REVISION}.tgz not found"
-        exit 1
-    fi
-    wget ${DIR_URL}/${PYTORCH_MODULE} -O ${PYTORCH_MODULE}
-    if [ $? -ne 0 ]; then
-        echo "unable to download Habana pytorch whl packages"
-        exit 1
-    fi
-    tar -xf ${PYTORCH_MODULE} -C ${PT_PKGS}
-    ${PYTHON} -m pip install -r ${PT_PKGS}/requirements-pytorch.txt --no-warn-script-location ${__python_user_opt}
-    ${PYTHON} -m pip install ${PT_PKGS}/torchvision*.whl ${__python_user_opt}
+    set +e
+}
 
-    ${PYTHON} -m pip uninstall --yes torch
-    # Remove the torchvision package after it is installed from
-    # the extracted folder. While installing the other .whl
-    # files from the extracted folder, there will be one more attempt
-    # to install torchvision. Simple reason is avoid the second attempt
-    rm -f ${PT_PKGS}/torchvision*.whl
-    ${PYTHON} -m pip install ${PT_PKGS}/*.whl ${__python_user_opt}
-    ${SUDO} /sbin/ldconfig
+###################################################################################################
+#    install_tf_habana_pkgs
+###################################################################################################
+install_tf_habana_pkgs()
+{
+    # uninstall Habana TF packages
+    uninstall_py_pkgs $TF_HABANA_PACKAGES
+    # uninstall any TF in the system
+    uninstall_py_pkgs $KNOWN_TF_PACKAGES
+    # make sure that no unknow TF package is still installed
+    ${PYTHON} -c 'import sys
+try:
+    import tensorflow;
+except ModuleNotFoundError:
+    sys.exit(0)
+except:
+    sys.exit(1)
+else:
+    sys.exit(1)'
+    if [ $? -ne 0 ]; then
+        echo "Detected unknown TensorFlow package. Known TF packages: ${KNOWN_TF_PACKAGES}."
+        echo "Please uninstall tensorflow from your system and re-run the script."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+    fi
+
+    ${PYTHON} -m pip install ${__tf_pkg} ${__python_user_opt}
+    install_tf_habana_py_pkgs
+
+    TF_IO_VER=""
+    if [[ ${__tf_pkg} == *"2.7.1"* ]]; then
+        TF_IO_VER="0.23.1"
+    elif [[ ${__tf_pkg} == *"2.8.0"* ]]; then
+        TF_IO_VER="0.24.0"
+    else
+        echo "Could not determine TensorFlow version from input -tf=${__tf_pkg}. Input string does not match known TF versions."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+    fi
+    # install tensorflow-io package with no deps, as it has broken dependency on tensorflow and would try to install non-cpu package
+    ${PYTHON} -m pip install --user --no-deps tensorflow-io==${TF_IO_VER} tensorflow-io-gcs-filesystem==${TF_IO_VER}
+
     setup_envs
     grep -qxF "source ${PROFILE_FILE}" ~/.bashrc || echo "source ${PROFILE_FILE}" >> ~/.bashrc
-    ${PYTHON} -m pip uninstall -y pillow
-    ${PYTHON} -m pip uninstall -y pillow-simd
-    ${PYTHON} -m pip install pillow-simd==7.0.0.post3 ${__python_user_opt}
-    rm -rf ${PT_PKGS}
-    rm -f ${PYTORCH_MODULE}
 }
 
 ###################################################################################################
@@ -581,12 +521,20 @@ install_pt_habana_pkgs()
 ###################################################################################################
 verify_installation()
 {
-    ${PYTHON} -c "import torch; from habana_frameworks.torch.utils.library_loader import load_habana_module; load_habana_module(); torch.rand(10).to('hpu')"
+    ${PYTHON} -c 'import tensorflow as tf
+import habana_frameworks.tensorflow as htf
+htf.load_habana_module()
+x = tf.constant(2); y = x + x
+assert y.numpy() == 4, "Sanity check failed: Wrong Add output"
+assert "HPU" in y.device, "Sanity check failed: Operation not executed on Habana Device"
+print("Sanity check passed")'
+
     if [ $? -ne 0 ]; then
-        echo "Habana torch test failed"
+        echo "Habana TensorFlow test failed"
+        echo "${CMDLINE_USAGE}"
         exit 1
     else
-        echo "Habana torch test completed successfully"
+        echo "Habana TensorFlow test completed successfully"
     fi
 
 }
@@ -594,50 +542,30 @@ verify_installation()
 ###################################################################################################
 #    pkg installation
 ###################################################################################################
-SW_VERSION=${__sw_version}
-REVISION=${__build_no}
-PT_VERSION=${__pt_version:-1.10.0}
-OS_VERSION=${__os_version:-ubuntu1804}
-
-echo "Software Version:  ${SW_VERSION}"
-echo "Software revision: ${REVISION}"
-echo "Operating System:  ${OS_VERSION}"
-echo "Artifactory link:  ${ARTIFACTORY_URL}"
+echo "Software Version:  ${__sw_version}"
+echo "Software Revision: ${__build_no}"
+echo "Operating System:  ${__os_version}"
 
 case ${__os_version} in
-  ubuntu1804)
-    [ "z${__pt_install_deps}" == "ztrue" ] && install_ubuntu18_dep_pkgs
-    compile_install_openmpi
-    install_pt_habana_pkgs
-    ;;
-  ubuntu2004)
-    [ "z${__pt_install_deps}" == "ztrue" ] && install_ubuntu20_dep_pkgs
-    compile_install_openmpi
-    install_pt_habana_pkgs
+  ubuntu1804|ubuntu2004)
+    [ "z${__install_deps}" == "ztrue" ] && install_ubuntu_dep_pkgs
+    [ "z${__install_model_deps}" == "ztrue" ] && install_extra_ubuntu_pkgs
     ;;
   amzn2)
-    [ "z${__pt_install_deps}" == "ztrue" ] && install_amzn2_dep_pkgs
-    compile_install_openmpi
-    install_pt_habana_pkgs
+    [ "z${__install_deps}" == "ztrue" ] && install_amzn2_dep_pkgs
+    [ "z${__install_model_deps}" == "ztrue" ] && install_yum_or_dnf_extra_pkgs "yum"
     ;;
-  rhel79)
-    [ "z${__pt_install_deps}" == "ztrue" ] && install_rhel79_dep_pkgs
-    compile_install_openmpi
-    install_pt_habana_pkgs
-    ;;
-  rhel83)
-    [ "z${__pt_install_deps}" == "ztrue" ] && install_rhel83_dep_pkgs
-    compile_install_openmpi
-    install_pt_habana_pkgs
-    ;;
-  centos83)
-    [ "z${__pt_install_deps}" == "ztrue" ] && install_centos83_dep_pkgs
-    compile_install_openmpi
-    install_pt_habana_pkgs
+  rhel83|centos83)
+    [ "z${__install_deps}" == "ztrue" ] && install_rhel83_or_centos83_dep_pkgs
+    [ "z${__install_model_deps}" == "ztrue" ] && install_yum_or_dnf_extra_pkgs "dnf"
     ;;
   *)
     echo "Unknown OS ${__os_version}"
+    echo "${CMDLINE_USAGE}"
     exit 1
     ;;
 esac
+compile_install_openmpi
+install_tf_habana_pkgs
 verify_installation
+echo "Setting up execution of TensorFlow for Gaudi is done. Source again ~/.bashrc."

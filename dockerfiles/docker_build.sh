@@ -1,20 +1,20 @@
 #!/bin/bash -e
 #
-# Copyright 2021 HabanaLabs, Ltd.
+# Copyright 2022 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
 # HabanaLabs script for building docker images
 
-: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.6.2, 2.7.0])"}"
-: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.6.2, 2.7.0])"}"
+: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.7.1, 2.8.0])"}"
+: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.7.1, 2.8.0])"}"
 
-VERSION="${CUSTOM_VERSION:-1.2.0}"
-REVISION="${CUSTOM_REVISION:-585}"
+VERSION="${CUSTOM_VERSION:-1.3.0}"
+REVISION="${CUSTOM_REVISION:-499}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
-PT_VERSION="1.10.0"
+PT_VERSION="1.10.1"
 ARTIFACTORY_URL="${CUSTOM_ARTIFACTORY_URL:-vault.habana.ai}"
 ARTIFACTORY_REPO="gaudi-docker"
 
@@ -22,10 +22,10 @@ ARTIFACTORY_REPO="gaudi-docker"
 case $MODE in
     tensorflow)
         case $TF_VERSION in
-            2.6.2|2.7.0);;
+            2.7.1|2.8.0);;
             *)
                 echo "Provide correct TF_VERSION argument"
-                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.6.2, 2.7.0]"
+                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.7.1, 2.8.0]"
                 exit 1;;
         esac
     ;;

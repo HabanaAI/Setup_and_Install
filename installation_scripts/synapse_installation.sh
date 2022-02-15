@@ -11,14 +11,14 @@
 # Clean, updated OS installation
 # User must have sudo access with no password
 #
-# Usage: sudo -E ./setupinstall.sh [-h]
+# Usage: sudo -E ./synapse_installation.sh [-h]
 #   -h ............. Optional; show help
 
 # OS support:
-# - Ubuntu 18.04       Python3.7
+# - Ubuntu 18.04       Python3.8
 # - Ubuntu 20.04       Python3.8
 # - CentOS 7.8 and 8.3 Python3.8
-# - Amazon Linux 2     Python3.7
+# - Amazon Linux 2     Python3.8
 
 
 #
@@ -39,7 +39,7 @@ TMPF=/tmp/$0-$$.log
 show_help()
 {
     cat <<EOF
-Usage: sudo -E ./setupinstall.sh [-h]
+Usage: sudo -E ./synapse_installation.sh [-h]
    -h ............. Optional; show help
 
 This script installs required OS packages and Habanalabs Gaudi drivers
@@ -312,29 +312,30 @@ fi
 # Install the right version if needed
 if ! grep -q python3 /etc/profile.d/habanalabs.sh 2>/dev/null; then
     case $DISTRIB_CODENAME in
-      bionic) # Ubuntu 18.04
-        # U18 has python 3.6 installed by default, but we need 3.7
-        if ! python3 --version 2>/dev/null|grep -q " 3.7"; then
-            # Install python3.7, add alternatives, and set default
+      "bionic") # Ubuntu 18.04
+        # U18 has python 3.6 installed by default, but we need 3.8
+        if ! python3 --version 2>/dev/null|grep -q " 3.8"; then
+            # Install python3.8, add alternatives, and set default
             add-apt-repository -y ppa:deadsnakes/ppa
             apt-get update
-            apt-get install -y python3.7 python3-pip
+            apt-get install -y python3.8 python3-pip
             for py in python python3; do
-                update-alternatives --install /usr/local/bin/$py $py /usr/bin/python3.6 20
-                update-alternatives --install /usr/local/bin/$py $py /usr/bin/python3.7 30
-                #
-                # WARN: python3 will still point to v3.6 and /usr/local/bin/python3
-                # points to 3.7 even when "which python3" says it is /usr/local/bin/python3
-                # Hence, use $PYTHON, not python3 to get the supported version of 3.7
+                update-alternatives --install /usr/bin/$py $py /usr/bin/python3.6 20
+                update-alternatives --install /usr/bin/$py $py /usr/bin/python3.8 30
             done
         fi
-        PY=python3.7 ;;
-      focal) PY=python3.8 ;;  # Ubuntu 20.04
-      "Amazon Linux") ## Default is 3.7, install if needed
-        if [[ ! -d /opt/Python-3.7.12 && -z "$(python3 --version 2>/dev/null|grep 3.7)" ]]; then
-            install_python 3.7.12
+        apt remove -y python3-apt; apt install -y python3-apt python3.8-dev
+        PY=python3.8 ;;
+      "focal") PY=python3.8 ;;  # Ubuntu 20.04
+      "Amazon Linux") ## Default is 3.7, install 3.8 for v1.3.0 and later
+        if [[ ! -d /opt/Python-3.8.12 && -z "$(python3 --version 2>/dev/null|grep 3.8)" ]]; then
+            yum install -y libffi-devel
+            install_python 3.8.12
         fi
-        PY=python3.7 ;;
+        PY=python3.8
+        if ! $PY -m amazon_linux_extras >/dev/null 2>&1; then
+            cp -pr /lib/python2.7/site-packages/amazon_linux_extras /usr/local/lib/python3.8/site-packages
+        fi ;;
       "CentOS Stream")
         if [[ ! -d /opt/Python-3.8.12 && -z "$(python3 --version 2>/dev/null|grep 3.8)" ]]; then
             yum install -y gcc gcc-c++ zlib zlib-devel

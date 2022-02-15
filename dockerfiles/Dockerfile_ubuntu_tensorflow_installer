@@ -1,4 +1,4 @@
-# Copyright (c) 2021 HabanaLabs, Ltd.
+# Copyright (c) 2022 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -38,15 +38,12 @@ ENV MPICC=/usr/local/openmpi/bin/mpicc
 COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3 -m pip install pip==21.0.1 && \
-    pip3 install tensorflow-cpu==${TF_VERSION} \
-        tensorflow-model-optimization==0.5.0 && \
+    pip3 install tensorflow-cpu==${TF_VERSION} && \
     pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
-RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
-        --extra-index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
-        --extra-index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \
+RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
+    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
 

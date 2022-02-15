@@ -1,0 +1,2 @@
+tensorflow-io==0.24.0
+tensorflow-io-gcs-filesystem==0.24.0

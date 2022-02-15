@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Habana Labs, Ltd.
+# Copyright (c) 2022 Habana Labs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -13,12 +13,13 @@ RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.n
 
 RUN echo "[appstream]" > /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "name=CentOS Linux 8 - AppStream" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
-    echo "mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=AppStream&infra=\$infra" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
+    echo "mirrorlist=http://mirrorlist.centos.org/?release=\$releasever-stream&arch=\$basearch&repo=AppStream&infra=\$infra" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo
+
 
 RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "name=CentOS Linux 8 - BaseOS" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
-    echo "mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=BaseOS&infra=\$infra" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
+    echo "mirrorlist=http://mirrorlist.centos.org/?release=\$releasever-stream&arch=\$basearch&repo=BaseOS&infra=\$infra" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
 
 RUN dnf install -y \
@@ -33,6 +34,7 @@ RUN dnf install -y \
     jemalloc \
     libarchive \
     llvm \
+    lsof \
     redhat-lsb-core \
     kernel-tools \
     kernel-tools-libs \
@@ -66,3 +68,6 @@ RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
+ENV SCAL_CFG_FILE_PATH=/opt/habanalabs/etc/scal/default.json
+ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
+ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins

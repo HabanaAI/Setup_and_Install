@@ -1,4 +1,4 @@
-# Copyright (c) 2021 HabanaLabs, Ltd.
+# Copyright (c) 2022 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -53,8 +53,7 @@ COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-
 RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
     pip3 install setuptools==41.0.0
 
-RUN pip3 install tensorflow-cpu==${TF_VERSION} \
-        tensorflow-model-optimization==0.5.0 && \
+RUN pip3 install tensorflow-cpu==${TF_VERSION} && \
     pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
@@ -65,10 +64,8 @@ ENV TFIO_DATAPATH=/usr/local/lib64/python3.8/site-packages/
 # otherwise curl will fail during access to S3 AWS storage
 RUN ln -s /etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
 
-RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" \
-        --extra-index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" \
-        --extra-index-url "https://${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple
+RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
+    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 
 RUN /usr/bin/ssh-keygen -A && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \

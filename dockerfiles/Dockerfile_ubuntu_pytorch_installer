@@ -1,4 +1,4 @@
-# Copyright (c) 2021 HabanaLabs, Ltd.
+# Copyright (c) 2022 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -38,8 +38,8 @@ RUN apt-get update && apt-get install -y \
 RUN bash -c "\
     if [[ $BASE_NAME == *"ubuntu18.04"* ]]; then \
         rm -rf /usr/bin/python /usr/bin/python3m; \
-        ln -s /usr/bin/python3.7 /usr/bin/python; \
-        ln -s /usr/bin/python3.7m /usr/bin/python3m; \
+        ln -s /usr/bin/python3.8 /usr/bin/python; \
+        ln -s /usr/bin/python3.8m /usr/bin/python3m; \
     else \
         ln -s /usr/bin/python3.8 /usr/bin/python; \
     fi"
