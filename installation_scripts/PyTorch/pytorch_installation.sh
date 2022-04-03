@@ -63,8 +63,8 @@ function help()
 {
     echo -e "Help: Setting up execution of Pytorch for Gaudi"
     echo -e "############################################################"
-    echo -e "  -v <software version>          - Habana software version eg 1.2.0"
-    echo -e "  -b <build/revision>             - Habana build number eg: 585 in 1.2.0-585"
+    echo -e "  -v <software version>          - Habana software version eg 1.4.0"
+    echo -e "  -b <build/revision>             - Habana build number eg: 422 in 1.4.0-422"
     echo -e "  -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel79/rhel83/centos83>"
     echo -e "  -ndep                           - dont install rpm/deb dependecies"
     echo -e "  -sys                            - eg: install python packages without --user"
