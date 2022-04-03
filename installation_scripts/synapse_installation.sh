@@ -11,7 +11,8 @@
 # Clean, updated OS installation
 # User must have sudo access with no password
 #
-# Usage: sudo -E ./synapse_installation.sh [-h]
+# Usage: sudo -E ./synapse_installation.sh [-s server] [-h]
+#   -s server ...... Optional; indicate server for driver package download (default: vault.habana.ai)
 #   -h ............. Optional; show help
 
 # OS support:
@@ -27,9 +28,9 @@ HABANALABS_REQUIRED="habanalabs-graph
                      habanalabs-thunk
                      habanalabs-firmware"
 HABANALABS_OPTIONAL="habanalabs-firmware-tools
-                     habanalabs-qual
-                     habanalabs-aeon"
+                     habanalabs-qual"
 HABANALABS_COMMON="$HABANALABS_REQUIRED $HABANALABS_OPTIONAL"
+SERVER=vault.habana.ai
 
 #
 # Temp filename
@@ -39,7 +40,8 @@ TMPF=/tmp/$0-$$.log
 show_help()
 {
     cat <<EOF
-Usage: sudo -E ./synapse_installation.sh [-h]
+Usage: sudo -E ./synapse_installation.sh [-s server] [-h]
+   -s server ...... Optional; indicate server for driver package download (default: vault.habana.ai)
    -h ............. Optional; show help
 
 This script installs required OS packages and Habanalabs Gaudi drivers
@@ -57,14 +59,16 @@ EOF
 
 #
 # Parse options
-while getopts h opt; do
+while getopts hs: opt; do
     case $opt in
+      s) SERVER="$OPTARG" ;;
       h) show_help >&2; exit 1 ;;
       *) show_help >&2; exit 1 ;;
     esac
 done
 shift "$((OPTIND-1))" # Shift off the options and optional --.
 
+server_tag=$(sed 's,\..*,,' <<<$SERVER)
 
 #
 # Returns true if the user has root privilege
@@ -201,11 +205,11 @@ if [ -n "$DISTRIB_CODENAME" ]; then
         done
         rm -f $TMPF
     fi
-    if ! grep -q vault.habana.ai /etc/apt/sources.list.d/artifactory.list 2>/dev/null; then
-        echo "deb https://vault.habana.ai/artifactory/debian $DISTRIB_CODENAME main" |\
+    if ! grep -q $SERVER /etc/apt/sources.list.d/artifactory.list 2>/dev/null; then
+        echo "deb https://$SERVER/artifactory/debian $DISTRIB_CODENAME main" |\
             tee /etc/apt/sources.list.d/artifactory.list
     fi
-    wget -O- https://vault.habana.ai/artifactory/api/gpg/key/public | apt-key add -
+    wget -O- https://$SERVER/artifactory/api/gpg/key/public | apt-key add -
 
     dpkg --configure -a
     apt-get update
@@ -243,7 +247,7 @@ else
     case "$DISTRIB_CODENAME" in
       "CentOS Linux") os_key="centos7"  ;;
       "CentOS Stream") if (($(grep ^VERSION_ID /etc/os-release 2>/dev/null | sed -e 's,.*=,,' -e 's,",,g') == 8)); then
-                           os_key="centos"
+                           os_key="centos/8/8.3"
                        fi;;
       "Amazon Linux") os_key="AmazonLinux2" ;;
       "Red Hat Enterprise Linux") os_key="rhel/8/8.3";;
@@ -252,18 +256,18 @@ else
     if [ -n "$os_key" ]; then
         {
             echo "[vault]"
-            echo "name=Habana Vault"
-            echo "baseurl=https://vault.habana.ai/artifactory/$os_key"
+            echo "name=Habana $server_tag"
+            echo "baseurl=https://$SERVER/artifactory/$os_key"
             echo "enabled=1"
             echo "gpgcheck=0"
-            echo "gpgkey=https://vault.habana.ai/artifactory/$os_key/repodata/repomod.xml.key"
+            echo "gpgkey=https://$SERVER/artifactory/$os_key/repodata/repomod.xml.key"
             echo "repo_gpgcheck=0"
-        } | tee /etc/yum.repos.d/Habana-Vault.repo
+        } | tee /etc/yum.repos.d/Habana-$server_tag.repo
         yum makecache
         if [[ $os_key =~ centos ]]; then
             yum install -y epel-release
         fi
-        yum install -y git yum-utils lsof
+        yum install -y wget git yum-utils lsof
         yum install -y kernel-devel-$(uname -r)
         yum install -y \
              habanalabs \
@@ -318,18 +322,20 @@ if ! grep -q python3 /etc/profile.d/habanalabs.sh 2>/dev/null; then
             # Install python3.8, add alternatives, and set default
             add-apt-repository -y ppa:deadsnakes/ppa
             apt-get update
-            apt-get install -y python3.8 python3-pip
+            apt-get install -y python3.8
             for py in python python3; do
                 update-alternatives --install /usr/bin/$py $py /usr/bin/python3.6 20
                 update-alternatives --install /usr/bin/$py $py /usr/bin/python3.8 30
             done
         fi
-        apt remove -y python3-apt; apt install -y python3-apt python3.8-dev
+        apt remove -y python3-apt; apt install -y python3-apt python3.8-dev python3-pip
         PY=python3.8 ;;
-      "focal") PY=python3.8 ;;  # Ubuntu 20.04
+      "focal")  # Ubuntu 20.04
+        apt install -y python3-pip
+        PY=python3.8 ;;
       "Amazon Linux") ## Default is 3.7, install 3.8 for v1.3.0 and later
         if [[ ! -d /opt/Python-3.8.12 && -z "$(python3 --version 2>/dev/null|grep 3.8)" ]]; then
-            yum install -y libffi-devel
+            yum install -y gcc-c++ libffi-devel openssl
             install_python 3.8.12
         fi
         PY=python3.8
@@ -341,8 +347,8 @@ if ! grep -q python3 /etc/profile.d/habanalabs.sh 2>/dev/null; then
             yum install -y gcc gcc-c++ zlib zlib-devel
             yum install -y libffi-devel
             install_python 3.8.12
-            PY=python3.8
-        fi ;;
+        fi
+        PY=python3.8 ;;
       *) PY=python3.7 ;;     # All others
     esac
     echo "export PYTHON=/usr/bin/$PY" | tee -a /etc/profile.d/habanalabs.sh

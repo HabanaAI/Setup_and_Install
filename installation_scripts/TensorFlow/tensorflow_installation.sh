@@ -22,16 +22,24 @@
 
 CMDLINE_USAGE="$0 $*"
 REF_PACKAGE="habanalabs-graph" # Synapse GC and Runtime
-OPENMPI_VER=4.0.5
+OPENMPI_VER=4.1.2
 HABANA_PIP_VERSION="21.1.1"
 SETUPTOOLS_VERSION=41.0.0
-MPI_ROOT="/usr/local/openmpi"
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
-PATH=$MPI_ROOT/bin:$PATH
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
-TF_HABANA_PACKAGES="habana_tensorflow habana_horovod"
+KNOWN_TF_HABANA_PACKAGES="habana_tensorflow habana_horovod"
 KNOWN_TF_PACKAGES="tensorflow tensorflow-cpu tensorflow-gpu intel-tensorflow"
-TF_RECOMMENDED_PKG="tensorflow-cpu==2.7.1"
+TF_RECOMMENDED_PKG="tensorflow-cpu==2.8.0"
+MPI_ROOT_LOCAL="/usr/local/openmpi"
+
+MPI_ROOT="${MPI_ROOT:-/opt/amazon/openmpi}" # Default location is Open MPI installed by AWS EFA Installer
+${MPI_ROOT}/bin/mpirun --version 2>/dev/null
+if [ $? -eq 0 ]; then
+    echo "openmpi is found at ${MPI_ROOT}/bin/mpirun"
+else
+    MPI_ROOT=$MPI_ROOT_LOCAL # fallback to local installation
+fi
+PATH=$MPI_ROOT/bin:$PATH
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${MPI_ROOT}/lib/
 
 [ -f ${PROFILE_FILE} ] && source ${PROFILE_FILE}
 ###################################################################################################
@@ -45,11 +53,15 @@ function help()
     echo -e "The script sets up environment for recommended TensorFlow version: ${TF_RECOMMENDED_PKG}."
     echo -e "It auto-detects OS and installed Habana SynapseAI."
     echo -e "List of optional parameters:"
-    echo -e "  --tf <tf package>              - full TensorFlow package name and version to install via PIP. (default: '${TF_RECOMMENDED_PKG}')"
-    echo -e "                                   I.e. 'tensorflow-cpu==<ver>'. Alternatively, it can be path to remotely located package (as accepted by PIP)."
+    echo -e "  --tf <tf package>              - TensorFlow package to install via PIP. (default: '${TF_RECOMMENDED_PKG}')"
+    echo -e "                                   It can be any package description accepted by 'pip install' command, i.e.:"
+    echo -e "                                         - tensorflow-cpu==<ver>,"
+    echo -e "                                         - locally stored Wheel (*.whl),"
+    echo -e "                                         - URL to remotely located package."
     echo -e "  --ndeps                        - don't install rpm/deb dependencies"
     echo -e "  --extra_deps                   - install extra model references' rpm/deb dependencies"
     echo -e "  --pip_user <true/false>        - force pip install with or without --user flag. (default: --user is added if USER is not root)"
+    echo -e "                                   Useful when installing the environment in Python VirtualEnvironment (recommented to set to false)"
 }
 command -v sudo 2>&1 > /dev/null
 if [ $? -ne 0 ] || [ $UID -eq 0 ]; then
@@ -156,6 +168,14 @@ do
         --tf)
             shift
             __tf_pkg=$1
+            ;;
+        --habana_tensorflow)
+            shift
+            __habana_tf_pkg=$1
+            ;;
+        --habana_horovod)
+            shift
+            __habana_hvd_pkg=$1
             ;;
         --pip_user)
             shift
@@ -267,6 +287,9 @@ if [ "z${__build_no}" == "z" ]; then
 fi
 
 __tf_pkg=${__tf_pkg:-${TF_RECOMMENDED_PKG}}
+__habana_tf_pkg=${__habana_tf_pkg:-"habana_tensorflow==${__sw_version}.${__build_no}"}
+__habana_hvd_pkg=${__habana_hvd_pkg:-"habana_horovod==${__sw_version}.${__build_no}"}
+__habana_py_pkgs="${__habana_tf_pkg} ${__habana_hvd_pkg}"
 
 if [ "z${__sw_version}" == "z" ]; then
     echo "Habana software version is not specified"
@@ -289,7 +312,7 @@ fi
 
 uninstall_py_pkgs()
 {
-    for pkg in $@
+    for pkg in "$@"
     do
         ${PYTHON} -m pip show ${pkg} 2>&1 > /dev/null
         if [ $? -eq 0 ]; then
@@ -304,9 +327,9 @@ uninstall_py_pkgs()
 
 install_tf_habana_py_pkgs()
 {
-    for pkg in ${TF_HABANA_PACKAGES}
+    for pkg in ${__habana_py_pkgs}
     do
-        ${PYTHON} -m pip install ${pkg}==${__sw_version}.${__build_no} ${__python_user_opt}
+        ${PYTHON} -m pip install ${pkg} ${__python_user_opt}
         if [ $? -ne 0 ]; then
             echo "Failed to install ${pkg}."
             echo "${CMDLINE_USAGE}"
@@ -345,20 +368,36 @@ setup_envs()
 compile_install_openmpi()
 {
     set -e
-    if [[ `${MPI_ROOT}/bin/mpirun --version` == *"$OPENMPI_VER"* ]]; then
-        echo "OpenMPI found. Skipping installation."
-    else
-        echo "OpenMPI not found. Installing OpenMPI ${OPENMPI_VER}.."
-        wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz
-        tar -xf openmpi-"${OPENMPI_VER}".tar.gz
-        cd openmpi-"${OPENMPI_VER}"
-        ./configure --prefix="${MPI_ROOT}"
-        make -j
-        ${SUDO} make install
-        ${SUDO} cp LICENSE ${MPI_ROOT}
-        cd -
-        ${SUDO} rm -rf openmpi-"${OPENMPI_VER}"*
-        ${SUDO} /sbin/ldconfig
+    if [[ "$MPI_ROOT" == "$MPI_ROOT_LOCAL"* ]]; then
+        local _mpirun_path="${MPI_ROOT}/bin/mpirun"
+
+        if [ -f "$_mpirun_path" ]; then
+            local _mpi_version=`$_mpirun_path --version | grep 'mpirun (Open MPI)' | grep -oE '[^ ]+$'`
+            # remove exisitng local Open MPI, if it does not match the version
+            if [[ "$_mpi_version" != "$OPENMPI_VER" ]]; then
+                echo "warning: An existing local installation of Open MPI found at $MPI_ROOT"
+                echo "         is not in currently supported version."
+                echo "         Supported version is: $OPENMPI_VER"
+                echo "         Installed version is: $_mpi_version"
+                echo "Removing the Open MPI from: $MPI_ROOT"
+                ${SUDO} rm -rf "$MPI_ROOT"
+            fi
+        fi
+
+        if [ ! -d "$MPI_ROOT" ]; then
+            echo "Installing Open MPI $OPENMPI_VER to: $MPI_ROOT"
+            local VER=$OPENMPI_VER
+            wget --no-verbose -O /tmp/openmpi-$VER.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-$VER.tar.gz && \
+                tar zxf /tmp/openmpi-$VER.tar.gz -C /tmp && \
+                pushd /tmp/openmpi-$VER && \
+                ./configure --prefix="$MPI_ROOT" && \
+                make -j `nproc` && \
+                ${SUDO} make install && \
+                ${SUDO} cp LICENSE ${MPI_ROOT} && \
+                popd && \
+                ${SUDO} rm -rf /tmp/openmpi-$VER* && \
+                ${SUDO} /sbin/ldconfig
+        fi
     fi
     MPICC=${MPI_ROOT}/bin/mpicc ${PYTHON} -m pip install mpi4py==3.0.3 --no-cache-dir ${__python_user_opt}
     set +e
@@ -476,7 +515,7 @@ install_yum_or_dnf_extra_pkgs()
 install_tf_habana_pkgs()
 {
     # uninstall Habana TF packages
-    uninstall_py_pkgs $TF_HABANA_PACKAGES
+    uninstall_py_pkgs $KNOWN_TF_HABANA_PACKAGES
     # uninstall any TF in the system
     uninstall_py_pkgs $KNOWN_TF_PACKAGES
     # make sure that no unknow TF package is still installed
@@ -497,6 +536,11 @@ else:
     fi
 
     ${PYTHON} -m pip install ${__tf_pkg} ${__python_user_opt}
+    if [ $? -ne 0 ]; then
+        echo "Failed to install ${__tf_pkg}."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+    fi
     install_tf_habana_py_pkgs
 
     TF_IO_VER=""
@@ -509,8 +553,13 @@ else:
         echo "${CMDLINE_USAGE}"
         exit 1
     fi
-    # install tensorflow-io package with no deps, as it has broken dependency on tensorflow and would try to install non-cpu package
-    ${PYTHON} -m pip install --user --no-deps tensorflow-io==${TF_IO_VER} tensorflow-io-gcs-filesystem==${TF_IO_VER}
+
+    ${PYTHON} -m pip install ${__python_user_opt} tensorflow-io==${TF_IO_VER} tensorflow-io-gcs-filesystem==${TF_IO_VER}
+    if [ $? -ne 0 ]; then
+        echo "Failed to install tensorflow-io==${TF_IO_VER} and tensorflow-io-gcs-filesystem==${TF_IO_VER}."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+    fi
 
     setup_envs
     grep -qxF "source ${PROFILE_FILE}" ~/.bashrc || echo "source ${PROFILE_FILE}" >> ~/.bashrc
@@ -569,3 +618,4 @@ compile_install_openmpi
 install_tf_habana_pkgs
 verify_installation
 echo "Setting up execution of TensorFlow for Gaudi is done. Source again ~/.bashrc."
+exit 0

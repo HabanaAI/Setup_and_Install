@@ -23,16 +23,25 @@
 CMDLINE_USAGE="$0 $*"
 REF_PACKAGE="habanalabs-firmware"
 ARTIFACTORY_URL=vault.habana.ai
-OPENMPI_VER=4.0.5
+OPENMPI_VER=4.1.2
 HABANA_PIP_VERSION="21.1.1"
 SETUPTOOLS_VERSION=41.0.0
-MPI_ROOT="/usr/local/openmpi"
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
 PT_SHARED_LIB_DIR="/usr/lib/habanalabs"
-DEFAULT_SW_VERSION="1.3.0"
-DEFAULT_BUILD_NO="499"
+DEFAULT_SW_VERSION="1.4.0"
+DEFAULT_BUILD_NO="442"
+MPI_ROOT="${MPI_ROOT:-/opt/amazon/openmpi}"
+
+${MPI_ROOT}/bin/mpirun --version 2>/dev/null
+if [ $? -eq 0 ]; then
+    echo "openmpi is found at ${MPI_ROOT}/bin/mpirun"
+else
+    MPI_ROOT="/usr/local/openmpi"
+fi
+
 PATH=$MPI_ROOT/bin:$PATH
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${MPI_ROOT}/lib/
+
 PT_HABANA_PACKAGES="torch habana_torch habana_torch_dataloader \
                     habana_dataloader transformers fairseq \
                     pytorch_lightning torchvision gather2d_cpp \
@@ -331,10 +340,11 @@ export LANG=en_US.UTF-8
 compile_install_openmpi()
 {
     set -e
-    if [[ `${MPI_ROOT}/bin/mpirun --version 2>/dev/null` == *"$OPENMPI_VER"* ]]; then
+    ${MPI_ROOT}/bin/mpirun --version 2>/dev/null
+    if [ $? -eq 0 ]; then
         echo "OpenMPI found. Skipping installation."
     else
-        wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz
+        wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-"${OPENMPI_VER}".tar.gz
         tar -xvf openmpi-"${OPENMPI_VER}".tar.gz
         cd openmpi-"${OPENMPI_VER}"
         ./configure --prefix="${MPI_ROOT}"
@@ -344,6 +354,7 @@ compile_install_openmpi()
         cd -
         ${SUDO} rm -rf openmpi-"${OPENMPI_VER}"*
         ${SUDO} /sbin/ldconfig
+        setup_envs
     fi
     MPICC=${MPI_ROOT}/bin/mpicc ${PYTHON} -m pip install mpi4py==3.0.3 --no-cache-dir ${__python_user_opt}
     set +e
@@ -371,7 +382,6 @@ install_ubuntu18_dep_pkgs()
     HABANA_PIP_VERSION="19.3.1"
     ${SUDO} apt-get update && ${SUDO} apt-get install -y \
     unzip \
-    openssh-client \
     curl \
     libcurl4 \
     moreutils \
@@ -381,9 +391,11 @@ install_ubuntu18_dep_pkgs()
     libselinux1-dev \
     libnuma-dev \
     libpcre2-dev \
+    libatlas-base-dev \
     libjpeg-dev \
     liblapack-dev \
     libblas-dev \
+    libnuma-dev \
     ${__pydev_pkg} \
     numactl && \
     ${SUDO} apt-get clean
@@ -398,7 +410,6 @@ install_ubuntu20_dep_pkgs()
     HABANA_PIP_VERSION="19.3.1"
     ${SUDO} apt-get update && ${SUDO} apt-get install -y \
     unzip \
-    openssh-client \
     curl \
     libcurl4 \
     moreutils \
@@ -408,10 +419,12 @@ install_ubuntu20_dep_pkgs()
     libselinux1-dev \
     libnuma-dev \
     libpcre2-dev \
+    libatlas-base-dev \
     libjpeg-dev \
     liblapack-dev \
     libblas-dev \
     python3-dev \
+    libnuma-dev \
     numactl && \
     ${SUDO} apt-get clean
     ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
@@ -427,8 +440,6 @@ install_rhel83_dep_pkgs()
     set -e
     ${SUDO} dnf install -y \
     unzip \
-    openssh-clients \
-    openssh-server \
     curl \
     redhat-lsb-core \
     openmpi-devel \
@@ -441,7 +452,9 @@ install_rhel83_dep_pkgs()
     python38-devel \
     zlib-devel \
     cpupowerutils \
+    lapack \
     lapack-devel \
+    blas \
     blas-devel \
     numactl && \
     ${SUDO} dnf clean all && ${SUDO} rm -rf /var/cache/yum
@@ -460,8 +473,6 @@ install_rhel79_dep_pkgs()
     set -e
     ${SUDO} yum install -y \
     unzip \
-    openssh-clients \
-    openssh-server \
     curl \
     redhat-lsb-core \
     openmpi-devel \
@@ -472,6 +483,7 @@ install_rhel79_dep_pkgs()
     libjpeg-devel \
     zlib-devel \
     lapack-devel \
+    blas \
     blas-devel \
     numactl && \
     ${SUDO} yum clean all
@@ -491,8 +503,6 @@ install_centos83_dep_pkgs()
     ${SUDO} dnf install -y --enablerepo=powertools \
     libffi-devel \
     unzip \
-    openssh-clients \
-    openssh-server \
     curl \
     redhat-lsb-core \
     openmpi-devel \
@@ -501,9 +511,11 @@ install_centos83_dep_pkgs()
     iproute \
     git \
     which \
+    mesa-libGL \
     libjpeg-devel \
     zlib-devel \
     lapack-devel \
+    blas \
     blas-devel \
     numactl && \
     ${SUDO} dnf clean all
@@ -534,8 +546,6 @@ install_amzn2_dep_pkgs()
     ${SUDO} yum install -y \
     unzip \
     ${__pydev_pkg} \
-    openssh-clients \
-    openssh-server \
     curl \
     redhat-lsb-core \
     openmpi-devel \
@@ -547,6 +557,7 @@ install_amzn2_dep_pkgs()
     libjpeg-devel \
     zlib-devel \
     lapack-devel \
+    blas \
     blas-devel \
     sox \
     numactl && \
@@ -602,7 +613,6 @@ install_pt_habana_pkgs()
     rm -f ${PT_PKGS}/torchvision*.whl
     ${PYTHON} -m pip install ${PT_PKGS}/*.whl ${__python_user_opt}
     ${SUDO} /sbin/ldconfig
-    setup_envs
     grep -qxF "source ${PROFILE_FILE}" ~/.bashrc || echo "source ${PROFILE_FILE}" >> ~/.bashrc
     ${PYTHON} -m pip uninstall -y pillow
     ${PYTHON} -m pip uninstall -y pillow-simd
