@@ -23,11 +23,8 @@ ENV MPI_ROOT=/usr/local/openmpi/
 
 # Install unzip to extract pre-trained weights for BERT demo
 RUN dnf install -y unzip \
-        openssh-clients \
-        openssh-server \
         git \
-        bc \
-        mesa-libGL && \
+        bc && \
     dnf clean all && rm -rf /var/cache/dnf
 
 RUN dnf --enablerepo=powertools install -y protobuf-devel && \
@@ -51,9 +48,10 @@ ENV MPICC=/usr/local/openmpi/bin/mpicc
 COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
-    pip3 install setuptools==41.0.0
+    pip3 install setuptools==60.5.0
 
-RUN pip3 install tensorflow-cpu==${TF_VERSION} && \
+RUN pip3 install tensorflow-cpu==${TF_VERSION} \
+        tensorflow-model-optimization==0.7.0 && \
     pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 

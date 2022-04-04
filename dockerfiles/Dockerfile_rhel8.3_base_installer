@@ -7,6 +7,7 @@ FROM registry.access.redhat.com/ubi8/ubi:8.3
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG EFA_INSTALLER_VER="1.15.0"
 
 RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
     dnf clean all && rm -rf /var/cache/yum
@@ -35,16 +36,30 @@ RUN dnf install -y \
     libarchive \
     llvm \
     lsof \
+    openssh-clients \
+    openssh-server \
     redhat-lsb-core \
     kernel-tools \
     kernel-tools-libs \
-    wget && \
+    wget \
+    mesa-libGL && \
     dnf clean all && rm -rf /var/cache/yum
-
-RUN dnf update -y glib2 systemd
 
 RUN dnf module install python38 -y && \
     dnf clean all && rm -rf /var/cache/yum
+
+RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -P /tmp && \
+    tar -xf "/tmp/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -C /tmp && \
+    cd /tmp/aws-efa-installer && \
+    ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
+    cd - && rm -rf /tmp/*
+
+ENV LD_LIBRARY_PATH=/opt/amazon/openmpi/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
+ENV PATH=/opt/amazon/openmpi/bin:/opt/amazon/efa/bin:$PATH
+ENV OPAL_PREFIX=/opt/amazon/openmpi
+ENV MPI_ROOT=/opt/amazon/openmpi
+ENV MPICC=/opt/amazon/openmpi/bin/mpicc
+ENV FI_EFA_ENABLE_SHM_TRANSFER=0
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana RH8 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
@@ -58,11 +73,16 @@ RUN echo "[powertools]" > /etc/yum.repos.d/powertools.repo && \
 
 RUN dnf install -y habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
-        habanalabs-graph-"$VERSION"-"$REVISION".el8 \
-        habanalabs-aeon-"$VERSION"-"$REVISION".el8
+        habanalabs-graph-"$VERSION"-"$REVISION".el8
 
 RUN rm -f /etc/yum.repos.d/habanalabs.repo && rm -rf /tmp/* && \
     dnf clean all && rm -rf /var/cache/yum
+
+# SSH configuration necessary to support mpi-operator v2
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
+    echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
+    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8

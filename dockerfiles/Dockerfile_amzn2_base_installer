@@ -7,16 +7,22 @@ FROM amazonlinux:2
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG EFA_INSTALLER_VER="1.15.0"
 
 RUN amazon-linux-extras enable python3.8 && \
 yum update -y && yum install -y \
     ethtool-4.8-10.amzn2.x86_64 \
+    openssh-clients \
+    openssh-server \
     python38 \
     python38-devel \
     python38-pip \
     python38-tkinter \
     wget \
-    lsof
+    lsof \
+    tar \
+    mesa-libGL && \
+    yum clean all && rm -rf /var/cache/yum
 
 # Install jemalloc-3.6.0-1.el7.x86_64 package with required /lib64/libjemalloc.so.1 lib need for topologies
 RUN yum install -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm && \
@@ -27,6 +33,18 @@ RUN yum install -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epe
 RUN yum groupinstall -y "Development Tools"
 RUN yum install -y sudo system-lsb-core cmake
 
+RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -P /tmp && \
+    tar -xf "/tmp/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -C /tmp && \
+    cd /tmp/aws-efa-installer && ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
+    cd - && rm -rf /tmp/*
+
+ENV LD_LIBRARY_PATH=/opt/amazon/openmpi/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
+ENV PATH=/opt/amazon/openmpi/bin:/opt/amazon/efa/bin:$PATH
+ENV OPAL_PREFIX=/opt/amazon/openmpi
+ENV MPI_ROOT=/opt/amazon/openmpi
+ENV MPICC=/opt/amazon/openmpi/bin/mpicc
+ENV FI_EFA_ENABLE_SHM_TRANSFER=0
+
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
@@ -34,14 +52,19 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
 
 RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-firmware-tools-"$VERSION"-"$REVISION".amzn2 && \
-    yum install -y habanalabs-graph-"$VERSION"-"$REVISION".amzn2 && \
-    yum install -y habanalabs-aeon-"$VERSION"-"$REVISION".amzn2
+    yum install -y habanalabs-graph-"$VERSION"-"$REVISION".amzn2
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
 
 RUN rm -f /etc/yum.repos.d/habanalabs.repo && \
     yum clean all && rm -rf /var/cache/yum
+
+# SSH configuration necessary to support mpi-operator v2
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
+    echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
+    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=off

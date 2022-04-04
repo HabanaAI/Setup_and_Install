@@ -10,35 +10,17 @@ FROM ${BASE_NAME}:${VERSION}-${REVISION}
 ARG VERSION
 ARG REVISION
 ARG TF_VERSION
-ARG OPENMPI_VER=4.0.5
 ARG ARTIFACTORY_URL
 
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
 ENV PYTHONPATH=/usr/lib/habanalabs/:/root
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
-ENV PATH=$PATH:/usr/local/openmpi/bin/
-ENV OPAL_PREFIX=/usr/local/openmpi/
-ENV MPI_ROOT=/usr/local/openmpi/
-
-# Install OpenMpi from public sources - it must be installed before requirements,
-# that has dependecy with mpi4py package
-RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
-    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
-    cd openmpi-"${OPENMPI_VER}" && \
-    ./configure --prefix="/usr/local/openmpi" && \
-    make -j && \
-    make install && \
-    cp LICENSE /usr/local/openmpi && \
-    cd - && \
-    rm -rf openmpi-"${OPENMPI_VER}"* && \
-    /sbin/ldconfig
-
-ENV MPICC=/usr/local/openmpi/bin/mpicc
 
 COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3 -m pip install pip==21.0.1 && \
-    pip3 install tensorflow-cpu==${TF_VERSION} && \
+    pip3 install setuptools==60.5.0 && \
+    pip3 install --use-pep517 tensorflow-cpu==${TF_VERSION} \
+        tensorflow-model-optimization==0.7.0 && \
     pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
 

@@ -80,7 +80,7 @@ The following is the usage of the script:
 Help :Setting up execution of Pytorch for Gaudi
 ############################################################
   -v <software version>           - Habana software version eg 1.4.0
-  -b <build/revision>             - Habana build number eg: 422 in 1.4.0-422
+  -b <build/revision>             - Habana build number eg: 442 in 1.4.0-442
   -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel79/rhel83/centos83>
   -ndep                           - dont install rpm/deb dependecies
   -sys                            - eg: install python packages without --user

@@ -11,7 +11,6 @@ ARG PT_VERSION
 ARG VERSION
 ARG REVISION
 ARG ARTIFACTORY_URL
-ARG OPENMPI_VER=4.0.5
 ARG HABANA_PIP_VERSION="21.0.1"
 
 ENV SETUPTOOLS_VERSION=41.0.0
@@ -19,11 +18,8 @@ ENV LANG=en_US.UTF-8
 
 RUN dnf install -y \
     unzip \
-    openssh-clients \
-    openssh-server \
     curl \
     redhat-lsb-core \
-    openmpi-devel \
     cairo-devel \
     numactl-devel \
     iproute \
@@ -39,23 +35,8 @@ RUN dnf install -y \
     dnf clean all && rm -rf /var/cache/yum
 
 RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
-    pip3 install setuptools=="${SETUPTOOLS_VERSION}"
-
-RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
-    tar -xf openmpi-"${OPENMPI_VER}".tar.gz && \
-    cd openmpi-"${OPENMPI_VER}" && \
-    ./configure --prefix="/usr/local/openmpi" && \
-    make -j && \
-    make install && \
-    cp LICENSE /usr/local/openmpi && \
-    cd - && \
-    rm -rf openmpi-"${OPENMPI_VER}"* && \
-    /sbin/ldconfig
-
-ENV MPI_ROOT=/usr/local/openmpi
-ENV PATH=$MPI_ROOT/bin:$PATH
-
-RUN MPICC=/usr/local/openmpi/bin/mpicc pip3 install mpi4py==3.0.3 --no-cache-dir
+    pip3 install setuptools=="${SETUPTOOLS_VERSION}" && \
+    pip3 install mpi4py==3.0.3 --no-cache-dir
 
 RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /rhel83/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
@@ -74,5 +55,4 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
 RUN rm -rf /tmp/*

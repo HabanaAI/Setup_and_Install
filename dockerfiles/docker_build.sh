@@ -10,11 +10,11 @@
 : "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.7.1, 2.8.0])"}"
 
 VERSION="${CUSTOM_VERSION:-1.4.0}"
-REVISION="${CUSTOM_REVISION:-422}"
+REVISION="${CUSTOM_REVISION:-442}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
-PT_VERSION="1.10.1"
+PT_VERSION="1.10.2"
 ARTIFACTORY_URL="${CUSTOM_ARTIFACTORY_URL:-vault.habana.ai}"
 ARTIFACTORY_REPO="gaudi-docker"
 

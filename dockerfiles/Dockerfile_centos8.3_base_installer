@@ -4,21 +4,21 @@
 #
 # HabanaLabs Dockerfile base installer layer for Centos 8
 
-FROM centos:8
+FROM quay.io/centos/centos:stream8
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 
-# old versions have been removed from the main CentOS servers to Vault mirror.
-RUN sed -i 's/#baseurl=http:\/\/mirror\./baseurl=http:\/\/vault\./g' /etc/yum.repos.d/*.repo && \
-    sed -i '/^mirrorlist/d' /etc/yum.repos.d/*.repo
-RUN dnf update -y && dnf install -y \
+RUN dnf install -y \
     cmake \
     epel-release \
     lsof \
+    openssh-clients \
+    openssh-server \
     python38 \
     python38-devel \
     python38-tkinter \
+    mesa-libGL \
     wget && \
     dnf install -y jemalloc && \
     dnf install -y https://repo.almalinux.org/almalinux/8/AppStream/x86_64/os/Packages/java-1.8.0-openjdk-headless-1.8.0.312.b07-1.el8_4.x86_64.rpm && \
@@ -34,9 +34,14 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
 
 RUN dnf install -y --enablerepo=powertools habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
-        habanalabs-graph-"$VERSION"-"$REVISION".el8 \
-        habanalabs-aeon-"$VERSION"-"$REVISION".el8 && \
+        habanalabs-graph-"$VERSION"-"$REVISION".el8 && \
     dnf clean all && rm -rf /var/cache/dnf
+
+# SSH configuration necessary to support mpi-operator v2
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
+    echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
+    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8

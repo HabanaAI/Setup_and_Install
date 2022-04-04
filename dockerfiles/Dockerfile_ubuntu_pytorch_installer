@@ -12,14 +12,12 @@ ARG VERSION
 ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
-ARG OPENMPI_VER=4.0.5
 ARG HABANA_PIP_VERSION="19.3.1"
 
 ENV LANG=en_US.UTF-8
 
 RUN apt-get update && apt-get install -y \
     unzip \
-    openssh-client \
     curl \
     libcurl4 \
     moreutils \
@@ -44,23 +42,8 @@ RUN bash -c "\
         ln -s /usr/bin/python3.8 /usr/bin/python; \
     fi"
 
-RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}"
-
-RUN wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-"${OPENMPI_VER}".tar.gz && \
-    tar -xvf openmpi-"${OPENMPI_VER}".tar.gz && \
-    cd openmpi-"${OPENMPI_VER}" && \
-    ./configure --prefix="/usr/local/openmpi" && \
-    make -j && \
-    make install && \
-    cp LICENSE /usr/local/openmpi && \
-    cd - && \
-    rm -rf openmpi-"${OPENMPI_VER}"* && \
-    /sbin/ldconfig
-
-ENV MPI_ROOT=/usr/local/openmpi
-ENV PATH=$MPI_ROOT/bin:$PATH
-
-RUN MPICC=/usr/local/openmpi/bin/mpicc pip install mpi4py==3.0.3 --no-cache-dir
+RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip install mpi4py==3.0.3 --no-cache-dir
 
 RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /ubuntu${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
@@ -80,7 +63,5 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 # requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
 # pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg
-
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/openmpi/lib/
 
 RUN rm -rf /tmp/*

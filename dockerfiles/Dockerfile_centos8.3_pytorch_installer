@@ -18,8 +18,6 @@ ENV LANG=en_US.UTF-8
 
 RUN dnf install -y --enablerepo=powertools \
     unzip \
-    openssh-clients \
-    openssh-server \
     curl \
     redhat-lsb-core \
     openmpi-devel \
