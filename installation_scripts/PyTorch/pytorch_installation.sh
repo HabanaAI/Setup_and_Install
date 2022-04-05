@@ -340,8 +340,7 @@ export LANG=en_US.UTF-8
 compile_install_openmpi()
 {
     set -e
-    ${MPI_ROOT}/bin/mpirun --version 2>/dev/null
-    if [ $? -eq 0 ]; then
+    if ${MPI_ROOT}/bin/mpirun --version 2>/dev/null; then
         echo "OpenMPI found. Skipping installation."
     else
         wget --no-verbose https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-"${OPENMPI_VER}".tar.gz
