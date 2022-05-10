@@ -9,8 +9,8 @@
 : "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.7.1, 2.8.0])"}"
 : "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.7.1, 2.8.0])"}"
 
-VERSION="${CUSTOM_VERSION:-1.4.0}"
-REVISION="${CUSTOM_REVISION:-442}"
+VERSION="${CUSTOM_VERSION:-1.4.1}"
+REVISION="${CUSTOM_REVISION:-11}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"

@@ -9,6 +9,9 @@ ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 
+RUN sed -i -e 's/Stream/Linux/g' /etc/centos-release && \
+    sed -i -e 's/Stream/Linux/g' /usr/lib/os-release
+
 RUN dnf install -y \
     cmake \
     epel-release \
@@ -37,6 +40,8 @@ RUN dnf install -y --enablerepo=powertools habanalabs-thunk-"$VERSION"-"$REVISIO
         habanalabs-graph-"$VERSION"-"$REVISION".el8 && \
     dnf clean all && rm -rf /var/cache/dnf
 
+RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}" --no-cache-dir \
+        --extra-index-url https://"${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
     sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \

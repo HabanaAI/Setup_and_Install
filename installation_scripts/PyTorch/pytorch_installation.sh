@@ -28,8 +28,8 @@ HABANA_PIP_VERSION="21.1.1"
 SETUPTOOLS_VERSION=41.0.0
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
 PT_SHARED_LIB_DIR="/usr/lib/habanalabs"
-DEFAULT_SW_VERSION="1.4.0"
-DEFAULT_BUILD_NO="442"
+DEFAULT_SW_VERSION="1.4.1"
+DEFAULT_BUILD_NO="11"
 MPI_ROOT="${MPI_ROOT:-/opt/amazon/openmpi}"
 
 ${MPI_ROOT}/bin/mpirun --version 2>/dev/null
@@ -63,8 +63,8 @@ function help()
 {
     echo -e "Help: Setting up execution of Pytorch for Gaudi"
     echo -e "############################################################"
-    echo -e "  -v <software version>          - Habana software version eg 1.4.0"
-    echo -e "  -b <build/revision>             - Habana build number eg: 442 in 1.4.0-442"
+    echo -e "  -v <software version>          - Habana software version eg 1.4.1"
+    echo -e "  -b <build/revision>             - Habana build number eg: 11 in 1.4.1-11"
     echo -e "  -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel79/rhel83/centos83>"
     echo -e "  -ndep                           - dont install rpm/deb dependecies"
     echo -e "  -sys                            - eg: install python packages without --user"

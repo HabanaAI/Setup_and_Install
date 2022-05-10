@@ -8,7 +8,7 @@ ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 ARG HABANA_PIP_VERSION="19.3.1"
-ARG EFA_INSTALLER_VER="1.15.0"
+ARG EFA_INSTALLER_VER="1.15.1"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
@@ -101,6 +101,9 @@ RUN apt-get update && \
         habanalabs-graph="$VERSION"-"$REVISION" && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
+
+    RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}" --no-cache-dir \
+        --extra-index-url https://"${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
