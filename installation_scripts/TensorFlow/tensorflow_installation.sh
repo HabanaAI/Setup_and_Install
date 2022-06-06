@@ -322,6 +322,20 @@ uninstall_py_pkgs()
 }
 
 ###################################################################################################
+#    install media loader
+###################################################################################################
+
+install_media_loader()
+{
+    ${PYTHON} -m pip install hpu_media_loader==${__sw_version}.${__build_no} --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple ${__python_user_opt}
+    if [ $? -ne 0 ]; then
+        echo "Failed to install hpu_media_loader."
+        echo "${CMDLINE_USAGE}"
+        exit 1
+    fi
+}
+
+###################################################################################################
 #    install tf python packages
 ###################################################################################################
 
@@ -336,6 +350,7 @@ install_tf_habana_py_pkgs()
             exit 1
         fi
     done
+    install_media_loader
 }
 
 ###################################################################################################
@@ -516,6 +531,7 @@ install_tf_habana_pkgs()
 {
     # uninstall Habana TF packages
     uninstall_py_pkgs $KNOWN_TF_HABANA_PACKAGES
+    uninstall_py_pkgs hpu_media_loader
     # uninstall any TF in the system
     uninstall_py_pkgs $KNOWN_TF_PACKAGES
     # make sure that no unknow TF package is still installed
