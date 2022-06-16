@@ -28,7 +28,7 @@ SETUPTOOLS_VERSION=41.0.0
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
 KNOWN_TF_HABANA_PACKAGES="habana_tensorflow habana_horovod"
 KNOWN_TF_PACKAGES="tensorflow tensorflow-cpu tensorflow-gpu intel-tensorflow"
-TF_RECOMMENDED_PKG="tensorflow-cpu==2.8.0"
+TF_RECOMMENDED_PKG="tensorflow-cpu==2.8.2"
 MPI_ROOT_LOCAL="/usr/local/openmpi"
 
 MPI_ROOT="${MPI_ROOT:-/opt/amazon/openmpi}" # Default location is Open MPI installed by AWS EFA Installer
@@ -177,6 +177,10 @@ do
             shift
             __habana_hvd_pkg=$1
             ;;
+        --hpu_media_loader)
+            shift
+            __habana_media_pkg=$1
+            ;;
         --pip_user)
             shift
             if [ "z${1}" == "ztrue" ]; then
@@ -289,7 +293,9 @@ fi
 __tf_pkg=${__tf_pkg:-${TF_RECOMMENDED_PKG}}
 __habana_tf_pkg=${__habana_tf_pkg:-"habana_tensorflow==${__sw_version}.${__build_no}"}
 __habana_hvd_pkg=${__habana_hvd_pkg:-"habana_horovod==${__sw_version}.${__build_no}"}
-__habana_py_pkgs="${__habana_tf_pkg} ${__habana_hvd_pkg}"
+__habana_media_pkg=${__habana_media_pkg:-"hpu_media_loader==${__sw_version}.${__build_no} --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple"}
+#use semicolons to separate packages in __habana_py_pkgs
+__habana_py_pkgs="${__habana_tf_pkg};${__habana_hvd_pkg};${__habana_media_pkg}"
 
 if [ "z${__sw_version}" == "z" ]; then
     echo "Habana software version is not specified"
@@ -322,35 +328,24 @@ uninstall_py_pkgs()
 }
 
 ###################################################################################################
-#    install media loader
-###################################################################################################
-
-install_media_loader()
-{
-    ${PYTHON} -m pip install hpu_media_loader==${__sw_version}.${__build_no} --extra-index-url https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple ${__python_user_opt}
-    if [ $? -ne 0 ]; then
-        echo "Failed to install hpu_media_loader."
-        echo "${CMDLINE_USAGE}"
-        exit 1
-    fi
-}
-
-###################################################################################################
 #    install tf python packages
 ###################################################################################################
 
 install_tf_habana_py_pkgs()
 {
+    IFS=";"
     for pkg in ${__habana_py_pkgs}
     do
+        unset IFS
         ${PYTHON} -m pip install ${pkg} ${__python_user_opt}
         if [ $? -ne 0 ]; then
             echo "Failed to install ${pkg}."
             echo "${CMDLINE_USAGE}"
             exit 1
         fi
+        IFS=";"
     done
-    install_media_loader
+    unset IFS
 }
 
 ###################################################################################################
@@ -560,10 +555,10 @@ else:
     install_tf_habana_py_pkgs
 
     TF_IO_VER=""
-    if [[ ${__tf_pkg} == *"2.7.1"* ]]; then
-        TF_IO_VER="0.23.1"
-    elif [[ ${__tf_pkg} == *"2.8.0"* ]]; then
-        TF_IO_VER="0.24.0"
+    if [[ ${__tf_pkg} == *"2.8.2"* ]]; then
+        TF_IO_VER="0.25.0"
+    elif [[ ${__tf_pkg} == *"2.9.1"* ]]; then
+        TF_IO_VER="0.26.0"
     else
         echo "Could not determine TensorFlow version from input -tf=${__tf_pkg}. Input string does not match known TF versions."
         echo "${CMDLINE_USAGE}"

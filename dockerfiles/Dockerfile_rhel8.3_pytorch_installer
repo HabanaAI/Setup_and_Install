@@ -15,6 +15,7 @@ ARG HABANA_PIP_VERSION="21.0.1"
 
 ENV SETUPTOOLS_VERSION=41.0.0
 ENV LANG=en_US.UTF-8
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
 RUN dnf install -y \
     unzip \
@@ -31,7 +32,8 @@ RUN dnf install -y \
     cpupowerutils \
     lapack-devel \
     blas-devel \
-    numactl && \
+    numactl \
+    gperftools.x86_64 && \
     dnf clean all && rm -rf /var/cache/yum
 
 RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
@@ -54,5 +56,7 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     pip3 install pillow-simd==7.0.0.post3 && \
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
+
+ENV LD_PRELOAD=/lib64/libtcmalloc.so
 
 RUN rm -rf /tmp/*

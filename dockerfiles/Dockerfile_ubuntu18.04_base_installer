@@ -14,7 +14,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV OS_NUMBER=1804
-ENV SCAL_CFG_FILE_PATH=/opt/habanalabs/etc/scal/default.json
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
 
 RUN apt-get update && \
@@ -61,11 +60,11 @@ RUN apt-get update && \
     cd /tmp/aws-efa-installer && ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
     cd - && rm -rf /tmp/*
 
-ENV LD_LIBRARY_PATH=/opt/amazon/openmpi/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
-ENV PATH=/opt/amazon/openmpi/bin:/opt/amazon/efa/bin:$PATH
-ENV OPAL_PREFIX=/opt/amazon/openmpi
 ENV MPI_ROOT=/opt/amazon/openmpi
-ENV MPICC=/opt/amazon/openmpi/bin/mpicc
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
+ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:$PATH
+ENV OPAL_PREFIX=${MPI_ROOT}
+ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV FI_EFA_ENABLE_SHM_TRANSFER=0
 
 # Update default Python to 3.8 as Habana dropped support for python older than 3.8
@@ -102,8 +101,7 @@ RUN apt-get update && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
-    RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}" --no-cache-dir \
-        --extra-index-url https://"${ARTIFACTORY_URL}"/artifactory/api/pypi/gaudi-python/simple
+RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}" --no-cache-dir
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

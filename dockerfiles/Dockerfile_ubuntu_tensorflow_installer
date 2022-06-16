@@ -15,14 +15,14 @@ ARG ARTIFACTORY_URL
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
 ENV PYTHONPATH=/usr/lib/habanalabs/:/root
 
-COPY requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
+COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3 -m pip install pip==21.0.1 && \
     pip3 install setuptools==60.5.0 && \
     pip3 install --use-pep517 tensorflow-cpu==${TF_VERSION} \
         tensorflow-model-optimization==0.7.0 && \
-    pip3 install --no-deps -r requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt && \
-    rm requirements-no-deps-tensorflow-cpu-"$TF_VERSION".txt
+    pip3 install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
+    rm requirements-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" && \

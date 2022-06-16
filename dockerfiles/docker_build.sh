@@ -6,15 +6,15 @@
 #
 # HabanaLabs script for building docker images
 
-: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.7.1, 2.8.0])"}"
-: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.7.1, 2.8.0])"}"
+: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.8.2, 2.9.1])"}"
+: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.8.2, 2.9.1])"}"
 
-VERSION="${CUSTOM_VERSION:-1.4.1}"
-REVISION="${CUSTOM_REVISION:-11}"
+VERSION="${CUSTOM_VERSION:-1.5.0}"
+REVISION="${CUSTOM_REVISION:-610}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
-PT_VERSION="1.10.2"
+PT_VERSION="1.11.0"
 ARTIFACTORY_URL="${CUSTOM_ARTIFACTORY_URL:-vault.habana.ai}"
 ARTIFACTORY_REPO="gaudi-docker"
 
@@ -22,10 +22,10 @@ ARTIFACTORY_REPO="gaudi-docker"
 case $MODE in
     tensorflow)
         case $TF_VERSION in
-            2.7.1|2.8.0);;
+            2.8.2|2.9.1);;
             *)
                 echo "Provide correct TF_VERSION argument"
-                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.7.1, 2.8.0]"
+                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.8.2, 2.9.1]"
                 exit 1;;
         esac
     ;;
@@ -39,10 +39,10 @@ case $MODE in
 esac
 
 case $OS in
-    amzn2|centos8.3|rhel8.3|ubuntu18.04|ubuntu20.04);;
+    amzn2|rhel8.3|ubuntu18.04|ubuntu20.04);;
     *)
         echo "OS not supported!"
-        echo "Provided OS: $2 - supported OS'es [amzn2,centos8.3,rhel8.3,ubuntu18.04,ubuntu20.04]"
+        echo "Provided OS: $2 - supported OS'es [amzn2,rhel8.3,ubuntu18.04,ubuntu20.04]"
         exit 1
     ;;
 esac
@@ -71,7 +71,7 @@ function buildDocker {
     case $MODE in
         tensorflow)
             case $OS in
-                amzn2|centos8.3|rhel8.3)
+                amzn2|rhel8.3)
                     DOCKERFILE="Dockerfile_${OS}_tensorflow_installer"
                 ;;
                 ubuntu18.04|ubuntu20.04)
@@ -85,7 +85,7 @@ function buildDocker {
         ;;
         pytorch)
             case $OS in
-                amzn2|centos8.3|rhel8.3)
+                amzn2|rhel8.3)
                     DOCKERFILE="Dockerfile_${OS}_pytorch_installer"
                 ;;
                 ubuntu18.04|ubuntu20.04)

@@ -28,8 +28,8 @@ HABANA_PIP_VERSION="21.1.1"
 SETUPTOOLS_VERSION=41.0.0
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
 PT_SHARED_LIB_DIR="/usr/lib/habanalabs"
-DEFAULT_SW_VERSION="1.4.1"
-DEFAULT_BUILD_NO="11"
+DEFAULT_SW_VERSION="1.5.0"
+DEFAULT_BUILD_NO="610"
 MPI_ROOT="${MPI_ROOT:-/opt/amazon/openmpi}"
 
 ${MPI_ROOT}/bin/mpirun --version 2>/dev/null
@@ -63,13 +63,12 @@ function help()
 {
     echo -e "Help: Setting up execution of Pytorch for Gaudi"
     echo -e "############################################################"
-    echo -e "  -v <software version>          - Habana software version eg 1.4.1"
-    echo -e "  -b <build/revision>             - Habana build number eg: 11 in 1.4.1-11"
-    echo -e "  -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel79/rhel83/centos83>"
-    echo -e "  -ndep                           - dont install rpm/deb dependecies"
-    echo -e "  -sys                            - eg: install python packages without --user"
+    echo -e "  -v <software version>          - Habana software version eg 1.5.0"
+    echo -e "  -b <build/revision>             - Habana build number eg: 610 in 1.5.0-610"
+    echo -e "  -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel83>"
+    echo -e "  -no-deps                        - dont install rpm/deb dependecies"
     echo -e "  -url <link/path to tar file>    - URL/local path of tar file containing Habana PyTorch packages"
-    echo -e "  -u                              - eg: install python packages with --user"
+    echo -e "  -pip-user                       - eg: install python packages with --user"
 }
 command -v sudo 2>&1 > /dev/null
 if [ $? -ne 0 ] || [ $UID -eq 0 ]; then
@@ -89,7 +88,7 @@ __get_os_ver()
     fi
     if [[ $__os == "debian" ]]; then
         __os_v=$(cat /etc/debian_version)
-    elif [[ $__os == "centos" || $__os == "rhel" ]]; then
+    elif [[ $__os == "rhel" ]]; then
         __os_v=$(cat /etc/redhat-release | tr -dc '0-9.' | cut -d '.' -f1)
     else
         __os_v=$(source /etc/os-release && echo -n $VERSION_ID)
@@ -100,10 +99,6 @@ __get_os_ver()
         __os_version="ubuntu1804"
     elif [[ ( $__os == 'rhel' && $__os_v == '8' ) ]]; then
         __os_version="rhel83"
-    elif [[ ( $__os == 'rhel' && $__os_v == '7' ) ]]; then
-        __os_version="rhel79"
-    elif [[ ( $__os == 'centos' && $__os_v == '8' ) ]]; then
-        __os_version="centos83"
     elif [[ ( $__os == 'amazon' && $__os_v == '2' ) ]]; then
         __os_version="amzn2"
     else
@@ -120,7 +115,6 @@ __get_python_ver()
 {
     if [[ ($__os_version == "ubuntu2004" ) || \
         ( $__os_version == "rhel83" ) || \
-        ( $__os_version == "centos83" ) || \
         ( $__os_version == "ubuntu1804" ) || \
         ( $__os_version == "amzn2" ) \
     ]]; then
@@ -142,12 +136,7 @@ __get_python_ver()
 }
 
 # Default settings
-if [ $UID -ne 0 ]; then
-   __python_user_opt="--user"
-else
-   __python_user_opt=""
-fi
-__python_user_opt="--user"
+__python_user_opt=""
 __pt_install_deps="true"
 
 ###################################################################################################
@@ -179,13 +168,10 @@ do
             __python_version=$1
             PYTHON=python${__python_ver}
             ;;
-        -sys)
-            __python_user_opt=""
-            ;;
-        -u)
+        -pip-user)
             __python_user_opt="--user"
             ;;
-        -ndep)
+        -no-deps)
             __pt_install_deps="false"
             ;;
         -url)
@@ -217,7 +203,7 @@ __get_habana_version()
             __sw_version=${ver}
         fi
         ;;
-      amzn2 | rhel79 | rhel83 | centos83)
+      amzn2 | rhel83 )
         pkgname=$(rpm -q ${REF_PACKAGE})
         if [ $? -eq 0 ]; then
             __sw_version="$(echo $pkgname | awk '{ print $3 }' FS='-')"
@@ -242,7 +228,7 @@ __get_habana_build()
             __build_no=${build}
         fi
         ;;
-      amzn2 | rhel79 | rhel83 | centos83)
+      amzn2 | rhel83 )
         pkgname=$(rpm -q ${REF_PACKAGE})
         if [ $? -eq 0 ]; then
             __build_no="$(echo $pkgname | awk '{ print $4 }' FS='-' | awk '{ print $1 }' FS='.')"
@@ -319,16 +305,44 @@ uninstall_habana_py_pkgs()
 }
 
 ###################################################################################################
-#    set env required for pytorch
+#    set env required for openmpi
 ###################################################################################################
-setup_envs()
+setup_openmpi_envs()
 {
-    ${SUDO} sed -i '/#>>>> PT Habana starts/,/#<<<< PT Habana ends/d' ${PROFILE_FILE}
-    echo "#>>>> PT Habana starts" | ${SUDO} tee -a ${PROFILE_FILE}
+    ${SUDO} sed -i '/#>>>> PT openmpi Habana starts/,/#<<<< PT openmpi Habana ends/d' ${PROFILE_FILE}
+    echo "#>>>> PT openmpi Habana starts" | ${SUDO} tee -a ${PROFILE_FILE}
     echo "export MPI_ROOT=${MPI_ROOT}" | ${SUDO} tee -a ${PROFILE_FILE}
     echo "export OPAL_PREFIX=${MPI_ROOT}" | ${SUDO} tee -a ${PROFILE_FILE}
     echo 'export LD_LIBRARY_PATH=${MPI_ROOT}/lib:${LD_LIBRARY_PATH}' | ${SUDO} tee -a ${PROFILE_FILE}
     echo 'export PATH=${MPI_ROOT}/bin:${PATH}' | ${SUDO} tee -a ${PROFILE_FILE}
+    echo "#<<<< PT openmpi Habana ends" | ${SUDO} tee -a ${PROFILE_FILE}
+}
+
+###################################################################################################
+#    set env required for pytorch
+###################################################################################################
+install_envs()
+{
+    ${SUDO} sed -i '/#>>>> PT Habana starts/,/#<<<< PT Habana ends/d' ${PROFILE_FILE}
+    echo "#>>>> PT Habana starts" | ${SUDO} tee -a ${PROFILE_FILE}
+    echo 'export TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768' | ${SUDO} tee -a ${PROFILE_FILE}
+    case ${__os_version} in
+      ubuntu1804)
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4' | ${SUDO} tee -a ${PROFILE_FILE}
+        ;;
+      ubuntu2004)
+        echo 'export LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4' | ${SUDO} tee -a ${PROFILE_FILE}
+        ;;
+      amzn2)
+        echo 'export LD_PRELOAD=/lib64/libtcmalloc.so' | ${SUDO} tee -a ${PROFILE_FILE}
+        ;;
+      rhel83)
+        echo 'export LD_PRELOAD=/lib64/libtcmalloc.so' | ${SUDO} tee -a ${PROFILE_FILE}
+        ;;
+      *)
+        echo "Unknown OS ${__os_version}"
+        ;;
+    esac
     echo "#<<<< PT Habana ends" | ${SUDO} tee -a ${PROFILE_FILE}
 }
 
@@ -353,7 +367,7 @@ compile_install_openmpi()
         cd -
         ${SUDO} rm -rf openmpi-"${OPENMPI_VER}"*
         ${SUDO} /sbin/ldconfig
-        setup_envs
+        setup_openmpi_envs
     fi
     MPICC=${MPI_ROOT}/bin/mpicc ${PYTHON} -m pip install mpi4py==3.0.3 --no-cache-dir ${__python_user_opt}
     set +e
@@ -395,6 +409,7 @@ install_ubuntu18_dep_pkgs()
     liblapack-dev \
     libblas-dev \
     libnuma-dev \
+    google-perftools \
     ${__pydev_pkg} \
     numactl && \
     ${SUDO} apt-get clean
@@ -422,6 +437,7 @@ install_ubuntu20_dep_pkgs()
     libjpeg-dev \
     liblapack-dev \
     libblas-dev \
+    google-perftools \
     python3-dev \
     libnuma-dev \
     numactl && \
@@ -455,6 +471,7 @@ install_rhel83_dep_pkgs()
     lapack-devel \
     blas \
     blas-devel \
+    gperftools.x86_64 \
     numactl && \
     ${SUDO} dnf clean all && ${SUDO} rm -rf /var/cache/yum
 
@@ -464,64 +481,6 @@ install_rhel83_dep_pkgs()
 }
 
 
-###################################################################################################
-#    install_rhel79_dep_pkgs
-###################################################################################################
-install_rhel79_dep_pkgs()
-{
-    set -e
-    ${SUDO} yum install -y \
-    unzip \
-    curl \
-    redhat-lsb-core \
-    openmpi-devel \
-    cairo-devel \
-    iproute \
-    git \
-    which \
-    libjpeg-devel \
-    zlib-devel \
-    lapack-devel \
-    blas \
-    blas-devel \
-    numactl && \
-    ${SUDO} yum clean all
-
-    ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
-    ${PYTHON} -m pip install setuptools=="${SETUPTOOLS_VERSION}" ${__python_user_opt}
-    set +e
-}
-
-
-###################################################################################################
-#    install_centos83_dep_pkgs
-###################################################################################################
-install_centos83_dep_pkgs()
-{
-    set -e
-    ${SUDO} dnf install -y --enablerepo=powertools \
-    libffi-devel \
-    unzip \
-    curl \
-    redhat-lsb-core \
-    openmpi-devel \
-    numactl-devel \
-    cairo-devel \
-    iproute \
-    git \
-    which \
-    mesa-libGL \
-    libjpeg-devel \
-    zlib-devel \
-    lapack-devel \
-    blas \
-    blas-devel \
-    numactl && \
-    ${SUDO} dnf clean all
-    ${PYTHON} -m pip install pip=="${HABANA_PIP_VERSION}" ${__python_user_opt}
-    ${PYTHON} -m pip install setuptools=="${SETUPTOOLS_VERSION}" ${__python_user_opt}
-    set +e
-}
 
 ###################################################################################################
 #    install_amzn2_dep_pkgs
@@ -558,6 +517,7 @@ install_amzn2_dep_pkgs()
     lapack-devel \
     blas \
     blas-devel \
+    gperftools \
     sox \
     numactl && \
     ${SUDO} yum clean all
@@ -661,14 +621,8 @@ if [ "z${__pt_install_deps}" == "ztrue" ]; then
       amzn2)
         install_amzn2_dep_pkgs
         ;;
-      rhel79)
-        install_rhel79_dep_pkgs
-        ;;
       rhel83)
         install_rhel83_dep_pkgs
-        ;;
-      centos83)
-        install_centos83_dep_pkgs
         ;;
       *)
         echo "Unknown OS ${__os_version}"
@@ -678,4 +632,5 @@ if [ "z${__pt_install_deps}" == "ztrue" ]; then
 fi
 compile_install_openmpi
 install_pt_habana_pkgs
+install_envs
 verify_installation

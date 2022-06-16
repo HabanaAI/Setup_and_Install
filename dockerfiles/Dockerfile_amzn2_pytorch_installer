@@ -13,6 +13,7 @@ ARG REVISION
 ARG ARTIFACTORY_URL
 
 ENV LANG=en_US.UTF-8
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
 RUN yum install -y \
     unzip \
@@ -27,7 +28,8 @@ RUN yum install -y \
     zlib-devel \
     lapack-devel \
     blas-devel \
-    numactl && \
+    numactl \
+    gperftools && \
     yum clean all
 
 RUN amazon-linux-extras install epel -y
@@ -56,5 +58,7 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     pip3 install pillow-simd==7.0.0.post3 && \
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
+
+ENV LD_PRELOAD=/lib64/libtcmalloc.so
 
 RUN rm -rf /tmp/*

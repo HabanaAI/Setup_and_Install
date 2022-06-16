@@ -15,6 +15,7 @@ ARG ARTIFACTORY_URL
 ARG HABANA_PIP_VERSION="19.3.1"
 
 ENV LANG=en_US.UTF-8
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
 RUN apt-get update && apt-get install -y \
     unzip \
@@ -30,7 +31,8 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     liblapack-dev \
     libblas-dev \
-    numactl && \
+    numactl \
+    google-perftools && \
     apt-get clean
 
 RUN bash -c "\
@@ -38,6 +40,7 @@ RUN bash -c "\
         rm -rf /usr/bin/python /usr/bin/python3m; \
         ln -s /usr/bin/python3.8 /usr/bin/python; \
         ln -s /usr/bin/python3.8m /usr/bin/python3m; \
+        ln -sf /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4 /lib/x86_64-linux-gnu/libtcmalloc.so.4; \
     else \
         ln -s /usr/bin/python3.8 /usr/bin/python; \
     fi"
@@ -62,6 +65,8 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 # requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
-# pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg
+# pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg installed by torchvision
+
+ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
 
 RUN rm -rf /tmp/*

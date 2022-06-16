@@ -83,3 +83,22 @@ Remove IP from all available Habana network interfaces by the following command:
 ```
 sudo manage_network_ifs.sh --unset-ip
 ```
+
+## check_habana_framework_env
+
+This script can be used as reference to check the environment for running Tensorflow or PyTorch on Habana.
+
+The following is the usage of the script:
+
+```
+usage: test.py [-h] [--cards CARDS] [--framework [{tensorflow,pytorch}]]
+
+Check health of HPU for either TensorFlow/PyTorch
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --cards CARDS         Set number of cards to test (default: 1)
+  --framework [{tensorflow,pytorch}]
+                        ML Framework to test (default: tensorflow)
+
+```

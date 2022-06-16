@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 #
 # Copyright 2021 HabanaLabs, Ltd.
@@ -14,27 +14,23 @@
 # Usage: sudo -E ./synapse_installation.sh [-s server] [-h]
 #   -s server ...... Optional; indicate server for driver package download (default: vault.habana.ai)
 #   -h ............. Optional; show help
+#   -q ............. Optional; supress output
 
-# OS support:
-# - Ubuntu 18.04       Python3.8
-# - Ubuntu 20.04       Python3.8
-# - CentOS 7.8 and 8.3 Python3.8
-# - Amazon Linux 2     Python3.8
+# OS support (all Python3.8):
+# - Ubuntu 18.04
+# - Ubuntu 20.04
+# - Amazon Linux 2
+# - Red Hat Enterprise Linux 8.3
 
-
-#
-# Habanalabs packages required
-HABANALABS_REQUIRED="habanalabs-graph
-                     habanalabs-thunk
-                     habanalabs-firmware"
-HABANALABS_OPTIONAL="habanalabs-firmware-tools
-                     habanalabs-qual"
-HABANALABS_COMMON="$HABANALABS_REQUIRED $HABANALABS_OPTIONAL"
-SERVER=vault.habana.ai
-
-#
-# Temp filename
-TMPF=/tmp/$0-$$.log
+# To preserve existing logs, we generate a new log filename based on
+# the script filename
+generate_logname()
+{
+    local cwd=$(dirname $1)
+    local fname=$(echo $(basename $1)|sed 's,\.[0-9]*\.log,,')
+    lastlogidx=$(ls -1 $fname.*.log 2>/dev/null|awk -F. '{print $2}'|sort -n|tail -1)
+    echo $fname.$((lastlogidx+1)).log
+}
 
 
 show_help()
@@ -43,6 +39,7 @@ show_help()
 Usage: sudo -E ./synapse_installation.sh [-s server] [-h]
    -s server ...... Optional; indicate server for driver package download (default: vault.habana.ai)
    -h ............. Optional; show help
+   -q ............. Optional; supress output
 
 This script installs required OS packages and Habanalabs Gaudi drivers
 Requirements:
@@ -51,23 +48,52 @@ User must have sudo access with no password
 OS support:
  - Ubuntu 18.04
  - Ubuntu 20.04
- - CentOS 7.8 and 8.3
  - Amazon Linux 2
+ - Red Hat Enterprise Linux 8.3
 EOF
 }
 
 
+QUIET=false
+LOGFILE="$(basename $0 .sh).log"
+if [ -f "$LOGFILE" ]; then
+    BASE="$(basename $0 .sh)"
+    NEWLOGFILE="$(generate_logname $BASE)"
+    mv "$LOGFILE" "$NEWLOGFILE"
+fi
+
+
 #
 # Parse options
-while getopts hs: opt; do
+while getopts hqs: opt; do
     case $opt in
       s) SERVER="$OPTARG" ;;
+      q) QUIET=true ;;
       h) show_help >&2; exit 1 ;;
       *) show_help >&2; exit 1 ;;
     esac
 done
 shift "$((OPTIND-1))" # Shift off the options and optional --.
 
+
+
+# == Begin logging ==
+{
+set -x
+
+#
+# Habanalabs packages required
+# Note: habanalabs-firmware-tools and habanalabs-qual are optional
+HABANALABS_FW_PACKAGES="habanalabs-firmware
+                        habanalabs-firmware-tools"
+HABANALABS_PACKAGES="habanalabs-thunk
+                     habanalabs-graph
+                     habanalabs-qual"
+SERVER=vault.habana.ai
+
+#
+# Temp filename
+TMPF=/tmp/$0-$$.log
 server_tag=$(sed 's,\..*,,' <<<$SERVER)
 
 #
@@ -137,14 +163,14 @@ set_huge_pages()
 # Return true/false if the drivers are installed
 driver_install_check()
 {
-    if egrep -q "focal|bionic" <<<$DISTRIB_CODENAME; then
+    if egrep -q "focal|bionic" <<<$VERSION_CODENAME; then
         # Ubuntu 18 or 20
         if dpkg -l | grep -q "habanalabs-firmware" &&
                 dpkg -l | grep -q "habanalabs-dkms"; then
             return $(true)
         fi
     else
-        # CentOS or Amazon Linux
+        # Amazon Linux and rpm based OSs
         if rpm -qa | grep "habanalabs-firmware" &&
                 rpm -qa | grep "habanalabs-[0-9]"; then
             return $(true)
@@ -187,14 +213,19 @@ fi
 
 #
 # General packages that are needed
-DISTRIB_CODENAME=$(grep DISTRIB_CODENAME /etc/lsb-release 2>/dev/null | sed 's,.*=,,')
-if [ -n "$DISTRIB_CODENAME" ]; then
+
+# Use VERSION_CODENAME or NAME to determine the OS type
+VERSION_CODENAME=$(cat /etc/os-release|egrep ^VERSION_CODENAME=|awk -F= '{print $2}'|sed 's,",,g')
+VERSION_CODENAME=${VERSION_CODENAME:-$(cat /etc/os-release|egrep ^NAME=|awk -F= '{print $2}'|sed 's,",,g')};
+
+if egrep -q "focal|bionic" <<<$VERSION_CODENAME; then
+    # Ubuntu 18 or 20
     update_test="lsof /var/lib/dpkg/lock-frontend >/dev/null 2>&1"
     if ! upd_ready "$update_test"; then
         printf "\nError: Package manager in use, please try again\n"
         exit 1
     fi
-    package_list=($HABANALABS_COMMON habanalabs-dkms)
+    package_list=($HABANALABS_FW_PACKAGES habanalabs-dkms $HABANALABS_PACKAGES)
     if driver_install_check; then
         apt-get remove -y ${package_list[@]} | tee $TMPF
         prior_versions=()
@@ -206,31 +237,34 @@ if [ -n "$DISTRIB_CODENAME" ]; then
         rm -f $TMPF
     fi
     if ! grep -q $SERVER /etc/apt/sources.list.d/artifactory.list 2>/dev/null; then
-        echo "deb https://$SERVER/artifactory/debian $DISTRIB_CODENAME main" |\
+        echo "deb https://$SERVER/artifactory/debian $VERSION_CODENAME main" |\
             tee /etc/apt/sources.list.d/artifactory.list
     fi
     wget -O- https://$SERVER/artifactory/api/gpg/key/public | apt-key add -
 
     dpkg --configure -a
     apt-get update
-    apt-get install -y curl ethtool python3 python3-pip dkms libelf-dev \
-         lsof \
-         habanalabs-dkms \
-         $HABANALABS_COMMON \
-         linux-headers-$(uname -r) | tee $TMPF
+    for p in curl ethtool python3 python3-pip libelf-dev lsof \
+             $HABANALABS_FW_PACKAGES \
+             dkms habanalabs-dkms \
+             $HABANALABS_PACKAGES \
+             linux-headers-$(uname -r); do
+        echo "== Installing package $p"
+        apt-get install -y $p
+    done | tee $TMPF
     for ((d=0;d<${#package_list[@]};d++)); do
         ver=$(grep "Setting up ${package_list[d]} " $TMPF|sed -e 's,.*(,,' -e 's,).*,,')
         if [ -n "$ver" ]; then new_versions[d]="$ver"; fi
     done
     rm -f $TMPF
 else
-    # Empty (not Ubuntu)
+    # Not Ubuntu, use yum/rpm as package management
     update_test="test -f /var/run/yum.pid"
     if ! upd_ready "$update_test"; then
         printf "\nError: Package manager in use, please try again\n"
         exit 1
     fi
-    package_list=($HABANALABS_COMMON habanalabs)
+    package_list=($HABANALABS_FW_PACKAGES habanalabs $HABANALABS_PACKAGES)
     prior_versions=()
     rpm_versions=$(rpm -qa | grep "habanalabs")
     for i in $(seq 1 $(wc -w <<<${package_list[@]})); do prior_versions+=("n/a"); new_versions+=("n/a"); done
@@ -240,17 +274,12 @@ else
         if [ -n "$ver" ]; then prior_versions[d]="$ver"; fi
     done
     if driver_install_check; then
-        rpm -e --nodeps $ABANALABS_COMMON habanalabs
+        rpm -e --nodeps $HABANALABS_FW_PACKAGES habanalabs $HABANALABS_PACKAGES
     fi
 
-    DISTRIB_CODENAME=$(grep ^NAME /etc/os-release 2>/dev/null | sed -e 's,.*=,,' -e 's,",,g')
-    case "$DISTRIB_CODENAME" in
-      "CentOS Linux") os_key="centos7"  ;;
-      "CentOS Stream") if (($(grep ^VERSION_ID /etc/os-release 2>/dev/null | sed -e 's,.*=,,' -e 's,",,g') == 8)); then
-                           os_key="centos/8/8.3"
-                       fi;;
+    case "$VERSION_CODENAME" in
       "Amazon Linux") os_key="AmazonLinux2" ;;
-      "Red Hat Enterprise Linux") os_key="rhel/8/8.3";;
+      "Red Hat Enterprise Linux") os_key="rhel/8/8.3" ;;
       *) unset os_key;;
     esac
     if [ -n "$os_key" ]; then
@@ -264,14 +293,11 @@ else
             echo "repo_gpgcheck=0"
         } | tee /etc/yum.repos.d/Habana-$server_tag.repo
         yum makecache
-        if [[ $os_key =~ centos ]]; then
-            yum install -y epel-release
-        fi
-        yum install -y wget git yum-utils lsof
-        yum install -y kernel-devel-$(uname -r)
-        yum install -y \
-             habanalabs \
-             $HABANALABS_COMMON
+        for p in wget git yum-utils lsof kernel-devel-$(uname -r) \
+                      $HABANALABS_FW_PACKAGES habanalabs $HABANALABS_PACKAGES; do
+            echo "== Installing package $p"
+            yum install -y $p
+        done
         rpm_versions=$(rpm -qa | grep "habanalabs")
         for ((d=0;d<${#package_list[@]};d++)); do
             ver=$(egrep "${package_list[d]}-[0-9]" <<<$rpm_versions|sed -e "s,.*[a-z]\-,," -e "s,\.el.*,,")
@@ -305,7 +331,7 @@ EOF
             chmod +x /etc/rc.d/rc.local
         fi
     else
-        echo "Error: unsupported OS $DISTRIB_CODENAME"
+        echo "Error: unsupported OS $VERSION_CODENAME"
         exit 2
     fi
 fi
@@ -315,7 +341,7 @@ fi
 # Set PYTHON variable to the supported Python version
 # Install the right version if needed
 if ! grep -q python3 /etc/profile.d/habanalabs.sh 2>/dev/null; then
-    case $DISTRIB_CODENAME in
+    case $VERSION_CODENAME in
       "bionic") # Ubuntu 18.04
         # U18 has python 3.6 installed by default, but we need 3.8
         if ! python3 --version 2>/dev/null|grep -q " 3.8"; then
@@ -342,14 +368,7 @@ if ! grep -q python3 /etc/profile.d/habanalabs.sh 2>/dev/null; then
         if ! $PY -m amazon_linux_extras >/dev/null 2>&1; then
             cp -pr /lib/python2.7/site-packages/amazon_linux_extras /usr/local/lib/python3.8/site-packages
         fi ;;
-      "CentOS Stream")
-        if [[ ! -d /opt/Python-3.8.12 && -z "$(python3 --version 2>/dev/null|grep 3.8)" ]]; then
-            yum install -y gcc gcc-c++ zlib zlib-devel
-            yum install -y libffi-devel
-            install_python 3.8.12
-        fi
-        PY=python3.8 ;;
-      *) PY=python3.7 ;;     # All others
+      *) PY=python3.8 ;;     # All others
     esac
     echo "export PYTHON=/usr/bin/$PY" | tee -a /etc/profile.d/habanalabs.sh
 fi
@@ -381,4 +400,7 @@ fi
 
 
 echo "Note: Drivers are installed, please reboot the system"
-exit 0
+
+} 2>&1 | if [ $QUIET == true ]; then cat > $LOGFILE; else tee $LOGFILE; fi
+
+exit ${PIPESTATUS[0]}
