@@ -17,16 +17,24 @@ ENV PYTHONPATH=/usr/lib/habanalabs/:/root
 
 COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
 
-RUN python3 -m pip install pip==21.0.1 && \
-    pip3 install setuptools==60.5.0 && \
-    pip3 install --use-pep517 tensorflow-cpu==${TF_VERSION} \
-        tensorflow-model-optimization==0.7.0 && \
-    pip3 install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    rm requirements-tensorflow-cpu-"$TF_VERSION".txt
+# Install python packages inside conda base environment
+RUN . /opt/miniconda/bin/activate && \
+    python3 -m pip install pip==21.0.1 \
+    setuptools==60.5.0 && \
+    python3 -m pip install --use-pep517 tensorflow-cpu==${TF_VERSION} && \
+    python3 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
+    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
+    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 
-RUN python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" && \
-    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
-    echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc
+# Regarding to issue that occurs only on Ubuntu 18.04 with termcolor which is dependency for tensorflow-cpu
+# add --use-pep517 to tensorflow-cpu or installation termcolor will fail and affect tensorflow-cpu
+RUN python3 -m pip install pip==21.0.1 \
+    setuptools==60.5.0 && \
+    python3 -m pip install --use-pep517 tensorflow-cpu==${TF_VERSION} && \
+    python3 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
+    rm requirements-tensorflow-cpu-"$TF_VERSION".txt && \
+    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
+    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 
-RUN rm -rf /tmp/*
+RUN echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
+    rm -rf /tmp/*

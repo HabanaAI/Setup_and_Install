@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for Amazon Linux 2
+# HabanaLabs Dockerfile PyTorch installer layer for RHEL 8.6
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -12,53 +12,34 @@ ARG VERSION
 ARG REVISION
 ARG ARTIFACTORY_URL
 ARG HABANA_PIP_VERSION="22.2.2"
-ARG GPERFTOOLS="gperftools-2.7"
 
+ENV SETUPTOOLS_VERSION=41.0.0
 ENV LANG=en_US.UTF-8
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
-RUN yum install -y \
-    unzip \
+RUN dnf install -y \
     curl \
-    redhat-lsb-core \
-    numactl-devel \
     cairo-devel \
+    numactl-devel \
     iproute \
-    git \
     which \
-    libjpeg-devel \
     zlib-devel \
     lapack-devel \
     blas-devel \
-    numactl && \
-    yum clean all
-
-RUN amazon-linux-extras install epel -y
-RUN yum install -y \
-    moreutils && \
-    yum clean all
-
-# Since there is an open bug in gperftools 2.6 installed from yum install,
-# Hence, Compile & Install gperftools 2.7. Later it might be removed and installed through yum install.
-RUN wget --no-verbose https://github.com/gperftools/gperftools/releases/download/${GPERFTOOLS}/${GPERFTOOLS}.tar.gz && \
-    tar -xvf ${GPERFTOOLS}.tar.gz && \
-    cd ${GPERFTOOLS} && \
-    ./configure --prefix="" && \
-    make -j && \
-    make install && \
-    cd - && \
-    rm -rf ${GPERFTOOLS}* && \
-    /sbin/ldconfig
+    numactl \
+    gperftools.x86_64 && \
+    dnf clean all && rm -rf /var/cache/yum
 
 COPY requirements-pytorch.txt requirements-pytorch.txt
 
 # Install python packages inside conda base environment
 RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
-/amzn2/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
+/rhel86/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     source /opt/miniconda/bin/activate && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip3 install setuptools=="${SETUPTOOLS_VERSION}" && \
     pip3 install mpi4py==3.0.3 && \
     pip3 install -r requirements-pytorch.txt --no-warn-script-location && \
     pip3 install /root/habanalabs/pytorch_temp/torchvision*.whl && \
@@ -73,10 +54,11 @@ RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 
 RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
-/amzn2/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
+/rhel86/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip3 install setuptools=="${SETUPTOOLS_VERSION}" && \
     pip3 install mpi4py==3.0.3 && \
     pip3 install -r requirements-pytorch.txt --no-warn-script-location && \
     pip3 install /root/habanalabs/pytorch_temp/torchvision*.whl && \
@@ -91,7 +73,7 @@ RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 
-ENV LD_PRELOAD=/lib/libtcmalloc.so
+ENV LD_PRELOAD=/lib64/libtcmalloc.so
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
 
 RUN rm -rf /tmp/* requirements-pytorch.txt

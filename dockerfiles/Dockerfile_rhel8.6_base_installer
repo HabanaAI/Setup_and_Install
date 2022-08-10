@@ -2,12 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile base installer layer for RedHat 8.3
-FROM registry.access.redhat.com/ubi8/ubi:8.3
+# HabanaLabs Dockerfile base installer layer for RedHat 8.6
+FROM registry.access.redhat.com/ubi8/ubi:8.6
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-ARG EFA_INSTALLER_VER="1.15.1"
+ARG EFA_INSTALLER_VER="1.16.0"
+ARG CONDA_VERSION="4.12.0"
 
 RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
     dnf clean all && rm -rf /var/cache/yum
@@ -34,18 +35,17 @@ RUN dnf install -y \
     glibc-devel \
     jemalloc \
     libarchive \
+    unzip \
     llvm \
     lsof \
+    python38-devel \
     openssh-clients \
+    libjpeg-devel \
     openssh-server \
     redhat-lsb-core \
-    kernel-tools \
-    kernel-tools-libs \
     wget \
+    git \
     mesa-libGL && \
-    dnf clean all && rm -rf /var/cache/yum
-
-RUN dnf module install python38 -y && \
     dnf clean all && rm -rf /var/cache/yum
 
 RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -P /tmp && \
@@ -54,17 +54,22 @@ RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTAL
     ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
     cd - && rm -rf /tmp/*
 
+RUN wget -nv "https://repo.anaconda.com/miniconda/Miniconda3-py38_${CONDA_VERSION}-Linux-x86_64.sh" -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+    /opt/miniconda/condabin/conda config --set auto_activate_base false && \
+    rm -rf /tmp/*
+
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
-ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:$PATH
+ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:/opt/miniconda/condabin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV FI_EFA_ENABLE_SHM_TRANSFER=0
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana RH8 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.3" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.3/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.6" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.6/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN echo "[powertools]" > /etc/yum.repos.d/powertools.repo && \
     echo "name=powertools" >> /etc/yum.repos.d/powertools.repo && \
@@ -73,18 +78,27 @@ RUN echo "[powertools]" > /etc/yum.repos.d/powertools.repo && \
 
 RUN dnf install -y habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
-        habanalabs-graph-"$VERSION"-"$REVISION".el8
-
-RUN rm -f /etc/yum.repos.d/habanalabs.repo && rm -rf /tmp/* && \
+        habanalabs-graph-"$VERSION"-"$REVISION".el8 && \
+    rm -f /etc/yum.repos.d/habanalabs.repo && rm -rf /tmp/* && \
     dnf clean all && rm -rf /var/cache/yum
 
-RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}" --no-cache-dir
+# There is no need to store pip installation files inside docker image
+ENV PIP_NO_CACHE_DIR=on
+
+# Install python packages inside conda base environment
+RUN source /opt/miniconda/bin/activate && \
+    python3.8 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}"
+
+RUN python3.8 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
     sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
+    sed -i 's/#\(ForwardAgent \).*/\1yes/g' /etc/ssh/ssh_config && \
     echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
-    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
+    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config && \
+    ssh-keygen -A && \
+    mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8

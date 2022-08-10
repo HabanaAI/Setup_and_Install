@@ -93,7 +93,7 @@ __get_os_ver()
         __os_version="ubuntu1804"
         __is_ubuntu="true"
     elif [[ ( $__os == 'rhel' && $__os_v == '8' ) ]]; then
-        __os_version="rhel83"
+        __os_version="rhel86"
         __is_ubuntu="false"
     elif [[ ( $__os == 'centos' && $__os_v == '8' ) ]]; then
         __os_version="centos83"
@@ -117,7 +117,7 @@ __get_python_ver()
     if [[ ($__os_version == "ubuntu1804" ) || \
         ( $__os_version == "amnz2" ) || \
         ( $__os_version == "ubuntu2004" ) || \
-        ( $__os_version == "rhel83" ) || \
+        ( $__os_version == "rhel86" ) || \
         ( $__os_version == "centos83" ) \
     ]]; then
         __python_ver="3.8"
@@ -220,7 +220,7 @@ __get_habana_version()
             __sw_version=${ver}
         fi
         ;;
-      amzn2 | rhel83 | centos83)
+      amzn2 | rhel86 | centos83)
         pkgname=$(rpm -q ${REF_PACKAGE})
         if [ $? -eq 0 ]; then
             __sw_version="$(echo $pkgname | awk '{ print $3 }' FS='-')"
@@ -251,7 +251,7 @@ __get_habana_build()
             __build_no=${build}
         fi
         ;;
-      amzn2 | rhel79 | rhel83 | centos83)
+      amzn2 | rhel79 | rhel86 | centos83)
         pkgname=$(rpm -q ${REF_PACKAGE})
         if [ $? -eq 0 ]; then
             __build_no="$(echo $pkgname | awk '{ print $4 }' FS='-' | awk '{ print $1 }' FS='.')"
@@ -444,9 +444,9 @@ install_extra_ubuntu_pkgs()
 }
 
 ###################################################################################################
-#    install_rhel83_or_centos83_dep_pkgs
+#    install_rhel86_or_centos83_dep_pkgs
 ###################################################################################################
-install_rhel83_or_centos83_dep_pkgs()
+install_rhel86_or_centos83_dep_pkgs()
 {
     set -e
     ${SUDO} dnf install -y \
@@ -494,7 +494,7 @@ install_yum_or_dnf_extra_pkgs()
     centos83)
         ${SUDO} $1 install -y epel-release
         ;;
-    rhel83)
+    rhel86)
         ${SUDO} $1 install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
         ;;
     *)
@@ -615,8 +615,8 @@ case ${__os_version} in
     [ "z${__install_deps}" == "ztrue" ] && install_amzn2_dep_pkgs
     [ "z${__install_model_deps}" == "ztrue" ] && install_yum_or_dnf_extra_pkgs "yum"
     ;;
-  rhel83|centos83)
-    [ "z${__install_deps}" == "ztrue" ] && install_rhel83_or_centos83_dep_pkgs
+  rhel86|centos83)
+    [ "z${__install_deps}" == "ztrue" ] && install_rhel86_or_centos83_dep_pkgs
     [ "z${__install_model_deps}" == "ztrue" ] && install_yum_or_dnf_extra_pkgs "dnf"
     ;;
   *)

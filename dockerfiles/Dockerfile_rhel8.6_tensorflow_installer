@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile Tensorflow installer layer for Amazon Linux 2
+# HabanaLabs Dockerfile Tensorflow installer layer for RHEL 8.6
+
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -11,43 +12,35 @@ ARG VERSION
 ARG REVISION
 ARG TF_VERSION
 ARG ARTIFACTORY_URL
+ARG HABANA_PIP_VERSION="21.3.1"
 
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
-ENV PATH=$PATH:/usr/local/protoc/bin
 
 # Install unzip to extract pre-trained weights for BERT demo
-RUN yum install -y \
-        unzip \
-        git \
-        bc && \
-    yum clean all && rm -rf /var/cache/yum
-
-# Install protoc in version 3.6.1 from public sources.
-# Protoc installed by yum install is outdated (ver 2.5.0).
-RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip && \
-    unzip protoc-3.6.1-linux-x86_64.zip -d /usr/local/protoc && \
-    rm -rf protoc-3.6.1-linux-x86_64.zip
+RUN dnf install -y \
+        bc \
+        protobuf-devel && \
+    dnf clean all && rm -rf /var/cache/dnf
 
 COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
 
 # Install python packages inside conda base environment
 RUN source /opt/miniconda/bin/activate && \
-    python3 -m pip install pip==21.0.1 \
+    python3.8 -m pip install pip=="${HABANA_PIP_VERSION}" \
     setuptools==60.5.0 \
     tensorflow-cpu==${TF_VERSION} && \
-    python3 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
+    python3.8 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
+    python3.8 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
+    python3.8 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 
-RUN python3 -m pip install pip==21.0.1 \
+RUN python3.8 -m pip install pip=="${HABANA_PIP_VERSION}" \
     setuptools==60.5.0 \
     tensorflow-cpu==${TF_VERSION} && \
-    python3 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
+        python3.8 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
-
+    python3.8 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
+    python3.8 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 
 # For AML/CentOS/RHEL OS'es TFIO_DATAPATH have to be specified to import tensorflow_io lib correctly
 ENV TFIO_DATAPATH=/usr/local/lib64/python3.8/site-packages/
@@ -57,4 +50,4 @@ ENV TFIO_DATAPATH=/usr/local/lib64/python3.8/site-packages/
 RUN ln -s /etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
 
 RUN echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
-    rm -rf /tmp/*
+    dnf clean all && rm -rf /var/cache/dnf && rm -rf /tmp/*

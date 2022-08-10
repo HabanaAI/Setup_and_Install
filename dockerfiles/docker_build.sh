@@ -6,15 +6,15 @@
 #
 # HabanaLabs script for building docker images
 
-: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.8.2, 2.9.1])"}"
-: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.3,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.8.2, 2.9.1])"}"
+: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.8.2, 2.9.1])"}"
+: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04] TF_VERSION(if MODE=tensorflow) [2.8.2, 2.9.1])"}"
 
-VERSION="${CUSTOM_VERSION:-1.5.0}"
-REVISION="${CUSTOM_REVISION:-610}"
+VERSION="${CUSTOM_VERSION:-1.6.0}"
+REVISION="${CUSTOM_REVISION:-439}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
-PT_VERSION="1.11.0"
+PT_VERSION="1.12.0"
 ARTIFACTORY_URL="${CUSTOM_ARTIFACTORY_URL:-vault.habana.ai}"
 ARTIFACTORY_REPO="gaudi-docker"
 
@@ -39,10 +39,10 @@ case $MODE in
 esac
 
 case $OS in
-    amzn2|rhel8.3|ubuntu18.04|ubuntu20.04);;
+    amzn2|rhel8.6|ubuntu18.04|ubuntu20.04);;
     *)
         echo "OS not supported!"
-        echo "Provided OS: $2 - supported OS'es [amzn2,rhel8.3,ubuntu18.04,ubuntu20.04]"
+        echo "Provided OS: $2 - supported OS'es [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04]"
         exit 1
     ;;
 esac
@@ -71,7 +71,7 @@ function buildDocker {
     case $MODE in
         tensorflow)
             case $OS in
-                amzn2|rhel8.3)
+                amzn2|rhel8.6)
                     DOCKERFILE="Dockerfile_${OS}_tensorflow_installer"
                 ;;
                 ubuntu18.04|ubuntu20.04)
@@ -85,7 +85,7 @@ function buildDocker {
         ;;
         pytorch)
             case $OS in
-                amzn2|rhel8.3)
+                amzn2|rhel8.6)
                     DOCKERFILE="Dockerfile_${OS}_pytorch_installer"
                 ;;
                 ubuntu18.04|ubuntu20.04)

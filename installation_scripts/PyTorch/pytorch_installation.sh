@@ -65,7 +65,7 @@ function help()
     echo -e "############################################################"
     echo -e "  -v <software version>          - Habana software version eg 1.5.0"
     echo -e "  -b <build/revision>             - Habana build number eg: 610 in 1.5.0-610"
-    echo -e "  -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel83>"
+    echo -e "  -os <os version>                - OS version <ubuntu2004/ubuntu1804/amzn2/rhel86>"
     echo -e "  -no-deps                        - dont install rpm/deb dependecies"
     echo -e "  -url <link/path to tar file>    - URL/local path of tar file containing Habana PyTorch packages"
     echo -e "  -pip-user                       - eg: install python packages with --user"
@@ -98,7 +98,7 @@ __get_os_ver()
     elif [[ ($__os == 'ubuntu' && $__os_v == '18.04') ]]; then
         __os_version="ubuntu1804"
     elif [[ ( $__os == 'rhel' && $__os_v == '8' ) ]]; then
-        __os_version="rhel83"
+        __os_version="rhel86"
     elif [[ ( $__os == 'amazon' && $__os_v == '2' ) ]]; then
         __os_version="amzn2"
     else
@@ -114,7 +114,7 @@ __get_os_ver()
 __get_python_ver()
 {
     if [[ ($__os_version == "ubuntu2004" ) || \
-        ( $__os_version == "rhel83" ) || \
+        ( $__os_version == "rhel86" ) || \
         ( $__os_version == "ubuntu1804" ) || \
         ( $__os_version == "amzn2" ) \
     ]]; then
@@ -203,7 +203,7 @@ __get_habana_version()
             __sw_version=${ver}
         fi
         ;;
-      amzn2 | rhel83 )
+      amzn2 | rhel86 )
         pkgname=$(rpm -q ${REF_PACKAGE})
         if [ $? -eq 0 ]; then
             __sw_version="$(echo $pkgname | awk '{ print $3 }' FS='-')"
@@ -228,7 +228,7 @@ __get_habana_build()
             __build_no=${build}
         fi
         ;;
-      amzn2 | rhel83 )
+      amzn2 | rhel86 )
         pkgname=$(rpm -q ${REF_PACKAGE})
         if [ $? -eq 0 ]; then
             __build_no="$(echo $pkgname | awk '{ print $4 }' FS='-' | awk '{ print $1 }' FS='.')"
@@ -326,23 +326,10 @@ install_envs()
     ${SUDO} sed -i '/#>>>> PT Habana starts/,/#<<<< PT Habana ends/d' ${PROFILE_FILE}
     echo "#>>>> PT Habana starts" | ${SUDO} tee -a ${PROFILE_FILE}
     echo 'export TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768' | ${SUDO} tee -a ${PROFILE_FILE}
-    case ${__os_version} in
-      ubuntu1804)
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4' | ${SUDO} tee -a ${PROFILE_FILE}
-        ;;
-      ubuntu2004)
-        echo 'export LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4' | ${SUDO} tee -a ${PROFILE_FILE}
-        ;;
-      amzn2)
-        echo 'export LD_PRELOAD=/lib64/libtcmalloc.so' | ${SUDO} tee -a ${PROFILE_FILE}
-        ;;
-      rhel83)
-        echo 'export LD_PRELOAD=/lib64/libtcmalloc.so' | ${SUDO} tee -a ${PROFILE_FILE}
-        ;;
-      *)
-        echo "Unknown OS ${__os_version}"
-        ;;
-    esac
+    __tcmalloc_path=$(ldconfig -p | grep libtcmalloc.so | tail -1 | awk '{ print $2 }' FS=' => ')
+    if [ "z$__tcmalloc_path" != "z" ]; then
+        echo "export LD_PRELOAD=${__tcmalloc_path}" | ${SUDO} tee -a ${PROFILE_FILE}
+    fi
     echo "#<<<< PT Habana ends" | ${SUDO} tee -a ${PROFILE_FILE}
 }
 
@@ -374,6 +361,30 @@ compile_install_openmpi()
 }
 
 ###################################################################################################
+#    compile_install_gperftools
+###################################################################################################
+compile_install_gperftools()
+{
+    GPERFTOOLS_PREFIX="/usr/local"
+    GPERFTOOLS="gperftools-2.7"
+    if [ -f ${GPERFTOOL_PREFIX}/lib/libtcmalloc.so ]; then
+        echo "tcmalloc found. Skipping installation."
+    else
+        set -e
+        wget --no-verbose https://github.com/gperftools/gperftools/releases/download/${GPERFTOOLS}/${GPERFTOOLS}.tar.gz
+        tar -xvf ${GPERFTOOLS}.tar.gz
+        cd ${GPERFTOOLS}
+        ./configure --prefix="${GPERFTOOL_PREFIX}"
+        make -j
+        ${SUDO} make install
+        cd -
+        ${SUDO} rm -rf ${GPERFTOOLS}*
+        ${SUDO} /sbin/ldconfig
+        set +e
+    fi
+}
+
+###################################################################################################
 #    install_ubuntu_dep_pkgs
 ###################################################################################################
 install_ubuntu18_dep_pkgs()
@@ -392,7 +403,6 @@ install_ubuntu18_dep_pkgs()
         ;;
     esac
     set -e
-    HABANA_PIP_VERSION="19.3.1"
     ${SUDO} apt-get update && ${SUDO} apt-get install -y \
     unzip \
     curl \
@@ -421,7 +431,6 @@ install_ubuntu18_dep_pkgs()
 install_ubuntu20_dep_pkgs()
 {
     set -e
-    HABANA_PIP_VERSION="19.3.1"
     ${SUDO} apt-get update && ${SUDO} apt-get install -y \
     unzip \
     curl \
@@ -448,9 +457,9 @@ install_ubuntu20_dep_pkgs()
 }
 
 ###################################################################################################
-#    install_rhel83_dep_pkgs
+#    install_rhel86_dep_pkgs
 ###################################################################################################
-install_rhel83_dep_pkgs()
+install_rhel86_dep_pkgs()
 {
     set -e
     ${SUDO} dnf install -y \
@@ -517,7 +526,6 @@ install_amzn2_dep_pkgs()
     lapack-devel \
     blas \
     blas-devel \
-    gperftools \
     sox \
     numactl && \
     ${SUDO} yum clean all
@@ -529,6 +537,8 @@ install_amzn2_dep_pkgs()
     ${PYTHON} get-pip.py pip==21.0.1 --no-warn-script-location && \
     rm -rf get-pip.py
     set +e
+    #https://bugzilla.redhat.com/show_bug.cgi?id=1569391
+    compile_install_gperftools
 }
 
 ###################################################################################################
@@ -585,6 +595,8 @@ install_pt_habana_pkgs()
 ###################################################################################################
 verify_installation()
 {
+    source ~/.bashrc
+    env | grep -i 'tcmalloc'
     ${PYTHON} -c "import torch; from habana_frameworks.torch.utils.library_loader import load_habana_module; load_habana_module(); torch.rand(10).to('hpu')"
     if [ $? -ne 0 ]; then
         echo "Habana torch test failed"
@@ -621,8 +633,8 @@ if [ "z${__pt_install_deps}" == "ztrue" ]; then
       amzn2)
         install_amzn2_dep_pkgs
         ;;
-      rhel83)
-        install_rhel83_dep_pkgs
+      rhel86)
+        install_rhel86_dep_pkgs
         ;;
       *)
         echo "Unknown OS ${__os_version}"

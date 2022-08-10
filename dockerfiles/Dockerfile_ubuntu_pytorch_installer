@@ -12,7 +12,7 @@ ARG VERSION
 ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
-ARG HABANA_PIP_VERSION="19.3.1"
+ARG HABANA_PIP_VERSION="22.2.2"
 
 ENV LANG=en_US.UTF-8
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
@@ -45,14 +45,35 @@ RUN bash -c "\
         ln -s /usr/bin/python3.8 /usr/bin/python; \
     fi"
 
-RUN python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
-    pip install mpi4py==3.0.3 --no-cache-dir
+COPY requirements-pytorch.txt requirements-pytorch.txt
 
-RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+# Install python packages inside conda base environment
+RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /ubuntu${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir -p /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
-    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \
+    . /opt/miniconda/bin/activate && \
+    python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip install mpi4py==3.0.3 && \
+    pip install -r requirements-pytorch.txt --no-warn-script-location && \
+    pip install /root/habanalabs/pytorch_temp/torchvision*.whl && \
+    pip uninstall --yes torch && \
+    rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
+    pip install /root/habanalabs/pytorch_temp/*.whl && \
+    /sbin/ldconfig && \
+    pip uninstall -y pillow && \
+    pip uninstall -y pillow-simd && \
+    pip install pillow-simd==7.0.0.post3 && \
+    rm -rf /root/habanalabs && \
+    rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
+
+RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+/ubuntu${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
+    mkdir -p /root/habanalabs/pytorch_temp && \
+    tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
+    python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    pip install mpi4py==3.0.3 && \
+    pip install -r requirements-pytorch.txt --no-warn-script-location && \
     pip install /root/habanalabs/pytorch_temp/torchvision*.whl && \
     pip uninstall --yes torch && \
     rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
@@ -68,5 +89,6 @@ RUN wget "https://${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
 # pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg installed by torchvision
 
 ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
+ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
 
-RUN rm -rf /tmp/*
+RUN rm -rf /tmp/* requirements-pytorch.txt
