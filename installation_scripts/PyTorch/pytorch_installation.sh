@@ -24,12 +24,12 @@ CMDLINE_USAGE="$0 $*"
 REF_PACKAGE="habanalabs-firmware"
 ARTIFACTORY_URL=vault.habana.ai
 OPENMPI_VER=4.1.2
-HABANA_PIP_VERSION="21.1.1"
+HABANA_PIP_VERSION="22.2.2"
 SETUPTOOLS_VERSION=41.0.0
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
 PT_SHARED_LIB_DIR="/usr/lib/habanalabs"
-DEFAULT_SW_VERSION="1.5.0"
-DEFAULT_BUILD_NO="610"
+DEFAULT_SW_VERSION="1.6.0"
+DEFAULT_BUILD_NO="439"
 MPI_ROOT="${MPI_ROOT:-/opt/amazon/openmpi}"
 
 ${MPI_ROOT}/bin/mpirun --version 2>/dev/null
