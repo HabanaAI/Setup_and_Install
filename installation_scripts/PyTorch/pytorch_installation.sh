@@ -534,7 +534,7 @@ install_amzn2_dep_pkgs()
     ${SUDO} yum install -y moreutils && ${SUDO} yum clean all
 
     wget https://bootstrap.pypa.io/get-pip.py && \
-    ${PYTHON} get-pip.py pip==21.0.1 --no-warn-script-location && \
+    ${PYTHON} get-pip.py pip==${HABANA_PIP_VERSION} --no-warn-script-location && \
     rm -rf get-pip.py
     set +e
     #https://bugzilla.redhat.com/show_bug.cgi?id=1569391

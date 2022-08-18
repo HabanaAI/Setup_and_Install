@@ -23,7 +23,7 @@
 CMDLINE_USAGE="$0 $*"
 REF_PACKAGE="habanalabs-graph" # Synapse GC and Runtime
 OPENMPI_VER=4.1.2
-HABANA_PIP_VERSION="21.1.1"
+HABANA_PIP_VERSION="22.2.2"
 SETUPTOOLS_VERSION=41.0.0
 PROFILE_FILE="/etc/profile.d/habanalabs.sh"
 KNOWN_TF_HABANA_PACKAGES="habana_tensorflow habana_horovod"
@@ -419,7 +419,6 @@ compile_install_openmpi()
 install_ubuntu_dep_pkgs()
 {
     set -e
-    HABANA_PIP_VERSION="19.3.1"
     ${SUDO} apt-get update && ${SUDO} apt-get install -y \
     wget \
     python3.8-dev
@@ -474,7 +473,7 @@ install_amzn2_dep_pkgs()
     wget
 
     wget https://bootstrap.pypa.io/get-pip.py && \
-    ${PYTHON} get-pip.py pip==21.0.1 --no-warn-script-location && \
+    ${PYTHON} get-pip.py pip=="${HABANA_PIP_VERSION}" --no-warn-script-location && \
     rm -rf get-pip.py
     set +e
 }
