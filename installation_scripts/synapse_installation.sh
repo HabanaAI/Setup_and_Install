@@ -90,6 +90,7 @@ HABANALABS_PACKAGES="habanalabs-thunk
                      habanalabs-graph
                      habanalabs-qual"
 SERVER=vault.habana.ai
+RELEASE_VERSION=1.6.0-439
 
 #
 # Temp filename
@@ -244,16 +245,16 @@ if egrep -q "focal|bionic" <<<$VERSION_CODENAME; then
 
     dpkg --configure -a
     apt-get update
-    for p in curl ethtool python3 python3-pip libelf-dev lsof \
-             $HABANALABS_FW_PACKAGES \
-             dkms habanalabs-dkms \
-             $HABANALABS_PACKAGES \
-             linux-headers-$(uname -r); do
+    apt-get install -y curl ethtool python3 python3-pip libelf-dev lsof
+    for p in $HABANALABS_FW_PACKAGES \
+             habanalabs-dkms \
+             $HABANALABS_PACKAGES; do
         echo "== Installing package $p"
-        apt-get install -y $p
+        apt-get install -y --allow-downgrades $p=$RELEASE_VERSION
     done | tee $TMPF
+    apt-get install -y linux-headers-$(uname -r)
     for ((d=0;d<${#package_list[@]};d++)); do
-        ver=$(grep "Setting up ${package_list[d]} " $TMPF|sed -e 's,.*(,,' -e 's,).*,,')
+        ver=$(grep "Setting up ${package_list[d]} " $TMPF|sed -e 's,.*(,,' -e 's,).*,,'|tail -1)
         if [ -n "$ver" ]; then new_versions[d]="$ver"; fi
     done
     rm -f $TMPF
@@ -279,7 +280,7 @@ else
 
     case "$VERSION_CODENAME" in
       "Amazon Linux") os_key="AmazonLinux2" ;;
-      "Red Hat Enterprise Linux") os_key="rhel/8/8.6";;
+      "Red Hat Enterprise Linux") os_key="rhel/8/8.6" ;;
       *) unset os_key;;
     esac
     if [ -n "$os_key" ]; then
@@ -293,10 +294,10 @@ else
             echo "repo_gpgcheck=0"
         } | tee /etc/yum.repos.d/Habana-$server_tag.repo
         yum makecache
-        for p in wget git yum-utils lsof kernel-devel-$(uname -r) \
-                      $HABANALABS_FW_PACKAGES habanalabs $HABANALABS_PACKAGES; do
+        yum install -y  wget git yum-utils lsof kernel-devel-$(uname -r)
+        for p in $HABANALABS_FW_PACKAGES habanalabs $HABANALABS_PACKAGES; do
             echo "== Installing package $p"
-            yum install -y $p
+            yum install -y $p-$(sed 's,-.*$,,' <<<$RELEASE_VERSION)
         done
         rpm_versions=$(rpm -qa | grep "habanalabs")
         for ((d=0;d<${#package_list[@]};d++)); do
