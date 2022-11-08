@@ -8,8 +8,7 @@ ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 ARG HABANA_PIP_VERSION="19.3.1"
-ARG EFA_INSTALLER_VER="1.16.0"
-ARG CONDA_VERSION="4.12.0"
+ARG EFA_INSTALLER_VER="1.19.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
@@ -61,14 +60,9 @@ RUN apt-get update && \
     cd /tmp/aws-efa-installer && ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
     cd - && rm -rf /tmp/*
 
-RUN wget -nv "https://repo.anaconda.com/miniconda/Miniconda3-py38_${CONDA_VERSION}-Linux-x86_64.sh" -O /tmp/miniconda.sh && \
-    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
-    /opt/miniconda/condabin/conda config --set auto_activate_base false && \
-    rm -rf /tmp/*
-
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
-ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:/opt/miniconda/condabin:$PATH
+ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV FI_EFA_ENABLE_SHM_TRANSFER=0
@@ -108,10 +102,6 @@ RUN apt-get update && \
         habanalabs-graph="$VERSION"-"$REVISION" && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
-
-# Install python packages inside conda base environment
-RUN . /opt/miniconda/bin/activate && \
-    python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}"
 
 RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}"
 

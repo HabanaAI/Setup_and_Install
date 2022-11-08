@@ -31,15 +31,6 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/pr
 
 COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
 
-# Install python packages inside conda base environment
-RUN source /opt/miniconda/bin/activate && \
-    python3 -m pip install pip==21.0.1 \
-    setuptools==60.5.0 \
-    tensorflow-cpu==${TF_VERSION} && \
-    python3 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
-
 RUN python3 -m pip install pip==21.0.1 \
     setuptools==60.5.0 \
     tensorflow-cpu==${TF_VERSION} && \
@@ -47,7 +38,6 @@ RUN python3 -m pip install pip==21.0.1 \
     rm requirements-tensorflow-cpu-"$TF_VERSION".txt && \
     python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
     python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
-
 
 # For AML/CentOS/RHEL OS'es TFIO_DATAPATH have to be specified to import tensorflow_io lib correctly
 ENV TFIO_DATAPATH=/usr/local/lib64/python3.8/site-packages/

@@ -1,7 +1,8 @@
 #common
-protobuf==3.20.1
+protobuf==3.19.5
 regex==2020.10.28
 pandas==1.4.1
+
 # Below pkgs are required for pytorch-fork
 cffi==1.14.6
 typing-extensions>=4.0.0
@@ -12,5 +13,6 @@ pyyaml==5.4.1
 mkl==2022.0.2
 mkl-include==2022.0.2
 pybind11==2.6.2
+
 #pytorch lightining with habana support
-pytorch-lightning==1.6.5
+pytorch-lightning==1.7.7

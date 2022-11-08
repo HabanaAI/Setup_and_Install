@@ -1,0 +1,70 @@
+# Copyright (c) 2022 HabanaLabs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile PyTorch installer layer for Debian 10
+ARG BASE_NAME
+ARG VERSION
+ARG REVISION
+FROM ${BASE_NAME}:${VERSION}-${REVISION}
+ARG PT_VERSION
+ARG VERSION
+ARG REVISION
+ARG ARTIFACTORY_URL
+ARG HABANA_PIP_VERSION="22.2.2"
+
+ENV LANG=en_US.UTF-8
+ENV SETUPTOOLS_VERSION=65.4.1
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
+
+RUN apt update && apt install -y \
+    curl \
+    google-perftools \
+    iproute2 \
+    libblas-dev \
+    libcairo2-dev \
+    libcurl4 \
+    libglib2.0-dev \
+    libjpeg-dev \
+    liblapack-dev \
+    libnuma-dev \
+    libpcre2-dev \
+    libselinux1-dev \
+    moreutils \
+    numactl \
+    unzip  && \
+    apt clean
+
+# Default python is pointing to 3.7
+RUN bash -c "\
+    ln -sf /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4 /lib/x86_64-linux-gnu/libtcmalloc.so.4; \
+"
+
+COPY requirements-pytorch.txt requirements-pytorch.txt
+
+RUN wget --no-verbose https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+/debian${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
+    mkdir -p /root/habanalabs/pytorch_temp && \
+    tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
+    python3.8 -m pip install pip=="${HABANA_PIP_VERSION}" && \
+    python3.8 -m pip install setuptools=="${SETUPTOOLS_VERSION}" && \
+    python3.8 -m pip install mpi4py==3.0.3 && \
+    python3.8 -m pip install -r requirements-pytorch.txt --no-warn-script-location && \
+    python3.8 -m pip install setuptools=="${SETUPTOOLS_VERSION}" && \
+    python3.8 -m pip install /root/habanalabs/pytorch_temp/torchvision*.whl && \
+    python3.8 -m pip uninstall --yes torch && \
+    rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
+    python3.8 -m pip install /root/habanalabs/pytorch_temp/*.whl && \
+    /sbin/ldconfig && \
+    echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
+    python3.8 -m pip uninstall -y pillow && \
+    python3.8 -m pip uninstall -y pillow-simd && \
+    python3.8 -m pip install pillow-simd==7.0.0.post3 && \
+    rm -rf /root/habanalabs/pytorch_temp/ pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz requirements-pytorch.txt
+# requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
+# pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg installed by torchvision
+
+ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
+ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
+
+RUN rm -rf /tmp/*

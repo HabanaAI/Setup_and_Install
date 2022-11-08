@@ -12,7 +12,7 @@ ARG VERSION
 ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
-ARG HABANA_PIP_VERSION="22.2.2"
+ARG HABANA_PIP_VERSION="22.3"
 
 ENV LANG=en_US.UTF-8
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
@@ -46,26 +46,6 @@ RUN bash -c "\
     fi"
 
 COPY requirements-pytorch.txt requirements-pytorch.txt
-
-# Install python packages inside conda base environment
-RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
-/ubuntu${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
-    mkdir -p /root/habanalabs/pytorch_temp && \
-    tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
-    . /opt/miniconda/bin/activate && \
-    python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
-    pip install mpi4py==3.0.3 && \
-    pip install -r requirements-pytorch.txt --no-warn-script-location && \
-    pip install /root/habanalabs/pytorch_temp/torchvision*.whl && \
-    pip uninstall --yes torch && \
-    rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
-    pip install /root/habanalabs/pytorch_temp/*.whl && \
-    /sbin/ldconfig && \
-    pip uninstall -y pillow && \
-    pip uninstall -y pillow-simd && \
-    pip install pillow-simd==7.0.0.post3 && \
-    rm -rf /root/habanalabs && \
-    rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
 
 RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /ubuntu${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \

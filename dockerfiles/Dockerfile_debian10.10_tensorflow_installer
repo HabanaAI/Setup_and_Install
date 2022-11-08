@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile Tensorflow installer layer for Ubuntu18.04/Ubuntu20.04
+# HabanaLabs Dockerfile Tensorflow installer layer for debian
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -17,11 +17,9 @@ ENV PYTHONPATH=/usr/lib/habanalabs/:/root
 
 COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
 
-# Regarding to issue that occurs only on Ubuntu 18.04 with termcolor which is dependency for tensorflow-cpu
-# add --use-pep517 to tensorflow-cpu or installation termcolor will fail and affect tensorflow-cpu
 RUN python3 -m pip install pip==21.0.1 \
     setuptools==60.5.0 && \
-    python3 -m pip install --use-pep517 tensorflow-cpu==${TF_VERSION} && \
+    python3 -m pip install tensorflow-cpu==${TF_VERSION} && \
     python3 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-tensorflow-cpu-"$TF_VERSION".txt && \
     python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
