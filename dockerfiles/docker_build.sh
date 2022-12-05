@@ -6,15 +6,15 @@
 #
 # HabanaLabs script for building docker images
 
-: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.3, 2.10.0])"}"
-: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.3, 2.10.0])"}"
+: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.4, 2.10.1])"}"
+: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.4, 2.10.1])"}"
 
-VERSION="${CUSTOM_VERSION:-1.7.0}"
-REVISION="${CUSTOM_REVISION:-665}"
+VERSION="${CUSTOM_VERSION:-1.7.1}"
+REVISION="${CUSTOM_REVISION:-85}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
-PT_VERSION="1.12.0"
+PT_VERSION="1.13.0"
 ARTIFACTORY_URL="${CUSTOM_ARTIFACTORY_URL:-vault.habana.ai}"
 ARTIFACTORY_REPO="gaudi-docker"
 
@@ -22,10 +22,10 @@ ARTIFACTORY_REPO="gaudi-docker"
 case $MODE in
     tensorflow)
         case $TF_VERSION in
-            2.8.3|2.10.0);;
+            2.8.4|2.10.1);;
             *)
                 echo "Provide correct TF_VERSION argument"
-                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.8.3, 2.10.0]"
+                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.8.4, 2.10.1]"
                 exit 1;;
         esac
     ;;

@@ -25,4 +25,3 @@ The installation_scripts have been consolidated into the Installation Guide in o
 This respository contains the following references:
   - dockerfiles -- Reference dockerfiles and build script to build Gaudi Docker images
   - installation_scripts -- Moved -- Please reference our [Habana docs](https://docs.habana.ai/en/latest/Installation_Guide/Bare_Metal_Fresh_OS.html#set-up-synapseai-sw-stack)
-  - utils -- Reference utility scripts

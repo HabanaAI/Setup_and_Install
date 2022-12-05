@@ -18,6 +18,7 @@ ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
 ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins
 
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     curl \
     sudo \
