@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Habana Labs, Ltd.
+# Copyright (c) 2023 Habana Labs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -40,12 +40,13 @@ RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTAL
     cd - && rm -rf /tmp/*
 
 ENV MPI_ROOT=/opt/amazon/openmpi
-ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib64:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
-ENV FI_EFA_ENABLE_SHM_TRANSFER=0
 ENV FI_EFA_FORK_SAFE=1
+ENV RDMAV_FORK_SAFE=1
+ENV FI_EFA_USE_DEVICE_RDMA=1
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \

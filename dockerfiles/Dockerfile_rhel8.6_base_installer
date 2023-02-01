@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Habana Labs, Ltd.
+# Copyright (c) 2023 Habana Labs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -28,8 +28,20 @@ RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "mirrorlist=http://mirrorlist.centos.org/?release=\$releasever-stream&arch=\$basearch&repo=BaseOS&infra=\$infra" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
 
-RUN dnf install -y \
-    clang \
+RUN dnf update -y krb5-devel \
+    krb5-libs \
+    libkadm5 \
+    libcom_err \
+    libcom_err-devel \
+    libxml2 \
+    python3-libxml2 \
+    e2fsprogs \
+    dbus \
+    expat \
+    libtasn1 \
+    sqlite-libs \
+    systemd && \
+    dnf install -y clang \
     cmake3 \
     cpp \
     gcc \
@@ -60,11 +72,12 @@ RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTAL
     cd - && rm -rf /tmp/*
 
 ENV MPI_ROOT=/opt/amazon/openmpi
-ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib64:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
-ENV FI_EFA_ENABLE_SHM_TRANSFER=0
+ENV RDMAV_FORK_SAFE=1
+ENV FI_EFA_USE_DEVICE_RDMA=1
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana RH8 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \

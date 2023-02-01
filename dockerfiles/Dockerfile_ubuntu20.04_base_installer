@@ -1,4 +1,4 @@
-# Copyright (c) 2022 HabanaLabs, Ltd.
+# Copyright (c) 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -69,11 +69,12 @@ RUN apt-get update && \
     cd - && rm -rf /tmp/*
 
 ENV MPI_ROOT=/opt/amazon/openmpi
-ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
-ENV FI_EFA_ENABLE_SHM_TRANSFER=0
+ENV RDMAV_FORK_SAFE=1
+ENV FI_EFA_USE_DEVICE_RDMA=1
 
 RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian focal main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \

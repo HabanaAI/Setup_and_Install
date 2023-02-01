@@ -1,8 +1,8 @@
-# Copyright (c) 2022 HabanaLabs, Ltd.
+# Copyright (c) 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu18.04/Ubuntu20.04
+# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu18.04/Ubuntu20.04/Ubuntu22.04
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -25,35 +25,40 @@ RUN apt-get update && apt-get install -y \
     iproute2 \
     libcairo2-dev \
     libglib2.0-dev \
+    libhdf5-dev \
     libselinux1-dev \
     libnuma-dev \
     libpcre2-dev \
     libjpeg-dev \
     liblapack-dev \
-    libblas-dev \
+    libopenblas-dev \
     numactl \
-    google-perftools && \
+    libgoogle-perftools-dev && \
     apt-get clean
 
 RUN bash -c "\
-    if [[ $BASE_NAME == *"ubuntu18.04"* ]]; then \
-        rm -rf /usr/bin/python /usr/bin/python3m; \
-        ln -s /usr/bin/python3.8 /usr/bin/python; \
-        ln -s /usr/bin/python3.8m /usr/bin/python3m; \
-        ln -sf /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4 /lib/x86_64-linux-gnu/libtcmalloc.so.4; \
-    else \
-        ln -s /usr/bin/python3.8 /usr/bin/python; \
-    fi"
-
-COPY requirements-pytorch.txt requirements-pytorch.txt
+    case $BASE_NAME in \
+            *ubuntu18.04*) \
+                rm -rf /usr/bin/python /usr/bin/python3m; \
+                ln -s /usr/bin/python3.8 /usr/bin/python; \
+                ln -s /usr/bin/python3.8m /usr/bin/python3m; \
+                ln -sf /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4 /lib/x86_64-linux-gnu/libtcmalloc.so.4; \
+            ;; \
+            *ubuntu20.04*) \
+                ln -s /usr/bin/python3.8 /usr/bin/python; \
+            ;; \
+            *ubuntu22.04*) \
+               ln -s /usr/bin/python3.10 /usr/bin/python; \
+            ;; \
+        esac"
 
 RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
-/ubuntu${OS_NUMBER}/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
+/pytorch/ubuntu${OS_NUMBER}/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir -p /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
-    pip install mpi4py==3.0.3 && \
-    pip install -r requirements-pytorch.txt --no-warn-script-location && \
+    pip install mpi4py==3.1.4 && \
+    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \
     pip install /root/habanalabs/pytorch_temp/torchvision*.whl && \
     pip uninstall --yes torch && \
     rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
@@ -71,4 +76,4 @@ RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
 ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
 
-RUN rm -rf /tmp/* requirements-pytorch.txt
+RUN rm -rf /tmp/*

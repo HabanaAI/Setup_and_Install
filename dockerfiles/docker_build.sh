@@ -1,20 +1,20 @@
 #!/bin/bash -e
 #
-# Copyright 2022 HabanaLabs, Ltd.
+# Copyright 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
 # HabanaLabs script for building docker images
 
-: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.4, 2.10.1])"}"
-: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.4, 2.10.1])"}"
+: "${1?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,ubuntu22.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.4, 2.11.0])"}"
+: "${2?"Usage: $0 MODE [tensorflow,pytorch] OS [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,ubuntu22.04,debian10.10] TF_VERSION(if MODE=tensorflow) [2.8.4, 2.11.0])"}"
 
-VERSION="${CUSTOM_VERSION:-1.7.1}"
-REVISION="${CUSTOM_REVISION:-85}"
+VERSION="${CUSTOM_VERSION:-1.8.0}"
+REVISION="${CUSTOM_REVISION:-690}"
 MODE="$1"
 OS="$2"
 TF_VERSION="$3"
-PT_VERSION="1.13.0"
+PT_VERSION="1.13.1"
 ARTIFACTORY_URL="${CUSTOM_ARTIFACTORY_URL:-vault.habana.ai}"
 ARTIFACTORY_REPO="gaudi-docker"
 
@@ -22,10 +22,10 @@ ARTIFACTORY_REPO="gaudi-docker"
 case $MODE in
     tensorflow)
         case $TF_VERSION in
-            2.8.4|2.10.1);;
+            2.8.4|2.11.0);;
             *)
                 echo "Provide correct TF_VERSION argument"
-                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.8.4, 2.10.1]"
+                echo "Provided TF_VERSION: $3 - supported TF_VERSION [2.8.4, 2.11.0]"
                 exit 1;;
         esac
     ;;
@@ -39,10 +39,10 @@ case $MODE in
 esac
 
 case $OS in
-    amzn2|rhel8.6|ubuntu18.04|ubuntu20.04|debian10.10);;
+    amzn2|rhel8.6|ubuntu18.04|ubuntu20.04|ubuntu22.04|debian10.10);;
     *)
         echo "OS not supported!"
-        echo "Provided OS: $2 - supported OS'es [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,debian10.10]"
+        echo "Provided OS: $2 - supported OS'es [amzn2,rhel8.6,ubuntu18.04,ubuntu20.04,ubuntu22.04,debian10.10]"
         exit 1
     ;;
 esac
@@ -74,7 +74,7 @@ function buildDocker {
                 amzn2|rhel8.6|debian10.10)
                     DOCKERFILE="Dockerfile_${OS}_tensorflow_installer"
                 ;;
-                ubuntu18.04|ubuntu20.04)
+                ubuntu18.04|ubuntu20.04|ubuntu22.04)
                     DOCKERFILE="Dockerfile_ubuntu_tensorflow_installer"
                 ;;
                 *)
@@ -88,7 +88,7 @@ function buildDocker {
                 amzn2|rhel8.6|debian10.10)
                     DOCKERFILE="Dockerfile_${OS}_pytorch_installer"
                 ;;
-                ubuntu18.04|ubuntu20.04)
+                ubuntu18.04|ubuntu20.04|ubuntu22.04)
                     DOCKERFILE="Dockerfile_ubuntu_pytorch_installer"
                 ;;
                 *)

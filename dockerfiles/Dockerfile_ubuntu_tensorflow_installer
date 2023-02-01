@@ -1,8 +1,8 @@
-# Copyright (c) 2022 HabanaLabs, Ltd.
+# Copyright (c) 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile Tensorflow installer layer for Ubuntu18.04/Ubuntu20.04
+# HabanaLabs Dockerfile Tensorflow installer layer for Ubuntu18.04/Ubuntu20.04/Ubuntu22.04
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION

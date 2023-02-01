@@ -1,4 +1,4 @@
-# Copyright (c) 2022 HabanaLabs, Ltd.
+# Copyright (c) 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -90,6 +90,15 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LC_CTYPE=en_US.UTF-8
+
+ENV LIBFABRIC_VERSION="1.16.1"
+ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
+RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/ofiwg/libfabric/releases/download/v${LIBFABRIC_VERSION}/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
+    cd /tmp/ && tar xf /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
+    cd /tmp/libfabric-${LIBFABRIC_VERSION} && \
+    ./configure --prefix=$LIBFABRIC_ROOT --enable-debug && \
+    make && make install
+ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on

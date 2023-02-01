@@ -1,4 +1,4 @@
-# Copyright (c) 2022 HabanaLabs, Ltd.
+# Copyright (c) 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -11,7 +11,7 @@ ARG PT_VERSION
 ARG VERSION
 ARG REVISION
 ARG ARTIFACTORY_URL
-ARG HABANA_PIP_VERSION="22.2.2"
+ARG HABANA_PIP_VERSION="22.3"
 ARG GPERFTOOLS_PREFIX="/usr/local"
 ARG GPERFTOOLS="gperftools-2.7"
 
@@ -30,7 +30,7 @@ RUN yum install -y \
     libjpeg-devel \
     zlib-devel \
     lapack-devel \
-    blas-devel \
+    openblas-devel \
     numactl && \
     yum clean all
 
@@ -47,19 +47,18 @@ RUN wget --no-verbose https://github.com/gperftools/gperftools/releases/download
     ./configure --prefix="${GPERFTOOLS_PREFIX}" && \
     make -j && \
     make install && \
+    ln -s /usr/local/include/google /usr/include/gperftools && \
     cd - && \
     rm -rf ${GPERFTOOLS}* && \
     /sbin/ldconfig
 
-COPY requirements-pytorch.txt requirements-pytorch.txt
-
 RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
-/amzn2/binary/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
+/pytorch/amzn2/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
-    pip3 install mpi4py==3.0.3 && \
-    pip3 install -r requirements-pytorch.txt --no-warn-script-location && \
+    pip3 install mpi4py==3.1.4 && \
+    pip3 install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \
     pip3 install /root/habanalabs/pytorch_temp/torchvision*.whl && \
     pip3 uninstall --yes torch && \
     rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
@@ -75,4 +74,4 @@ RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
 ENV LD_PRELOAD="${GPERFTOOLS_PREFIX}/lib/libtcmalloc.so"
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
 
-RUN rm -rf /tmp/* requirements-pytorch.txt
+RUN rm -rf /tmp/*
