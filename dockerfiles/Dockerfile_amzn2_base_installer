@@ -7,10 +7,12 @@ FROM amazonlinux:2
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-ARG EFA_INSTALLER_VER="1.19.0"
+ARG EFA_INSTALLER_VER="1.20.0"
 
 RUN amazon-linux-extras enable python3.8 && \
 yum update -y && yum install -y \
+    git \
+    unzip \
     ethtool-4.8-10.amzn2.x86_64 \
     openssh-clients \
     openssh-server \
@@ -74,7 +76,7 @@ RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config &&
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
 
-RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}.1"
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8

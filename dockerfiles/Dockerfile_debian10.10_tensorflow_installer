@@ -1,4 +1,4 @@
-# Copyright (c) 2022 HabanaLabs, Ltd.
+# Copyright (c) 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -17,13 +17,12 @@ ENV PYTHONPATH=/usr/lib/habanalabs/:/root
 
 COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
 
-RUN python3 -m pip install pip==21.0.1 \
-    setuptools==60.5.0 && \
+RUN python3 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4 && \
     python3 -m pip install tensorflow-cpu==${TF_VERSION} && \
     python3 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
+    python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}.1" && \
+    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}.1"
 
 RUN echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     rm -rf /tmp/*

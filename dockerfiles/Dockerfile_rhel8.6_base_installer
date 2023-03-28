@@ -7,7 +7,7 @@ FROM registry.access.redhat.com/ubi8/ubi:8.6
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-ARG EFA_INSTALLER_VER="1.19.0"
+ARG EFA_INSTALLER_VER="1.20.0"
 
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
@@ -28,20 +28,8 @@ RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "mirrorlist=http://mirrorlist.centos.org/?release=\$releasever-stream&arch=\$basearch&repo=BaseOS&infra=\$infra" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
 
-RUN dnf update -y krb5-devel \
-    krb5-libs \
-    libkadm5 \
-    libcom_err \
-    libcom_err-devel \
-    libxml2 \
-    python3-libxml2 \
-    e2fsprogs \
-    dbus \
-    expat \
-    libtasn1 \
-    sqlite-libs \
-    systemd && \
-    dnf install -y clang \
+RUN dnf install -y \
+    clang \
     cmake3 \
     cpp \
     gcc \
@@ -51,6 +39,7 @@ RUN dnf update -y krb5-devel \
     glibc-devel \
     jemalloc \
     libarchive \
+    libksba \
     unzip \
     llvm \
     lsof \
@@ -62,6 +51,25 @@ RUN dnf update -y krb5-devel \
     wget \
     git \
     mesa-libGL && \
+    dnf update -y \
+    krb5-devel \
+    krb5-libs \
+    libkadm5 \
+    libcom_err \
+    libcom_err-devel \
+    libxml2 \
+    python3-libxml2 \
+    platform-python \
+    python3-setuptools-wheel \
+    platform-python-setuptools \
+    e2fsprogs \
+    dbus \
+    expat \
+    libtasn1 \
+    sqlite-libs \
+    systemd \
+    tar \
+    curl && \
     dnf clean all && rm -rf /var/cache/yum
 
 RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -P /tmp && \
@@ -98,7 +106,7 @@ RUN dnf install -y habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
 
-RUN python3.8 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}"
+RUN python3.8 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}.1"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

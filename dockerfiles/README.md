@@ -35,9 +35,11 @@ This script can be used as reference to build docker images for Gaudi.
 
 2. Run build script to generate Docker image
     ```
-    ./docker_build.sh mode [tensorflow,pytorch] os [ubuntu18.04,ubuntu20.04,ubuntu22.04,amzn2,rhel8.6,debian10.10] tf_version [2.11.0, 2.8.4]
+    ./docker_build.sh mode [tensorflow,pytorch,triton] os [ubuntu20.04,ubuntu22.04,amzn2,rhel8.6,debian10.10] [ubuntu20.04] for triton
     ```
     For example:
     ```
-    ./docker_build.sh tensorflow ubuntu20.04 2.11.0
+    ./docker_build.sh tensorflow ubuntu20.04
+    ./docker_build.sh pytorch ubuntu22.04
+    ./docker_build.sh triton ubuntu20.04
     ```

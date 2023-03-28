@@ -99,6 +99,7 @@ RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/o
     ./configure --prefix=$LIBFABRIC_ROOT --enable-debug && \
     make && make install
 ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV PATH=${LIBFABRIC_ROOT}/bin:$PATH
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
@@ -106,7 +107,7 @@ ENV PIP_NO_CACHE_DIR=on
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 2 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
 
-RUN pip3 install setuptools==45.2.0
+RUN pip3 install setuptools==67.3.3 wheel==0.38.4
 
 RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian buster main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
@@ -119,7 +120,7 @@ RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian buster main" | tee -
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
-RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}.1"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

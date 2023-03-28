@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu18.04/Ubuntu20.04/Ubuntu22.04
+# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu20.04/Ubuntu22.04
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -18,7 +18,6 @@ ENV LANG=en_US.UTF-8
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
 RUN apt-get update && apt-get install -y \
-    unzip \
     curl \
     libcurl4 \
     moreutils \
@@ -34,16 +33,10 @@ RUN apt-get update && apt-get install -y \
     libopenblas-dev \
     numactl \
     libgoogle-perftools-dev && \
-    apt-get clean
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN bash -c "\
     case $BASE_NAME in \
-            *ubuntu18.04*) \
-                rm -rf /usr/bin/python /usr/bin/python3m; \
-                ln -s /usr/bin/python3.8 /usr/bin/python; \
-                ln -s /usr/bin/python3.8m /usr/bin/python3m; \
-                ln -sf /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4 /lib/x86_64-linux-gnu/libtcmalloc.so.4; \
-            ;; \
             *ubuntu20.04*) \
                 ln -s /usr/bin/python3.8 /usr/bin/python; \
             ;; \
@@ -52,17 +45,16 @@ RUN bash -c "\
             ;; \
         esac"
 
-RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+RUN wget --no-verbose https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /pytorch/ubuntu${OS_NUMBER}/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir -p /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
     pip install mpi4py==3.1.4 && \
-    pip install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \
-    pip install /root/habanalabs/pytorch_temp/torchvision*.whl && \
-    pip uninstall --yes torch && \
-    rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
+    pip install $(grep -ivE "#|pytorch-lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt | grep .) --no-warn-script-location && \
     pip install /root/habanalabs/pytorch_temp/*.whl && \
+    pip install $(grep "pytorch-lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt) && \
+    pip install -U habana-lightning-plugins=="${VERSION}"."${REVISION}.1" && \
     /sbin/ldconfig && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     pip uninstall -y pillow && \
@@ -70,8 +62,6 @@ RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/
     pip install pillow-simd==7.0.0.post3 && \
     rm -rf /root/habanalabs/pytorch_temp/ && \
     rm -rf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz
-# requirement-pytorch.txt installs a pkg called torchvision.torchvision has dependency on "torch" pkg
-# pytorch uses its own package "torch", to avoid the conflict between two pkgs, we uninstall torch pkg installed by torchvision
 
 ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 HabanaLabs, Ltd.
+# Copyright (c) 2023 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -30,12 +30,13 @@ RUN dnf install -y \
 COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
 
 RUN python3.8 -m pip install pip=="${HABANA_PIP_VERSION}" \
-    setuptools==60.5.0 \
+    setuptools==67.3.3 \
+    wheel==0.38.4 \
     tensorflow-cpu==${TF_VERSION} && \
         python3.8 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
     rm requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    python3.8 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
-    python3.8 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
+    python3.8 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}.1" && \
+    python3.8 -m pip install habana-horovod=="${VERSION}"."${REVISION}.1"
 
 # For AML/CentOS/RHEL OS'es TFIO_DATAPATH have to be specified to import tensorflow_io lib correctly
 ENV TFIO_DATAPATH=/usr/local/lib64/python3.8/site-packages/

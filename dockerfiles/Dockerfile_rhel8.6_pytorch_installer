@@ -17,7 +17,7 @@ LABEL name="PyTorch Installer"
 LABEL summary="Habanalabs PyTorch installer layer for RHEL8.6"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
-ENV SETUPTOOLS_VERSION=41.0.0
+ENV SETUPTOOLS_VERSION=67.3.3
 ENV LANG=en_US.UTF-8
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
@@ -34,18 +34,17 @@ RUN dnf install -y \
     gperftools-devel && \
     dnf clean all && rm -rf /var/cache/yum
 
-RUN wget https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
+RUN wget --no-verbose https://"${ARTIFACTORY_URL}"/artifactory/gaudi-pt-modules/"${VERSION}"/"${REVISION}"\
 /pytorch/rhel86/pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz && \
     mkdir /root/habanalabs /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
     pip3 install setuptools=="${SETUPTOOLS_VERSION}" && \
     pip3 install mpi4py==3.1.4 && \
-    pip3 install -r /root/habanalabs/pytorch_temp/requirements-pytorch.txt --no-warn-script-location && \
-    pip3 install /root/habanalabs/pytorch_temp/torchvision*.whl && \
-    pip3 uninstall --yes torch && \
-    rm -rf /root/habanalabs/pytorch_temp/torchvision*.whl && \
+    pip3 install $(grep -ivE "#|pytorch-lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt | grep .) --no-warn-script-location && \
     pip3 install /root/habanalabs/pytorch_temp/*.whl && \
+    pip3 install $(grep "pytorch-lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt) && \
+    pip3 install -U habana-lightning-plugins=="${VERSION}"."${REVISION}.1" && \
     /sbin/ldconfig && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     pip3 uninstall -y pillow && \
