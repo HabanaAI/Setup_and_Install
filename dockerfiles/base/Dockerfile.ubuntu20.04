@@ -7,7 +7,6 @@ FROM ubuntu:focal
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-ARG EFA_INSTALLER_VER="1.20.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
@@ -59,14 +58,12 @@ ENV LC_CTYPE=en_US.UTF-8
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN pip3 install setuptools==67.3.3 wheel==0.38.4
+RUN python3 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4
 
-RUN apt-get update && \
-    wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -P /tmp && \
-    tar -xf "/tmp/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -C /tmp && \
-    cd /tmp/aws-efa-installer && ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
-    cd - && rm -rf /tmp/*
+COPY install_efa.sh .
+RUN ./install_efa.sh && rm install_efa.sh
 
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
@@ -76,16 +73,19 @@ ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
 ENV FI_EFA_USE_DEVICE_RDMA=1
 
-RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian focal main" | tee -a /etc/apt/sources.list && \
-    wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
-    apt-key add public && rm public && apt-get update && \
-    apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
+RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/habana-artifactory.gpg && \
+    chown root:root /usr/share/keyrings/habana-artifactory.gpg && \
+    chmod 644 /usr/share/keyrings/habana-artifactory.gpg  && \
+    echo "deb [signed-by=/usr/share/keyrings/habana-artifactory.gpg] https://${ARTIFACTORY_URL}/artifactory/debian focal main" | tee -a /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y habanalabs-rdma-core="$VERSION"-"$REVISION" \
+        habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
         habanalabs-graph="$VERSION"-"$REVISION" && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
-RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}.1"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

@@ -7,7 +7,6 @@ FROM registry.access.redhat.com/ubi8/ubi:8.6
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-ARG EFA_INSTALLER_VER="1.20.0"
 
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
@@ -50,34 +49,15 @@ RUN dnf install -y \
     redhat-lsb-core \
     wget \
     git \
-    mesa-libGL && \
-    dnf update -y \
-    krb5-devel \
-    krb5-libs \
-    libkadm5 \
-    libcom_err \
-    libcom_err-devel \
-    libxml2 \
-    python3-libxml2 \
-    platform-python \
-    python3-setuptools-wheel \
-    platform-python-setuptools \
-    e2fsprogs \
-    dbus \
-    expat \
-    libtasn1 \
-    sqlite-libs \
-    systemd \
-    tar \
-    curl && \
+    mesa-libGL \
+    python3-dnf-plugin-versionlock && \
+    # update pkgs (except OS version) for resolving potentials CVEs
+    dnf versionlock add redhat-release* && \
+    dnf update -y && \
     dnf clean all && rm -rf /var/cache/yum
 
-RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -P /tmp && \
-    tar -xf "/tmp/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -C /tmp && \
-    cd /tmp/aws-efa-installer && \
-    rm -f RPMS/RHEL8/x86_64/dkms*.rpm && \
-    ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
-    cd - && rm -rf /tmp/*
+COPY install_efa.sh .
+RUN ./install_efa.sh && rm install_efa.sh
 
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib64:/usr/lib/habanalabs:$LD_LIBRARY_PATH
@@ -97,7 +77,8 @@ RUN echo "[powertools]" > /etc/yum.repos.d/powertools.repo && \
     echo "baseurl=http://mirror.centos.org/centos/8-stream/PowerTools/x86_64/os/"  >> /etc/yum.repos.d/powertools.repo && \
     echo "gpgcheck=0" >> /etc/yum.repos.d/powertools.repo
 
-RUN dnf install -y habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
+RUN dnf install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".el8 \
+        habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
         habanalabs-graph-"$VERSION"-"$REVISION".el8 && \
     rm -f /etc/yum.repos.d/habanalabs.repo && rm -rf /tmp/* && \
@@ -105,8 +86,15 @@ RUN dnf install -y habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN python3.8 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}.1"
+RUN python3.8 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4
+
+RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
+    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
+    alternatives --set python3 /usr/bin/python3.8
+
+RUN python3.8 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

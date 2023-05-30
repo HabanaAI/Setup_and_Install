@@ -12,7 +12,6 @@ ARG VERSION
 ARG REVISION
 ARG TF_VERSION
 ARG ARTIFACTORY_URL
-ARG HABANA_PIP_VERSION="21.3.1"
 
 LABEL name="Tensorflow Installer (${TF_VERSION})"
 LABEL summary="Habanalabs Tensorflow (${TF_VERSION}) installer layer for RHEL 8.6"
@@ -27,16 +26,13 @@ RUN dnf install -y \
         protobuf-devel && \
     dnf clean all && rm -rf /var/cache/dnf
 
-COPY requirements-tensorflow-cpu-"$TF_VERSION".txt requirements-tensorflow-cpu-"$TF_VERSION".txt
+COPY requirements.txt requirements.txt
 
-RUN python3.8 -m pip install pip=="${HABANA_PIP_VERSION}" \
-    setuptools==67.3.3 \
-    wheel==0.38.4 \
-    tensorflow-cpu==${TF_VERSION} && \
-        python3.8 -m pip install -r requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    rm requirements-tensorflow-cpu-"$TF_VERSION".txt && \
-    python3.8 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}.1" && \
-    python3.8 -m pip install habana-horovod=="${VERSION}"."${REVISION}.1"
+RUN python3.8 -m pip install tensorflow-cpu==${TF_VERSION} && \
+    python3.8 -m pip install -r requirements.txt && \
+    rm requirements.txt && \
+    python3.8 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
+    python3.8 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 
 # For AML/CentOS/RHEL OS'es TFIO_DATAPATH have to be specified to import tensorflow_io lib correctly
 ENV TFIO_DATAPATH=/usr/local/lib64/python3.8/site-packages/

@@ -91,7 +91,7 @@ This script can be used as reference to check the environment for running Tensor
 The following is the usage of the script:
 
 ```
-usage: test.py [-h] [--cards CARDS] [--framework [{tensorflow,pytorch}]]
+usage: check_habana_framework_env.py [-h] [--cards CARDS] [--framework [{tensorflow,pytorch}]]
 
 Check health of HPU for either TensorFlow/PyTorch
 

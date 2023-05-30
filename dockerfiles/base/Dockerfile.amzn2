@@ -7,10 +7,9 @@ FROM amazonlinux:2
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
-ARG EFA_INSTALLER_VER="1.20.0"
 
 RUN amazon-linux-extras enable python3.8 && \
-yum update -y && yum install -y \
+    yum update -y && yum install -y \
     git \
     unzip \
     ethtool-4.8-10.amzn2.x86_64 \
@@ -36,10 +35,8 @@ RUN yum install -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epe
 RUN yum groupinstall -y "Development Tools"
 RUN yum install -y sudo system-lsb-core cmake
 
-RUN wget -nv "https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -P /tmp && \
-    tar -xf "/tmp/aws-efa-installer-${EFA_INSTALLER_VER}.tar.gz" -C /tmp && \
-    cd /tmp/aws-efa-installer && ./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-verify && \
-    cd - && rm -rf /tmp/*
+COPY install_efa.sh .
+RUN ./install_efa.sh && rm install_efa.sh
 
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib64:/usr/lib/habanalabs:$LD_LIBRARY_PATH
@@ -55,7 +52,8 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
-RUN yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 && \
+RUN yum install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".amzn2 && \
+    yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-firmware-tools-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-graph-"$VERSION"-"$REVISION".amzn2
 
@@ -75,8 +73,11 @@ RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config &&
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}.1"
+RUN python3 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4
+
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8

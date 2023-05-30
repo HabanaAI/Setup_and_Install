@@ -38,6 +38,7 @@ RUN apt-get update && \
     libgoogle-glog0v5 \
     libjemalloc2 \
     libpq-dev \
+    libsqlite3-dev \
     locales \
     lsof \
     make \
@@ -55,6 +56,8 @@ RUN apt-get update && \
     zlib1g-dev \
     wget \
     libbz2-dev \
+    libibverbs-dev \
+    librdmacm-dev \
     liblzma-dev && \
     apt-get autoremove && apt-get clean
 
@@ -96,31 +99,33 @@ ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
 RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/ofiwg/libfabric/releases/download/v${LIBFABRIC_VERSION}/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
     cd /tmp/ && tar xf /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
     cd /tmp/libfabric-${LIBFABRIC_VERSION} && \
-    ./configure --prefix=$LIBFABRIC_ROOT --enable-debug && \
+    ./configure --prefix=$LIBFABRIC_ROOT --enable-debug --enable-psm3-verbs --enable-verbs=yes && \
     make && make install
-ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${LIBFABRIC_ROOT}/bin:$PATH
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
-
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 2 && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
-
-RUN pip3 install setuptools==67.3.3 wheel==0.38.4
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian buster main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
     apt-key add public && \
     rm public && \
     apt-get update && \
-    apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
+    apt-get install -y habanalabs-rdma-core="$VERSION"-"$REVISION" \
+        habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
         habanalabs-graph="$VERSION"-"$REVISION" && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
-RUN python3 -m pip install hpu_media_loader=="${VERSION}"."${REVISION}.1"
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 2 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
+
+RUN python3 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4
+
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

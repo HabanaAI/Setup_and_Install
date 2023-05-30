@@ -1,10 +1,8 @@
-# Gaudi Dockers
-
-By installing, copying, accessing, or using the software, you agree to be legally bound by the terms and conditions of the Habana software license agreement [defined here](https://habana.ai/habana-outbound-software-license-agreement/).
+# Gaudi Docker Images Builder
 
 ## Table of Contents
   - [Overview](#overview)
-  - [docker_build](#docker_build)
+  - [Build docker](#docker_build)
 
 
 <br />
@@ -15,9 +13,7 @@ By installing, copying, accessing, or using the software, you agree to be legall
 
 ## Overview
 
-Welcome to Gaudi Dockers!
-
-This folder contains some Gaudi dockerfiles and docker_build.sh that can be used as reference to build docker images for Gaudi.
+This folder contains Gaudi dockerfiles and makefiles that can be used to build Habanalabs docker images for Gaudi.
 
 <br />
 
@@ -25,21 +21,39 @@ This folder contains some Gaudi dockerfiles and docker_build.sh that can be used
 
 <br />
 
-## docker_build
+## Build Docker
 
 This script can be used as reference to build docker images for Gaudi.
 
 ### How to Build Docker Images from Habana Dockerfiles
 
-1. Download Docker files and build script from Github to local directory
+1. Go into the folder of the image type you would like to build:
+    * base
+    * pytorch
+    * tensorflow
+    * triton
 
-2. Run build script to generate Docker image
+2. Run build comamnd to generate Docker image
     ```
-    ./docker_build.sh mode [tensorflow,pytorch,triton] os [ubuntu20.04,ubuntu22.04,amzn2,rhel8.6,debian10.10] [ubuntu20.04] for triton
+    make build
     ```
-    For example:
+    Examples:
+    #### Build pytorch image for ubuntu22.04:
     ```
-    ./docker_build.sh tensorflow ubuntu20.04
-    ./docker_build.sh pytorch ubuntu22.04
-    ./docker_build.sh triton ubuntu20.04
+    cd pytorch
+    make build BUILD_OS=ubuntu22.04
     ```
+
+    #### Build tensorflow image rhel8.6:
+    ```
+    cd tensorflow
+    make build BUILD_OS=rhel8.6
+    ```
+
+3. Build command variables
+
+    #### Optional Parameters
+    * BUILD_OS - set the OS to build (default ubuntu20.04)
+    * BUILD_DIR - the folder where the build be executed from (default dockerbuild in image folder)
+    * VERBOSE - set to TRUE to echo the commands (default FALSE)
+    * DOCKER_CACHE - set to TRUE to use cache for building docker image (default FALSE)
