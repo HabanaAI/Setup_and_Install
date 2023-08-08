@@ -33,8 +33,7 @@ RUN python3 -m pip install tensorflow-cpu==${TF_VERSION} && \
     rm requirements.txt && \
     python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
     python3 -m pip install --upgrade "urllib3<2" && \
-    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}" && \
-    python3 -m pip install --no-binary opencv-python opencv-python==4.7.0.68
+    python3 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 
 # For AML/CentOS/RHEL OS'es TFIO_DATAPATH have to be specified to import tensorflow_io lib correctly
 ENV TFIO_DATAPATH=/usr/local/lib64/python3.8/site-packages/

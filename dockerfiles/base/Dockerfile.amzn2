@@ -46,6 +46,8 @@ ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV FI_EFA_FORK_SAFE=1
 ENV RDMAV_FORK_SAFE=1
 ENV FI_EFA_USE_DEVICE_RDMA=1
+ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
+ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
@@ -56,6 +58,8 @@ RUN yum install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-firmware-tools-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-graph-"$VERSION"-"$REVISION".amzn2
+
+RUN rpm -V habanalabs-rdma-core && rpm -V habanalabs-thunk && rpm -V habanalabs-firmware-tools && rpm -V habanalabs-graph
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1

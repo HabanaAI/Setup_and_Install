@@ -72,6 +72,8 @@ ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
 ENV FI_EFA_USE_DEVICE_RDMA=1
+ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
+ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
 RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/habana-artifactory.gpg && \
     chown root:root /usr/share/keyrings/habana-artifactory.gpg && \

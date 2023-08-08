@@ -56,10 +56,9 @@ RUN ln -s /usr/bin/python3.8 /usr/bin/python && wget --no-verbose "${PT_ARTIFACT
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C /root/habanalabs/pytorch_temp/. && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
     pip install mpi4py==3.1.4 --disable-pip-version-check && \
-    pip install $(grep -ivE "#|pytorch-lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt | grep .) --no-warn-script-location --disable-pip-version-check && \
+    pip install $(grep -ivE "#|lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt | grep .) --no-warn-script-location --disable-pip-version-check && \
     pip install /root/habanalabs/pytorch_temp/*.whl --disable-pip-version-check && \
-    pip install $(grep "pytorch-lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt) --disable-pip-version-check && \
-    pip install -U habana-lightning-plugins=="${VERSION}"."${REVISION}" --disable-pip-version-check && \
+    pip install $(grep "lightning" /root/habanalabs/pytorch_temp/requirements-pytorch.txt) --disable-pip-version-check && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     pip uninstall -y pillow && \
     pip uninstall -y pillow-simd && \

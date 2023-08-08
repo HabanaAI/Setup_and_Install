@@ -252,18 +252,18 @@ check_flags
 
 if [ $status -eq 1 ]; then
     for (( i=0; i<$NICS_NUM; i++ )); do
-        dev_name="hl$i"
-        if [ ! -d /sys/class/habanalabs/$dev_name/ ]; then
+        dev_name="accel$i"
+        if [ ! -d /sys/class/accel/$dev_name/ ]; then
             echo "$dev_name doesn't exist"
             continue
         fi
 
-        if [ "$(cat /sys/class/habanalabs/$dev_name/status)" != "Operational" ]; then
+        if [ "$(cat /sys/class/accel/$dev_name/device/status)" != "Operational" ]; then
             echo "$dev_name is not operational"
             continue
         fi
 
-        pci_addr=$(cat /sys/class/habanalabs/$dev_name/pci_addr)
+        pci_addr=$(cat /sys/class/accel/$dev_name/device/pci_addr)
         dev_ifs=""
         dev_ifs_up=""
         dev_ifs_down=""
