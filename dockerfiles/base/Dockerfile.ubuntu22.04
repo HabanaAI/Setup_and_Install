@@ -9,7 +9,7 @@ ARG VERSION
 ARG REVISION
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so:/usr/lib/habanalabs/libtpc_scalar_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV OS_NUMBER=2204
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
