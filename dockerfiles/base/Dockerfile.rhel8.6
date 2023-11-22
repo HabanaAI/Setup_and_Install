@@ -93,7 +93,7 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
-RUN python3.8 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4
+RUN python3.8 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
 
 RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
     alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
@@ -112,7 +112,7 @@ RUN mkdir -p /var/run/sshd && \
 
 RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
 RUN export LANG=en_US.UTF-8
-ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so:/usr/lib/habanalabs/libtpc_scalar_kernels.so
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
 ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins

@@ -9,7 +9,7 @@ ARG VERSION
 ARG REVISION
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so:/usr/lib/habanalabs/libtpc_scalar_kernels.so
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV OS_NUMBER=2204
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
@@ -60,7 +60,7 @@ ENV LC_CTYPE=en_US.UTF-8
 ENV PIP_NO_CACHE_DIR=on
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN python3 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4
+RUN python3 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
 
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm install_efa.sh

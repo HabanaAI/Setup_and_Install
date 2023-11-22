@@ -11,7 +11,7 @@ ARG REVISION
 ARG OPENMPI_VER=4.1.5
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so:/usr/lib/habanalabs/libtpc_scalar_kernels.so
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV OS_NUMBER=1010
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
@@ -56,28 +56,62 @@ RUN apt-get update && \
     zlib1g-dev \
     wget \
     libbz2-dev \
+    lbzip2 \
+    libtool \
+    autoconf \
     libibverbs-dev \
     librdmacm-dev \
     libdrm-dev \
     liblzma-dev && \
     apt-get autoremove && apt-get clean
 
+COPY install_efa.sh .
+RUN ./install_efa.sh && rm install_efa.sh
+
+ENV LIBFABRIC_VERSION="1.19.0"
+ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
+ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
+ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
+RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/ofiwg/libfabric/releases/download/v${LIBFABRIC_VERSION}/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
+    cd /tmp/ && tar xf /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
+    cd /tmp/libfabric-${LIBFABRIC_VERSION} && \
+    ./configure --prefix=$LIBFABRIC_ROOT --enable-psm3-verbs --enable-verbs=yes && \
+    make && make install
+ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV PATH=${LIBFABRIC_ROOT}/bin:$PATH
+
+# ucx installation
+ENV UCX_VERSION="1.13.1"
+ENV UCX_ROOT="/opt/habanalabs/ucx-${UCX_VERSION}"
+RUN wget -nv -O /tmp/ucx-${UCX_VERSION}.tar.gz https://github.com/openucx/ucx/releases/download/v${UCX_VERSION}/ucx-${UCX_VERSION}.tar.gz && \
+    cd /tmp/ && tar xf /tmp/ucx-${UCX_VERSION}.tar.gz && \
+    cd /tmp/ucx-${UCX_VERSION} && \
+    ./configure --prefix=${UCX_ROOT} && \
+    make && make install
+ENV LD_LIBRARY_PATH=${UCX_ROOT}/lib:$LD_LIBRARY_PATH
+ENV PATH=${UCX_ROOT}/bin:$PATH
 
 # install openmpi
 ENV MPI_ROOT="/usr/local/share/openmpi"
 RUN wget -nv -P /tmp/openmpi "https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OPENMPI_VER}.tar.gz" && \
     cd /tmp/openmpi && tar xzf openmpi-${OPENMPI_VER}.tar.gz && \
     cd /tmp/openmpi/openmpi-${OPENMPI_VER} && \
-    ./configure --prefix=${MPI_ROOT} && \
+    ./configure --prefix=${MPI_ROOT} --with-sge --disable-builtin-atomics --enable-orterun-prefix-by-default --with-ucx=${UCX_ROOT} --with-verbs && \
     make -j 8 && \
     sudo make install && \
     cp LICENSE ${MPI_ROOT} && \
     rm -rf /tmp/openmpi
 ENV PATH="${MPI_ROOT}/bin:$PATH"
-ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib
-ENV PATH=${MPI_ROOT}/bin:$PATH
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/opt/amazon/efa/lib64:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV PATH=${MPI_ROOT}/bin:/opt/amazon/efa/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
+
+ENV FI_EFA_FORK_SAFE=1
+ENV RDMAV_FORK_SAFE=1
+ENV FI_EFA_USE_DEVICE_RDMA=1
+ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
+ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
 RUN wget -nv -O /opt/Python-3.8.10.tgz https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz && \
     cd /opt/ && \
@@ -95,17 +129,6 @@ ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LC_CTYPE=en_US.UTF-8
 
-ENV LIBFABRIC_VERSION="1.18.0"
-ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
-ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
-ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
-RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/ofiwg/libfabric/releases/download/v${LIBFABRIC_VERSION}/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
-    cd /tmp/ && tar xf /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
-    cd /tmp/libfabric-${LIBFABRIC_VERSION} && \
-    ./configure --prefix=$LIBFABRIC_ROOT --enable-debug --enable-psm3-verbs --enable-verbs=yes && \
-    make && make install
-ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
-ENV PATH=${LIBFABRIC_ROOT}/bin:$PATH
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on
@@ -128,7 +151,7 @@ RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian buster main" | tee -
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 2 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
 
-RUN python3 -m pip install pip==22.2.2 setuptools==67.3.3 wheel==0.38.4
+RUN python3 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 

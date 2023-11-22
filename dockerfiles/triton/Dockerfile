@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y \
     numactl \
     libgoogle-perftools-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN python3 -m pip install pip==21.1.1 --disable-pip-version-check && \
+RUN python3 -m pip install pip==23.3.1 --disable-pip-version-check && \
     python3 -m pip install setuptools==67.3.3 --disable-pip-version-check && \
     python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --disable-pip-version-check
 

@@ -20,6 +20,7 @@ ifneq (,$(findstring ubuntu,$(BUILD_OS)))
 else
 	$(HIDE)cp $(CURDIR)/Dockerfile.$(BUILD_OS) $(BUILD_DIR)/Dockerfile
 endif
+	$(HIDE)cp $(CURDIR)/install-python310.sh $(BUILD_DIR)/install-python310.sh
 	$(HIDE)cp $(CURDIR)/requirements-tensorflow-cpu-$(shell echo -n $(TF_VERSION) | awk -F'-' '{print $$1}').txt $(BUILD_DIR)/requirements.txt
 
 build: init

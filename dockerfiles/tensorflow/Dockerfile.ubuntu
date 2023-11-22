@@ -7,6 +7,7 @@ ARG BASE_NAME
 ARG VERSION
 ARG REVISION
 FROM ${BASE_NAME}:${VERSION}-${REVISION}
+ARG BASE_NAME
 ARG VERSION
 ARG REVISION
 ARG TF_VERSION
@@ -14,10 +15,22 @@ ARG ARTIFACTORY_URL
 
 ENV TF_MODULES_RELEASE_BUILD=/usr/lib/habanalabs/
 ENV PYTHONPATH=/usr/lib/habanalabs/:/root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    openssl \
+    libssl-dev \
+    libffi-dev \
+    libbz2-dev && \
+    apt-get autoremove && apt-get clean
+
+COPY install-python310.sh install-python310.sh
+RUN ./install-python310.sh $BASE_NAME
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 COPY requirements.txt requirements.txt
 
-RUN python3 -m pip install tensorflow-cpu==${TF_VERSION} && \
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" && \
+    python3 -m pip install tensorflow-cpu==${TF_VERSION} && \
     python3 -m pip install -r requirements.txt && \
     rm requirements.txt && \
     python3 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
