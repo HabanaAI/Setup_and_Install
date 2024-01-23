@@ -33,12 +33,8 @@ COPY install-python310.sh install-python310.sh
 RUN ./install-python310.sh $BASE_NAME
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-COPY requirements.txt requirements.txt
-
 RUN python3.10 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" && \
     python3.10 -m pip install tensorflow-cpu==${TF_VERSION} && \
-    python3.10 -m pip install -r requirements.txt && \
-    rm requirements.txt && \
     python3.10 -m pip install habana-tensorflow=="${VERSION}"."${REVISION}" && \
     python3.10 -m pip install habana-horovod=="${VERSION}"."${REVISION}"
 

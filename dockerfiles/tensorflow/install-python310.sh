@@ -10,7 +10,15 @@ case "${_BASE_NAME}" in
         echo "Skip install Python3.10 from source on Ubuntu22.04"
         exit 0;
     ;;
+    *debian*)
+        apt update
+        apt install -y libsqlite3-dev libreadline-dev
+    ;;
+    *rhel*)
+        yum install -y sqlite-devel readline-devel
+    ;;
     *amzn2*)
+        yum install -y sqlite-devel readline-devel
         wget -nv -O /opt/openssl-1.1.1w.tar.gz https://github.com/openssl/openssl/releases/download/OpenSSL_1_1_1w/openssl-1.1.1w.tar.gz && \
             cd /opt/ && \
             tar xzf openssl-1.1.1w.tar.gz && \
@@ -33,7 +41,7 @@ tar xzf Python-3.10.9.tgz
 rm -f Python-3.10.9.tgz
 cd Python-3.10.9
 ./configure --enable-optimizations --enable-loadable-sqlite-extensions --enable-shared $_SSL_LIB
-make && make altinstall
+make -j && make altinstall
 
 # post install
 case "${_BASE_NAME}" in
@@ -52,10 +60,6 @@ case "${_BASE_NAME}" in
         update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 3
         update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 2
         update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
-    ;;
-    *ubuntu20.04*)
-        update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 2 && \
-        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
     ;;
 esac
 

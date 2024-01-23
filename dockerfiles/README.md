@@ -33,7 +33,7 @@ This script can be used as reference to build docker images for Gaudi.
     * tensorflow
     * triton
 
-2. Run build comamnd to generate Docker image
+2. Run build command to generate Docker image
     ```
     make build
     ```
@@ -53,7 +53,7 @@ This script can be used as reference to build docker images for Gaudi.
 3. Build command variables
 
     #### Optional Parameters
-    * BUILD_OS - set the OS to build (default ubuntu20.04)
+    * BUILD_OS - set the OS to build (default ubuntu22.04)
     * BUILD_DIR - the folder where the build be executed from (default dockerbuild in image folder)
     * VERBOSE - set to TRUE to echo the commands (default FALSE)
     * DOCKER_CACHE - set to TRUE to use cache for building docker image (default FALSE)

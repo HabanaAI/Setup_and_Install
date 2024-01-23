@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu20.04/Ubuntu22.04
+# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu22.04
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -36,9 +36,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN bash -c "\
         case $BASE_NAME in \
-            *ubuntu20.04*) \
-                update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1 \
-            ;; \
             *ubuntu22.04*) \
                update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
             ;; \

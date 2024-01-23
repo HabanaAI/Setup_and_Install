@@ -13,6 +13,9 @@ case "${BASE_NAME}" in
     *debian*)
         os_string="debian${OS_NUMBER}"
     ;;
+    *tencentos*)
+        os_string="tencentos31"
+    ;;
 esac
 pt_artifact_path="https://${ARTIFACTORY_URL}/artifactory/gaudi-pt-modules/${VERSION}/${REVISION}/pytorch/${os_string}"
 
