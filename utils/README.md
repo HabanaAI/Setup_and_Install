@@ -99,6 +99,6 @@ optional arguments:
   -h, --help            show this help message and exit
   --cards CARDS         Set number of cards to test (default: 1)
   --framework [{tensorflow,pytorch}]
-                        ML Framework to test (default: tensorflow)
+                        ML Framework to test (default: pytorch)
 
 ```
