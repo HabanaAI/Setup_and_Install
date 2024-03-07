@@ -23,7 +23,7 @@ def parse_arguments():
                         required=False,
                         help="Set number of cards to test (default: 1)")
     parser.add_argument("--framework",
-                        default="tensorflow",
+                        default="pytorch",
                         type=str,
                         required=False,
                         nargs="?",
