@@ -102,3 +102,7 @@ optional arguments:
                         ML Framework to test (default: pytorch)
 
 ```
+
+## Multi Server SSH setup
+
+Refer to the README in the multi_server folder for details on how to setup multiple docker containers for SSH communication in a cluster.
