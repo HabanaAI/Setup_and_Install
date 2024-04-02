@@ -57,18 +57,17 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
-RUN yum install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".amzn2 && \
+RUN yum makecache && \
+    yum install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-thunk-"$VERSION"-"$REVISION".amzn2 && \
     yum install -y habanalabs-firmware-tools-"$VERSION"-"$REVISION".amzn2 && \
-    yum install -y habanalabs-graph-"$VERSION"-"$REVISION".amzn2
-
-RUN rpm -V habanalabs-rdma-core && rpm -V habanalabs-thunk && rpm -V habanalabs-firmware-tools && rpm -V habanalabs-graph
+    yum install -y habanalabs-graph-"$VERSION"-"$REVISION".amzn2 && \
+    rpm -V habanalabs-rdma-core && rpm -V habanalabs-thunk && rpm -V habanalabs-firmware-tools && rpm -V habanalabs-graph && \
+    rm -f /etc/yum.repos.d/habanalabs.repo && \
+    yum clean all && rm -rf /var/cache/yum
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
-
-RUN rm -f /etc/yum.repos.d/habanalabs.repo && \
-    yum clean all && rm -rf /var/cache/yum
 
 # SSH configuration necessary to support mpi-operator v2
 RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
@@ -88,13 +87,12 @@ RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/o
     ./configure --prefix=$LIBFABRIC_ROOT --enable-psm3-verbs --enable-verbs=yes --with-synapseai=/usr && \
     make && make install
 
-ENV LIBOFI_VERSION="0.0.1"
-RUN wget -nv -O /tmp/v${LIBOFI_VERSION}.tar.gz https://github.com/HabanaAI/hccl_ofi_wrapper/archive/refs/tags/v${LIBOFI_VERSION}.tar.gz && \
-    cd /tmp/ && tar xf /tmp/v${LIBOFI_VERSION}.tar.gz && \
-    cd /tmp/hccl_ofi_wrapper-${LIBOFI_VERSION} && \
+RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archive/refs/heads/main.zip && \
+    unzip /tmp/main.zip -d /tmp && \
+    cd /tmp/hccl_ofi_wrapper-main && \
     make && cp -f libhccl_ofi_wrapper.so /usr/lib/habanalabs/libhccl_ofi_wrapper.so && \
     cd / && \
-    rm -rf /tmp/v${LIBOFI_VERSION}.tar.gz /tmp/hccl_ofi_wrapper-${LIBOFI_VERSION}
+    rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
 RUN python3 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
 

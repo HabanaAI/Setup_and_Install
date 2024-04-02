@@ -75,23 +75,12 @@ ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${LIBFABRIC_ROOT}/bin:$PATH
 
-# ucx installation
-ENV UCX_VERSION="1.15.0"
-ENV UCX_ROOT="/opt/habanalabs/ucx-${UCX_VERSION}"
-RUN wget -nv -O /tmp/ucx-${UCX_VERSION}.tar.gz https://github.com/openucx/ucx/releases/download/v${UCX_VERSION}/ucx-${UCX_VERSION}.tar.gz && \
-    cd /tmp/ && tar xf /tmp/ucx-${UCX_VERSION}.tar.gz && \
-    cd /tmp/ucx-${UCX_VERSION} && \
-    ./configure --prefix=${UCX_ROOT} && \
-    make && make install
-ENV LD_LIBRARY_PATH=${UCX_ROOT}/lib:$LD_LIBRARY_PATH
-ENV PATH=${UCX_ROOT}/bin:$PATH
-
 # install openmpi
 ENV MPI_ROOT="/usr/local/share/openmpi"
 RUN wget -nv -P /tmp/openmpi "https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OPENMPI_VER}.tar.gz" && \
     cd /tmp/openmpi && tar xzf openmpi-${OPENMPI_VER}.tar.gz && \
     cd /tmp/openmpi/openmpi-${OPENMPI_VER} && \
-    ./configure --prefix=${MPI_ROOT} --with-sge --disable-builtin-atomics --enable-orterun-prefix-by-default --with-ucx=${UCX_ROOT} --with-verbs && \
+    ./configure --prefix=${MPI_ROOT} --with-sge --disable-builtin-atomics --enable-orterun-prefix-by-default --with-verbs && \
     make -j 8 && \
     sudo make install && \
     cp LICENSE ${MPI_ROOT} && \
@@ -149,13 +138,12 @@ RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/o
     ./configure --prefix=$LIBFABRIC_ROOT --enable-psm3-verbs --enable-verbs=yes --with-synapseai=/usr && \
     make && make install
 
-ENV LIBOFI_VERSION="0.0.1"
-RUN wget -nv -O /tmp/v${LIBOFI_VERSION}.tar.gz https://github.com/HabanaAI/hccl_ofi_wrapper/archive/refs/tags/v${LIBOFI_VERSION}.tar.gz && \
-    cd /tmp/ && tar xf /tmp/v${LIBOFI_VERSION}.tar.gz && \
-    cd /tmp/hccl_ofi_wrapper-${LIBOFI_VERSION} && \
+RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archive/refs/heads/main.zip && \
+    unzip /tmp/main.zip -d /tmp && \
+    cd /tmp/hccl_ofi_wrapper-main && \
     make && cp -f libhccl_ofi_wrapper.so /usr/lib/habanalabs/libhccl_ofi_wrapper.so && \
     cd / && \
-    rm -rf /tmp/v${LIBOFI_VERSION}.tar.gz /tmp/hccl_ofi_wrapper-${LIBOFI_VERSION}
+    rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 2 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1

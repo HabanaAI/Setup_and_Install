@@ -10,12 +10,12 @@ case "${_BASE_NAME}" in
         echo "Skip install Python3.10 from source on Ubuntu22.04"
         exit 0;
     ;;
-    *debian*)
+    *debian* | *ubuntu*)
         apt update
         apt install -y libsqlite3-dev libreadline-dev
     ;;
     *rhel*)
-        yum install -y sqlite-devel readline-devel
+        yum install -y sqlite-devel readline-devel xz-devel
     ;;
     *amzn2*)
         yum install -y sqlite-devel readline-devel
@@ -45,11 +45,11 @@ make -j && make altinstall
 
 # post install
 case "${_BASE_NAME}" in
-    *rhel8*)
-        alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 3 && \
-        alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
-        alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
+    *rhel9*)
+        alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 2 && \
+        alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
         alternatives --set python3 /usr/local/bin/python3.10
+        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     ;;
     *amzn2*)
         update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 3 && \

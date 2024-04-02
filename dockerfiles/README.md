@@ -30,7 +30,6 @@ This script can be used as reference to build docker images for Gaudi.
 1. Go into the folder of the image type you would like to build:
     * base
     * pytorch
-    * tensorflow
     * triton
 
 2. Run build command to generate Docker image
@@ -38,16 +37,16 @@ This script can be used as reference to build docker images for Gaudi.
     make build
     ```
     Examples:
-    #### Build pytorch image for ubuntu22.04:
+    #### Build pytorch image for rhel9.2:
     ```
     cd pytorch
-    make build BUILD_OS=ubuntu22.04
+    make build BUILD_OS=rhel9.2
     ```
 
-    #### Build tensorflow image rhel8.6:
+    #### Build triton image (default OS - ubuntu22.04):
     ```
-    cd tensorflow
-    make build BUILD_OS=rhel8.6
+    cd triton
+    make build
     ```
 
 3. Build command variables
