@@ -28,7 +28,9 @@ RUN yum install -y \
     zlib-devel \
     lapack-devel \
     openblas-devel \
-    numactl && \
+    pdsh \
+    numactl \
+    libmkl-dev && \
     yum clean all
 
 RUN amazon-linux-extras install epel -y

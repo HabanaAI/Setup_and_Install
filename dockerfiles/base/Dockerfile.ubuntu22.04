@@ -97,13 +97,12 @@ RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/o
     ./configure --prefix=$LIBFABRIC_ROOT --enable-psm3-verbs --enable-verbs=yes --with-synapseai=/usr && \
     make && make install
 
-ENV LIBOFI_VERSION="0.0.1"
-RUN wget -nv -O /tmp/v${LIBOFI_VERSION}.tar.gz https://github.com/HabanaAI/hccl_ofi_wrapper/archive/refs/tags/v${LIBOFI_VERSION}.tar.gz && \
-    cd /tmp/ && tar xf /tmp/v${LIBOFI_VERSION}.tar.gz && \
-    cd /tmp/hccl_ofi_wrapper-${LIBOFI_VERSION} && \
+RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archive/refs/heads/main.zip && \
+    unzip /tmp/main.zip -d /tmp && \
+    cd /tmp/hccl_ofi_wrapper-main && \
     make && cp -f libhccl_ofi_wrapper.so /usr/lib/habanalabs/libhccl_ofi_wrapper.so && \
     cd / && \
-    rm -rf /tmp/v${LIBOFI_VERSION}.tar.gz /tmp/hccl_ofi_wrapper-${LIBOFI_VERSION}
+    rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 

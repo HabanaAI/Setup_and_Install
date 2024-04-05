@@ -34,6 +34,7 @@ RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian jammy main" | tee -a
         habanalabs-graph="$VERSION"-"$REVISION" && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
+
 RUN apt-get update && apt-get install -y \
     libjemalloc2 \
     libcairo2-dev \
@@ -47,6 +48,7 @@ RUN apt-get update && apt-get install -y \
     numactl \
     libgoogle-perftools-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN python3 -m pip install pip==23.3.1 --disable-pip-version-check && \
     python3 -m pip install setuptools==67.3.3 --disable-pip-version-check && \
     python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --disable-pip-version-check
@@ -64,5 +66,6 @@ RUN ln -s /usr/bin/python3.10 /usr/bin/python && wget --no-verbose "${PT_ARTIFAC
     pip uninstall -y pillow-simd && \
     pip install pillow-simd==7.0.0.post3 --disable-pip-version-check && \
     rm -rf /root/habanalabs pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz /tmp/*
+
 ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
