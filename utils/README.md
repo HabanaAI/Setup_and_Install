@@ -35,7 +35,7 @@ options:
 
 Note: Please run this script with one operation at a time
 ```
-### Operations
+## Operations
 
 Before executing any operation, this script finds all the Habana network interfaces available on the system and stores the Habana interface information into a list.  
 The list will be used for the operations. If no Habana network interface is found, the script will exit. 
