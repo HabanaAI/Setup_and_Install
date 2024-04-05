@@ -7,26 +7,15 @@ By installing, copying, accessing, or using the software, you agree to be legall
   - [Overview](#overview)
   - [manage_network_ifs.sh](#manage_network_ifs)
 
-
-<br />
-
----
-
-<br />
-
 ## Overview
 
 Welcome to Gaudi's Util Scripts!
 
 This folder contains some Gaudi utility scripts that users can access as reference.
 
-<br />
-
----
-
-<br />
-
 ## manage_network_ifs
+
+Moved to habanalabs-qual Example: (/opt/habanalabs/qual/gaudi2/bin/manage_network_ifs.sh).
 
 This script can be used as reference to bring up, take down, set IPs, unset IPs and check for status of the Gaudi network interfaces.
 
@@ -46,7 +35,7 @@ options:
 
 Note: Please run this script with one operation at a time
 ```
-## Operations
+### Operations
 
 Before executing any operation, this script finds all the Habana network interfaces available on the system and stores the Habana interface information into a list.  
 The list will be used for the operations. If no Habana network interface is found, the script will exit. 
@@ -86,7 +75,7 @@ sudo manage_network_ifs.sh --unset-ip
 
 ## check_habana_framework_env
 
-This script can be used as reference to check the environment for running Tensorflow or PyTorch on Habana.
+This script can be used as reference to check the environment for running PyTorch on Habana.
 
 The following is the usage of the script:
 
