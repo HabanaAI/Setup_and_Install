@@ -7,6 +7,9 @@ case "${BASE_NAME}" in
     *rhel9*)
         os_string="rhel92"
     ;;
+    *rhel8*)
+        os_string="rhel86"
+    ;;
     *amzn2*)
         os_string="amzn2"
     ;;
