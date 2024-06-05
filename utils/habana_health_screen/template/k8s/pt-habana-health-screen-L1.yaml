@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: template-metadata-name
+  namespace: default
+  labels:
+    app: hhs
+spec:
+  template:
+    metadata:
+      labels:
+        app: hhs
+    spec:
+      restartPolicy: "Never"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - HHS-DUMMY-VAL
+      volumes:
+        - name: mydir
+          hostPath:
+            path: template-volume-mydir
+            type: Directory
+      tolerations:
+        - key: ""
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: template-container-name
+          image: template-container-image
+          workingDir: /habana_health_screen
+          command: ["/bin/bash", "-c"]
+          args:
+            - >-
+              python $HOME_DIR/screen.py --hhs-check node --logs-dir $LOG_DIR --node-write-report;
+          volumeMounts:
+            - name: mydir
+              mountPath: /habana_health_screen
+          env:
+            - name: HOME_DIR
+              value: "/habana_health_screen"
+            - name: HHS_LEVEL
+              value: "1"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              habana.ai/gaudi: 8
+              cpu: 95
+            requests:
+              habana.ai/gaudi: 8
+              cpu: 95

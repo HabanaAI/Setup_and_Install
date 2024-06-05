@@ -4,8 +4,18 @@ By installing, copying, accessing, or using the software, you agree to be legall
 
 ## Table of Contents
 
+- [Gaudi Utils](#gaudi-utils)
+  - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
-  - [manage_network_ifs.sh](#manage_network_ifs)
+  - [manage\_network\_ifs](#manage_network_ifs)
+  - [Operations](#operations)
+    - [Up](#up)
+    - [Down](#down)
+    - [Status](#status)
+    - [Set IP](#set-ip)
+    - [Unset IP](#unset-ip)
+  - [check\_habana\_framework\_env](#check_habana_framework_env)
+  - [Habana Health Screen (HHS)](#habana-health-screen-hhs)
 
 ## Overview
 
@@ -22,23 +32,23 @@ This script can be used as reference to bring up, take down, set IPs, unset IPs 
 The following is the usage of the script:
 
 ```
-usage: ./manage_network_ifs.sh [options]  
+usage: ./manage_network_ifs.sh [options]
 
-options:  
-       --up         toggle up all Habana network interfaces  
-       --down       toggle down all Habana network interfaces  
-       --status     print status of all Habana network interfaces  
-       --set-ip     set IP for all internal Habana network interfaces  
-       --unset-ip   unset IP from all internal Habana network interfaces  
-  -v,  --verbose    print more logs  
-  -h,  --help       print this help  
+options:
+       --up         toggle up all Habana network interfaces
+       --down       toggle down all Habana network interfaces
+       --status     print status of all Habana network interfaces
+       --set-ip     set IP for all internal Habana network interfaces
+       --unset-ip   unset IP from all internal Habana network interfaces
+  -v,  --verbose    print more logs
+  -h,  --help       print this help
 
 Note: Please run this script with one operation at a time
 ```
 ## Operations
 
-Before executing any operation, this script finds all the Habana network interfaces available on the system and stores the Habana interface information into a list.  
-The list will be used for the operations. If no Habana network interface is found, the script will exit. 
+Before executing any operation, this script finds all the Habana network interfaces available on the system and stores the Habana interface information into a list.
+The list will be used for the operations. If no Habana network interface is found, the script will exit.
 
 ### Up
 
@@ -87,4 +97,40 @@ Check health of HPUs for PyTorch
 optional arguments:
   -h, --help            show this help message and exit
   --cards CARDS         Set number of cards to test (default: 1)
+```
+
+## Habana Health Screen (HHS)
+
+**Habana Health Screen** (HHS) tool has been developed to verify the cluster network health through a suite of diagnostic tests. The test
+includes checking gaudi port status, running small workloads, and running standard collective operations arcoss multiple systems.
+
+``` bash
+usage: screen.py [-h] [--initialize] [--screen] [--target-nodes TARGET_NODES]
+                 [--job-id JOB_ID] [--round ROUND] [--config CONFIG]
+                 [--hhs-check [{node,hccl-demo,none}]] [--node-write-report]
+                 [--node-name NODE_NAME] [--logs-dir LOGS_DIR]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --initialize          Downloads Necessary Repos and Creates Report Template
+  --screen              Starts Health Screen for Cluster
+  --target-nodes TARGET_NODES
+                        List of target nodes
+  --job-id JOB_ID       Needed to identify hccl-demo running log
+  --round ROUND         Needed to identify hccl-demo running round log
+  --config CONFIG       Configuration file for Health Screener
+  --hhs-check [{node,hccl-demo,none}]
+                        Check HHS Status for Node (Ports status, Device Acquire Fail) or all_reduce
+                        (HCCL_DEMO between paris of nodes)
+  --node-write-report   Write Individual Node Health Report
+  --node-name NODE_NAME Name of Node
+  --logs-dir LOGS_DIR   Output directory of health screen results
+```
+
+To run a full HHS test, run the below command:
+
+``` bash
+# Creates HHS Report and screens clusters for any infected nodes.
+# Will check Level 1 and 2 by default
+python screen.py --initialize --screen
 ```
