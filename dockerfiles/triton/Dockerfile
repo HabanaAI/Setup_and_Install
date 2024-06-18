@@ -29,7 +29,8 @@ ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian jammy main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
     apt-key add public && rm public && apt-get update && \
-    apt-get install -y habanalabs-thunk="$VERSION"-"$REVISION" \
+    apt-get install -y habanalabs-rdma-core="$VERSION"-"$REVISION" \
+	habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
         habanalabs-graph="$VERSION"-"$REVISION" && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
