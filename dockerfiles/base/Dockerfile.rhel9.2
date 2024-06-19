@@ -19,12 +19,14 @@ RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.n
 RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "name=CentOS Linux 9 - BaseOS" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "baseurl=https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
-    echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
+    echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
+    echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
 
 RUN echo "[centos9]" > /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "name=CentOS Linux 9 - AppStream" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "baseurl=https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
-    echo "gpgcheck=0" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo
+    echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
+    echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo
 
 RUN dnf install -y \
     clang \
@@ -61,6 +63,7 @@ RUN dnf install -y \
     dnf update -y && \
     dnf clean all && rm -rf /var/cache/yum
 
+ENV PYTHON_VERSION=3.10
 COPY install-python310.sh .
 RUN ./install-python310.sh rhel9.2 && rm install-python310.sh
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
@@ -84,7 +87,8 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/9/9.2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
     echo 'gpgcheck=1' >> /etc/yum.repos.d/habanalabs.repo
 
-RUN update-crypto-policies --set LEGACY
+# for Habana GPG key with SHA-1 signature
+RUN update-crypto-policies --set DEFAULT:SHA1
 
 RUN dnf install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".el9 \
     habanalabs-thunk-"$VERSION"-"$REVISION".el9 \
