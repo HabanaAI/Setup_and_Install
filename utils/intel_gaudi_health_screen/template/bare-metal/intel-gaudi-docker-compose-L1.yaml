@@ -1,28 +1,28 @@
 version: '3.3'
 
 services:
-  hhs_level1:
-    image: hhs_level1
+  ighs_level1:
+    image: ighs_level1
     build:
       context: .
       network: host
       args:
         BASE_IMAGE: "${BASE_IMAGE}"
-    container_name: hhs_level1
+    container_name: ighs_level1
     runtime: habana
     environment:
     - HABANA_VISIBLE_DEVICES=all
     - OMPI_MCA_btl_vader_single_copy_mechanism=none
-    - HHS_LEVEL=1
+    - IGHS_LEVEL=1
     cap_add:
       - SYS_NICE
     ipc: host
     network_mode: host
-    working_dir: /tmp/hhs/habana_health_screen
+    working_dir: /tmp/ighs/intel_gaudi_health_screen
     volumes:
       - ./ssh:/root/.ssh/
-      - /tmp/hhs/habana_health_screen:/tmp/hhs/habana_health_screen
+      - /tmp/ighs/intel_gaudi_health_screen:/tmp/ighs/intel_gaudi_health_screen
       - /etc/localtime:/etc/localtime:ro
     command: >
-      bash -c "python screen.py --hhs-check node --logs-dir $${LOG_DIR} --node-name $${MY_NODE_NAME} --node-write-report && \
+      bash -c "python screen.py --ighs-check node --logs-dir $${LOG_DIR} --node-name $${MY_NODE_NAME} --node-write-report && \
               chmod 777 -R $${LOG_DIR}"

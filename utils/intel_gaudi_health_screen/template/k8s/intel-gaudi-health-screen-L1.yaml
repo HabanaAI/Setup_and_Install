@@ -4,12 +4,12 @@ metadata:
   name: template-metadata-name
   namespace: default
   labels:
-    app: hhs
+    app: ighs
 spec:
   template:
     metadata:
       labels:
-        app: hhs
+        app: ighs
     spec:
       restartPolicy: "Never"
       affinity:
@@ -20,7 +20,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - HHS-DUMMY-VAL
+                      - IGHS-DUMMY-VAL
       volumes:
         - name: mydir
           hostPath:
@@ -33,18 +33,19 @@ spec:
       containers:
         - name: template-container-name
           image: template-container-image
-          workingDir: /habana_health_screen
+          imagePullPolicy: IfNotPresent
+          workingDir: /intel_gaudi_health_screen
           command: ["/bin/bash", "-c"]
           args:
             - >-
-              python $HOME_DIR/screen.py --hhs-check node --logs-dir $LOG_DIR --node-write-report;
+              python $HOME_DIR/screen.py --ighs-check node --logs-dir $LOG_DIR --node-write-report;
           volumeMounts:
             - name: mydir
-              mountPath: /habana_health_screen
+              mountPath: /intel_gaudi_health_screen
           env:
             - name: HOME_DIR
-              value: "/habana_health_screen"
-            - name: HHS_LEVEL
+              value: "/intel_gaudi_health_screen"
+            - name: IGHS_LEVEL
               value: "1"
             - name: MY_POD_IP
               valueFrom:
@@ -61,7 +62,9 @@ spec:
           resources:
             limits:
               habana.ai/gaudi: 8
+              hugepages-2Mi: 29000Mi
               cpu: 95
             requests:
               habana.ai/gaudi: 8
+              hugepages-2Mi: 29000Mi
               cpu: 95

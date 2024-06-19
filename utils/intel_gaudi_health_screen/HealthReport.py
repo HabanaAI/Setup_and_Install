@@ -18,12 +18,12 @@ from utilities import copy_files
 
 import logging
 
-_logger = logging.getLogger("habana_health_screener")
+_logger = logging.getLogger("health_screener")
 
-class HabanaHealthReport():
+class HealthReport():
 
     def __init__(self, f_dir="tmp", report_name="health_report.csv"):
-        """ Initialize Habana Health Report Class
+        """ Initialize Health Report Class
 
         Args:
             f_dir (str, optional): File Directory to store Health Report logs and results. Defaults to "tmp".
@@ -83,8 +83,8 @@ class HabanaHealthReport():
         """ Write health check results to Health Report CSV. Can write multiple rows at once
 
         Args:
-            cards ([HCard], optional): Level 1 HCards to report about. Defaults to list().
-            node_id (str, optional): Node ID of HCards. Defaults to "".
+            cards ([IGCard], optional): Level 1 IGCards to report about. Defaults to list().
+            node_id (str, optional): Node ID of IGCards. Defaults to "".
             data (_type_, optional): Health Report CSV Row data. Defaults to list().
             level (int, optional): Health Screen Level. Defaults to 1.
         """
@@ -118,12 +118,12 @@ class HabanaHealthReport():
             infected_nodes (list[str]): List of infected node_ids
             missing_nodes (list[str]): List of missing node_ids
         """
-        tempfile = NamedTemporaryFile(mode='w', delete=False)
+        temp_file = NamedTemporaryFile(mode='w', delete=False)
         detected_nodes_cp = detected_nodes.copy()
 
-        with open(self.f_path, 'r', newline='') as csvfile, tempfile:
-            reader     = csv.DictReader(csvfile)
-            writer     = csv.DictWriter(tempfile, fieldnames=self.header)
+        with open(self.f_path, 'r', newline='') as csv_file, temp_file:
+            reader     = csv.DictReader(csv_file)
+            writer     = csv.DictWriter(temp_file, fieldnames=self.header)
 
             writer.writeheader()
             for row in reader:
@@ -148,22 +148,22 @@ class HabanaHealthReport():
                 for n in missing_nodes:
                     writer.writerow({"node_id": n, "multi_node_fail": True, "missing": True})
 
-        shutil.move(tempfile.name, self.f_path)
+        shutil.move(temp_file.name, self.f_path)
 
     def update_hccl_demo_health_report(self, round, all_node_pairs, multi_node_fail, qpc_fail, missing_nodes):
         """ Update health_report with hccl_demo results, based on infected_nodes.
 
         Args:
-            all_node_pairs (list[str]): List of all node pairs reported by Level 2 round
+            all_node_pairs (list[str]): List of all Node Pairs reported by Level 2 round
             multi_node_fail (list[str]): List of Node Pairs that failed HCCL_Demo Test
             qpc_fail (list[str]): List of Node Pairs that failed HCCL_Demo Test due to QPC error
             missing_nodes (list[str]): List of Node Pairs that couldn't run HCCL_Demo
         """
-        tempfile = NamedTemporaryFile(mode='w', delete=False)
+        temp_file = NamedTemporaryFile(mode='w', delete=False)
 
-        with open(self.f_path_hccl_demo, 'r', newline='') as csvfile, tempfile:
-            reader     = csv.DictReader(csvfile)
-            writer     = csv.DictWriter(tempfile, fieldnames=self.header_hccl_demo, extrasaction='ignore')
+        with open(self.f_path_hccl_demo, 'r', newline='') as csv_file, temp_file:
+            reader     = csv.DictReader(csv_file)
+            writer     = csv.DictWriter(temp_file, fieldnames=self.header_hccl_demo, extrasaction='ignore')
 
             writer.writeheader()
             for row in reader:
@@ -181,7 +181,7 @@ class HabanaHealthReport():
             if len(all_node_pairs):
                 writer.writerows(list(all_node_pairs.values()))
 
-        shutil.move(tempfile.name, self.f_path_hccl_demo)
+        shutil.move(temp_file.name, self.f_path_hccl_demo)
 
     def check_screen_complete(self, num_nodes, hccl_demo=False, round=0):
         """ Check on status of Health Screen Check.
@@ -306,11 +306,11 @@ class HabanaHealthReport():
         """ Gathers Health Report from all hosts
 
         Args:
-            level (str): HHS Level
-            remote_path (str): Remote Destintation of HHS Report
-            hosts (list, optional): List of IP Addresses to gather HHS Reports
+            level (str): IGHS Level
+            remote_path (str): Remote Destintation of IGHS Report
+            hosts (list, optional): List of IP Addresses to gather IGHS Reports
         """
-        copy_files(src=f"{remote_path}/habana_health_screen/{self.f_dir}/L{level}",
+        copy_files(src=f"{remote_path}/intel_gaudi_health_screen/{self.f_dir}/L{level}",
                         dst=f"{self.f_dir}",
                         hosts=hosts,
                         to_remote=False)
@@ -319,7 +319,7 @@ class HabanaHealthReport():
         """ Consolidates the health_report_*.csv from worker pods into a single master csv file
 
         Args:
-            level (str): HHS Level
+            level (str): IGHS Level
             report_dir (str): Directory of CSV files to merge
         """
         data      = list()
@@ -327,8 +327,8 @@ class HabanaHealthReport():
         csv_files = glob.glob(path)
 
         for f in csv_files:
-            with open(f, 'r', newline='') as csvfile:
-                reader = csv.DictReader(csvfile)
+            with open(f, 'r', newline='') as csv_file:
+                reader = csv.DictReader(csv_file)
                 for row in reader:
                     data.append(row)
 

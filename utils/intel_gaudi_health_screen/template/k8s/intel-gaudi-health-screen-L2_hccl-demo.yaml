@@ -4,7 +4,7 @@ metadata:
   name: template-metadata-name
   namespace: default
   labels:
-    app: hhs-hccl
+    app: ighs-hccl
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -15,7 +15,7 @@ spec:
       template:
         metadata:
           labels:
-            app: hhs-hccl
+            app: ighs-hccl
         spec:
           volumes:
             - name: mydir
@@ -24,11 +24,12 @@ spec:
                 type: Directory
           containers:
             - image: template-container-image
-              name: pt-hhs-launcher
-              workingDir: /habana_health_screen
+              name: ighs-launcher
+              imagePullPolicy: IfNotPresent
+              workingDir: /intel_gaudi_health_screen
               volumeMounts:
                 - name: mydir
-                  mountPath: /habana_health_screen
+                  mountPath: /intel_gaudi_health_screen
               env:
                 - name: JOB_ID
                   valueFrom:
@@ -39,8 +40,8 @@ spec:
                     fieldRef:
                       fieldPath: spec.nodeName
                 - name: HOME_DIR
-                  value: "/habana_health_screen"
-                - name: HHS_LEVEL
+                  value: "/intel_gaudi_health_screen"
+                - name: IGHS_LEVEL
                   value: "2"
               command: ["/bin/bash", "-c"]
               args:
@@ -73,19 +74,20 @@ spec:
                     --rank-by core --report-bindings \
                     --tag-output \
                     --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    --mca btl_tcp_if_include eth0 \
                     -x PYTHONPATH="/usr/lib/habanalabs/:$PYTHONPATH" \
                     -x ENABLE_CONSOLE="true" -x LOG_LEVEL_ALL=4 \
-                    -x MAX_TIMEOUT=60 2>&1 | tee -a $HOME_DIR/$LOG_DIR/L2/$ROUND/$JOB_ID.log;
+                    -x MAX_TIMEOUT=60 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a $HOME_DIR/$LOG_DIR/L2/$ROUND/$JOB_ID.log;
 
                   cd ${HOME_DIR};
-                  python ${HOME_DIR}/screen.py --hhs-check hccl-demo --target-nodes $TARGET_NODES --job-id $JOB_ID --logs-dir $LOG_DIR --round $ROUND;
+                  python ${HOME_DIR}/screen.py --ighs-check hccl-demo --target-nodes $TARGET_NODES --job-id $JOB_ID --logs-dir $LOG_DIR --round $ROUND;
 
     Worker:
       replicas: template-num-nodes
       template:
         metadata:
           labels:
-            app: hhs-hccl
+            app: ighs-hccl
         spec:
           affinity:
             nodeAffinity:
@@ -95,7 +97,7 @@ spec:
                       - key: kubernetes.io/hostname
                         operator: In
                         values:
-                          - HHS-DUMMY-VAL
+                          - IGHS-DUMMY-VAL
           volumes:
             - name: mydir
               hostPath:
@@ -110,17 +112,22 @@ spec:
               effect: "NoExecute"
           containers:
             - image: template-container-image
-              name: pt-hhs-worker
+              name: ighs-worker
+              imagePullPolicy: IfNotPresent
               resources:
                 limits:
                   habana.ai/gaudi: 8
+                  hugepages-2Mi: 29000Mi
+                  cpu: 95
                 requests:
                   habana.ai/gaudi: 8
+                  hugepages-2Mi: 29000Mi
+                  cpu: 95
               volumeMounts:
                 - name: mydir
-                  mountPath: /habana_health_screen
+                  mountPath: /intel_gaudi_health_screen
               env:
-                - name: HHS_LEVEL
+                - name: IGHS_LEVEL
                   value: "2"
                 - name: MY_POD_IP
                   valueFrom:

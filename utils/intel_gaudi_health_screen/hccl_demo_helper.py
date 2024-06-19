@@ -13,7 +13,7 @@
 import random, math, os, yaml, glob
 
 import logging
-_logger = logging.getLogger("habana_health_screener")
+_logger = logging.getLogger("health_screener")
 
 def find_groups(nodes_to_test, groups_tracker):
     """ Find a list of node groups to run hccl_demo all reduce test
@@ -116,7 +116,7 @@ def gather_hccl_logs(job_path, round, log_dir, health_report):
         job_path (str): Base directory of job yamls executed
         round (int): Round to retrieve HCCL_Demo logs
         log_dir (str): Base directory of HCCL_Demo logs
-        health_report (HabanaHealthReport): Tracks and reports health of hccl_demo
+        health_report (HealthReport): Tracks and reports health of hccl_demo
     """
     path         = f"{job_path}/**/r{round}/*.yaml"
     job_files    = glob.glob(path, recursive=True)
@@ -159,7 +159,7 @@ def hccl_demo_check(job_id, target_nodes, health_report, write=True):
     Args:
         job_id (str): Metadata name of the Job
         target_nodes ([str]): Nodes that are used in hccl_demo testing
-        health_report (HabanaHealthReport): Tracks and reports health of hccl_demo
+        health_report (HealthReport): Tracks and reports health of hccl_demo
         write (bool, optional): Writes to Report. Used to collect hccl results and update Base Health Report. Default to True
 
     Returns:

@@ -1,20 +1,20 @@
-# Habana Health Screen 1.0.0
+# Intel Gaudi Health Screen 2.0.0
 
-A large scale Gaudi cluster contains a lot of moving parts. To ensure distributed training proceeds smoothly, it is recommended to check the
+A large scale Intel Gaudi cluster contains a lot of moving parts. To ensure distributed training proceeds smoothly, it is recommended to check the
 cluster network health. Troubleshooting issues on a large cluster can be a tedious act. To simplify the debugging process the
-**Habana Health Screen** (HHS) tool has been developed to verify the cluster network health through a suite of diagnostic tests. The test
+**Intel Gaudi Health Screen** (IGHS) tool has been developed to verify the cluster network health through a suite of diagnostic tests. The test
 includes checking gaudi port status, running small workloads, and running standard collective operations arcoss multiple systems
 
-HHS is capable of running on a Kubernetes cluster or on a baremetal cluster. It is an active scan, which will block other users from training
-on a gaudi systems until the scans are complete. At the end of the scans, HHS produces a CSV report detailing the state of each gaudi card.
+IGHS is capable of running on a Kubernetes cluster or on a baremetal cluster. It is an active scan, which will block other users from training
+on a gaudi systems until the scans are complete. At the end of the scans, IGHS produces a CSV report detailing the state of each gaudi card.
 
-It is reccomended to run HHS in the below scenarios:
+It is reccomended to run IGHS in the below scenarios:
 
 * After a system upgrade/update
 * Before running a long term training
 * Pinpointing problematic systems in a cluster if a problem can't be isolated to a single system
 
-HHS runs a multi-tiered configurable scan:
+IGHS runs a multi-tiered configurable scan:
 
 * Level 1 - Individual System Diagnostics
 * Level 2 - Multi-System Communication Diagnostics
@@ -27,10 +27,11 @@ Level 1 focuses on individual Gaudi Cards Health Diagnostics.
 | ------------------------- | ---------------------------------------------------------- |
 | Gaudi Ports Status        | Checks if ports are DOWN                                   |
 | Device Acquire Failures   | Checks if devices are busy                                 |
+| Device Temperatue         | Checks if devices temperatures are in acceptable range     |
 
 **2 System Cluster Example**
 
-Here is an example of running HHS on a 2 system cluster. It identifies the Gaudi Cards that have down links, device acquire issues, and
+Here is an example of running IGHS on a 2 system cluster. It identifies the Gaudi Cards that have down links, device acquire issues, and
 flags for multi node communication failure
 
 | node_id  | index | module_id | pci_address  | temperature_C | temperature_C | device_acquire_fail | down_links | multi_node_fail | missing |
@@ -73,7 +74,7 @@ first round.
 
 ** Multi Node Cluster Example**
 
-Here is an example of running HHS for 2 rounds and the results gets recorded to `hccl_demo_health_report.csv`. It identifies node pairs that failed the all_reduce test. If "True" is flagged
+Here is an example of running IGHS for 2 rounds and the results gets recorded to `hccl_demo_health_report.csv`. It identifies node pairs that failed the all_reduce test. If "True" is flagged
 in the multi_node_fail column, then one of the nodes has a communication issue. List of infected nodes will be printed out to
 the log as well as the `health_report.csv` multi_node_fail column.
 
@@ -125,61 +126,61 @@ been tested, such as having missing cards, it is occupied by another session, or
 
 ## Setup
 
-HHS is compatible with python3 default packages and does not require additional packages
+IGHS is compatible with python3 default packages and does not require additional packages
 to be installed
 
 If your setup envionrment requires custom configruation, update the yaml files located in the templates folder. The default template
-relies on storing HHS in a shared file system.
+relies on storing IGHS in a shared file system.
 
 If running on bare metal system, then install `pdsh` to your system.
 
 Update [config.yaml](config.yaml) to match your system envionrment
 
 ``` yaml
-# Sets HHS to screen for K8s or Bare Metal Envionrment (k8s, bare-metal).
+# Sets IGHS to screen for K8s or Bare Metal Envionrment (k8s, bare-metal).
 system-info:
   type: "k8s"
   # Namespace is only required for k8s settings
-  namespace: "habanalabs"
+  namespace: "intelgaudi"
   # Can specify specific systems. For k8s, to scan entire cluster comment out hostfile
-  hostfile: "./hostfile"
+  # hostfile: "./hostfile"
 
   # Bare Metal Configurations
   ssh-path: "./ssh"
   tcp-interface: "10.3.124.0/24"
 
-# Image to run Habana Health Screen
+# Image to run Intel Gaudi Health Screen
 image: "vault.habana.ai/gaudi-docker/1.16.0/ubuntu22.04/habanalabs/pytorch-installer-2.2.2:latest"
 
-# Node Label used to identify a Gaudi Node
-gaudi-node-label: "brightcomputing.com/node-category=gaudi"
+# Node Label used to identify a Intel Gaudi Node
+gaudi-node-label: "ighs_label=gaudi"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"
 
-# Level 1 - Checks Individual Node Health (Ports status, Device Acquire failure)
+# Level 1 - Checks Individual Node Health (Ports status, Device Acquire failure, Device Temperature)
 level-1:
   run: true
-  timeout_s: 300
+  timeout_s: 150
   # Number of times to check Port Status
   num-checks-link-state: 10
 
 # Level 2 - Checks All Reduce between node pairs in the cluster.
 level-2:
   run: true
-  timeout_s: 180
+  timeout_s: 130
   # Number of times to check Network connections between nodes
   num-rounds: 5
 ```
 
-To learn the features of HHS, run the below command:
+To learn the features of IGHS, run the below command:
 
 ``` bash
 python screen.py --help
 
 usage: screen.py [-h] [--initialize] [--screen] [--target-nodes TARGET_NODES]
                  [--job-id JOB_ID] [--round ROUND] [--config CONFIG]
-                 [--hhs-check [{node,hccl-demo,none}]] [--node-write-report]
+                 [--ighs-check [{node,hccl-demo,none}]] [--node-write-report]
                  [--node-name NODE_NAME] [--logs-dir LOGS_DIR]
 
 optional arguments:
@@ -191,18 +192,18 @@ optional arguments:
   --job-id JOB_ID       Needed to identify hccl-demo running log
   --round ROUND         Needed to identify hccl-demo running round log
   --config CONFIG       Configuration file for Health Screener
-  --hhs-check [{node,hccl-demo,none}]
-                        Check HHS Status for Node (Ports status, Device Acquire Fail) or all_reduce
+  --ighs-check [{node,hccl-demo,none}]
+                        Check IGHS Status for Node (Ports status, Device Acquire Fail, Device Temperature) or all_reduce
                         (HCCL_DEMO between paris of nodes)
   --node-write-report   Write Individual Node Health Report
   --node-name NODE_NAME Name of Node
   --logs-dir LOGS_DIR   Output directory of health screen results
 ```
 
-To Run HHS, run the below command:
+To Run IGHS, run the below command:
 
 ``` bash
-# Creates HHS Report and screens clusters for any infected nodes.
+# Creates IGHS Report and screens clusters for any infected nodes.
 # Will check Level 1 and 2 by default
 python screen.py --initialize --screen
 ```
@@ -212,11 +213,11 @@ python screen.py --initialize --screen
 To run on bare-metal systems update the [config.yaml](config.yaml) to use bare-metal configuration.
 
 ``` yaml
-# Sets HHS to screen for K8s or Bare Metal Envionrment (k8s, bare-metal).
+# Sets IGHS to screen for K8s or Bare Metal Envionrment (k8s, bare-metal).
 system-info:
   type: "bare-metal"
   # Namespace is only required for k8s settings
-  namespace: "habanalabs"
+  namespace: "intelgaudi"
   # Can specify specific systems. For k8s, to scan entire cluster comment out hostfile
   hostfile: "./hostfile"
 
@@ -224,26 +225,26 @@ system-info:
   ssh-path: "./ssh"
   tcp-interface: "10.3.124.0/24"
 
-# Image to run Habana Health Screen
+# Image to run Intel Gaudi Health Screen
 image: "vault.habana.ai/gaudi-docker/1.16.0/ubuntu22.04/habanalabs/pytorch-installer-2.2.2:latest"
 
-# Node Label used to identify a Gaudi Node
+# Node Label used to identify a Intel Gaudi Node
 gaudi-node-label: "brightcomputing.com/node-category=gaudi"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"
 
-# Level 1 - Checks Individual Node Health (Ports status, Device Acquire failure)
+# Level 1 - Checks Individual Node Health (Ports status, Device Acquire failure, Device Temperature)
 level-1:
   run: true
-  timeout_s: 300
+  timeout_s: 150
   # Number of times to check Port Status
   num-checks-link-state: 10
 
 # Level 2 - Checks All Reduce between node pairs in the cluster.
 level-2:
   run: true
-  timeout_s: 180
+  timeout_s: 130
   # Number of times to check Network connections between nodes
   num-rounds: 5
 ```
@@ -252,9 +253,9 @@ Before running the screening test, you need to generate the ssh key used for pas
 
 ``` bash
 # Keys to setup initial bare-metal passwordless ssh connection between systems
-ssh-keygen -t rsa -f ssh/hhs_rsa
-chmod 600 ssh/hhs_rsa;
-chmod 644 ssh/hhs_rsa.pub;
+ssh-keygen -t rsa -f ssh/ighs_rsa
+chmod 600 ssh/ighs_rsa;
+chmod 644 ssh/ighs_rsa.pub;
 
 # Keys to setup containers passwordless ssh connection
 ssh-keygen -t rsa -f template/bare-metal/ssh/id_rsa

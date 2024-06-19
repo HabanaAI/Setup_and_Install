@@ -17,12 +17,12 @@ from utilities import run_cmd, copy_files
 from hccl_demo_helper import find_groups, gather_hccl_logs
 
 
-_logger = logging.getLogger("habana_health_screener")
+_logger = logging.getLogger("health_screener")
 
 
 class SystemUtils():
 
-    def __init__(self, image, log_dir, remote_path="/tmp/hhs"):
+    def __init__(self, image, log_dir, remote_path="/tmp/ighs"):
         self.job_path    = "tmp/jobs"
         self.image       = image
         self.log_dir     = log_dir
@@ -47,7 +47,7 @@ class SystemUtils():
 
         return hosts
 
-    def monitor_hhs_status(self, level, nodes, timeout_s=240, round=0, monitor=True):
+    def monitor_ighs_status(self, level, nodes, timeout_s=240, round=0, monitor=True):
         is_finished  = False
         attempt      = 0
         max_attempts = (timeout_s // 10) + min(timeout_s % 10, 1)
@@ -58,7 +58,7 @@ class SystemUtils():
         else:
             num_nodes = len(nodes.all_nodes)
 
-        _logger.info(f"Checking HHS Level {level} Status")
+        _logger.info(f"Checking IGHS Level {level} Status")
 
         if monitor:
             for attempt in range(max_attempts):
@@ -85,7 +85,7 @@ class SystemUtils():
             if len(nodes.launcher_nodes) > 0:
                 hosts = nodes.launcher_nodes
 
-            nodes.health_report.gather_health_report(level, remote_path="/tmp/hhs", hosts=hosts)
+            nodes.health_report.gather_health_report(level, remote_path="/tmp/ighs", hosts=hosts)
             nodes.health_report.consolidate_health_report(level=level, report_dir=f"{self.log_dir}")
 
         if level == 1:
@@ -127,8 +127,8 @@ class KubeUtils(SystemUtils):
         self.hostfile = hostfile
 
     def initialize_system(self):
-        self.clear_hhs_pods()
-        self.clear_hhs_pods(job_type="mpijobs")
+        self.clear_ighs_pods()
+        self.clear_ighs_pods(job_type="mpijobs")
         self.clear_jobs()
 
     def collect_nodes(self, gaudi_node_label):
@@ -158,14 +158,14 @@ class KubeUtils(SystemUtils):
         }
 
         if level == 1:
-            source_f                   = "template/k8s/pt-habana-health-screen-L1.yaml"
+            source_f                   = "template/k8s/intel-gaudi-health-screen-L1.yaml"
             update_val["num-nodes"]    = len(nodes.all_nodes)
             update_val["target-nodes"] = nodes.all_nodes
             node_groups                = nodes.all_nodes
             job_path                   = f"{job_base_path}/L1"
             yaml_type                  = "job"
         elif level == 2:
-            source_f                   = "template/k8s/pt-habana-health-screen-L2_hccl-demo.yaml"
+            source_f                   = "template/k8s/intel-gaudi-health-screen-L2_hccl-demo.yaml"
             yaml_type                  = "mpijob"
 
             if len(nodes.healthy_nodes) > 0:
@@ -178,11 +178,11 @@ class KubeUtils(SystemUtils):
 
         for i, node_group in enumerate(node_groups):
             if level == 1:
-                update_val["metadata-name"] = f"hhs-{node_group}"
+                update_val["metadata-name"] = f"ighs-{node_group}"
                 update_val["target-nodes"]  = [node_group]
                 out_file                    = f"{node_group}.yaml"
             elif level == 2:
-                update_val["metadata-name"] = f"hhs-hccl-r{round}-{i}"
+                update_val["metadata-name"] = f"ighs-hccl-r{round}-{i}"
                 update_val["target-nodes"]  = node_group
                 update_val["num-nodes"]     = len(node_group)
                 out_file                    = f"{update_val['metadata-name']}.yaml"
@@ -200,7 +200,7 @@ class KubeUtils(SystemUtils):
 
 
     def update_yaml_job(self, update_val={},
-                        source_file="template/k8s/pt-habana-health-screen-L1.yaml",
+                        source_file="template/k8s/intel-gaudi-health-screen-L1.yaml",
                         out_dir="tmp/jobs",
                         out_file="default.yaml",
                         yaml_type="job"):
@@ -252,21 +252,21 @@ class KubeUtils(SystemUtils):
 
         return out_f
 
-    def clear_hhs_pods(self, job_type="jobs"):
-        """ Clear Pods with label=hhs,hhs-hccl
+    def clear_ighs_pods(self, job_type="jobs"):
+        """ Clear Pods with label=ighs,ighs-hccl
 
         Args:
             job_type (str, optional): Type of Job to delete. Options: [jobs, mpijobs]. Defaults to "jobs".
         """
-        _logger.info(f"Checking for existing HHS Pods ({job_type})")
+        _logger.info(f"Checking for existing IGHS Pods ({job_type})")
 
-        metadata_app = "hhs" if (job_type == "jobs") else "hhs-hccl"
+        metadata_app = "ighs" if (job_type == "jobs") else "ighs-hccl"
 
         cmd    = f"kubectl get pods -n {self.namespace} -l app={metadata_app} -o=custom-columns='NAME:.metadata.name' --no-headers"
         output = run_cmd(cmd).strip()
 
         if len(output) > 0:
-            _logger.info(f"Found existing HHS Pods ({job_type}). Will delete.")
+            _logger.info(f"Found existing IGHS Pods ({job_type}). Will delete.")
 
             cmd     = f"kubectl get {job_type} -n {self.namespace} -l app={metadata_app} -o=custom-columns='NAME:.metadata.name' --no-headers"
             output  = run_cmd(cmd).strip()
@@ -338,8 +338,8 @@ class BareMetalUtils(SystemUtils):
                  ssh_path,
                  tcp_interface,
                  log_dir,
-                 docker_compose_f="template/pt-hhs-docker-compose-L1.yaml"):
-        super().__init__(image, log_dir, remote_path="/tmp/hhs")
+                 docker_compose_f="template/intel-gaudi-docker-compose-L1.yaml"):
+        super().__init__(image, log_dir, remote_path="/tmp/ighs")
 
         self.hostfile             = hostfile
         self.ssh_path             = ssh_path
@@ -361,20 +361,20 @@ class BareMetalUtils(SystemUtils):
         cmd    = f"ssh-agent -s"
         output = run_cmd(cmd)
 
-        _logger.debug("Adding hhs private key to ssh-agent")
-        cmd    = f"ssh-add {self.ssh_path}/hhs_rsa"
+        _logger.debug("Adding ighs private key to ssh-agent")
+        cmd    = f"ssh-add {self.ssh_path}/ighs_rsa"
         output = run_cmd(cmd)
 
 
     def initialize_system(self):
-        self.clear_hhs_pods()
-        self.clear_hhs_pods(job_type="mpijobs")
+        self.clear_ighs_pods()
+        self.clear_ighs_pods(job_type="mpijobs")
         self.clear_jobs()
         self.clear_remote_jobs()
 
         _logger.info(f"Setting up ssh connection for hosts: {self.hosts}")
         for h in self.hosts:
-            cmd    = f"ssh-copy-id -o StrictHostKeyChecking=no -i {self.ssh_path}/hhs_rsa.pub {os.environ['USER']}@{h}"
+            cmd    = f"ssh-copy-id -o StrictHostKeyChecking=no -i {self.ssh_path}/ighs_rsa.pub {os.environ['USER']}@{h}"
             output = run_cmd(cmd)
 
         self.initialize_ssh()
@@ -406,7 +406,7 @@ class BareMetalUtils(SystemUtils):
             job_path                   = f"{job_base_path}/L1"
         elif level == 2:
             if len(nodes.healthy_nodes) > 0:
-                nodes_to_test = [n.replace("hhs-","").replace(":48","") for n in nodes.healthy_nodes]
+                nodes_to_test = [n.replace("ighs-","").replace(":48","") for n in nodes.healthy_nodes]
             else:
                 nodes_to_test = nodes.all_nodes.copy()
 
@@ -426,24 +426,24 @@ class BareMetalUtils(SystemUtils):
                 copy_files(src="tmp/jobs", dst=f"{self.remote_path}", hosts=update_val["target-nodes"])
                 copy_files(src="template/bare-metal/dockerfile", dst=f"{self.remote_path}/jobs/L1", hosts=update_val["target-nodes"])
                 copy_files(src="./ssh", dst=f"{self.remote_path}/jobs/L1", hosts=update_val["target-nodes"])
-                copy_files(src="tmp/config.yaml", dst=f"{self.remote_path}/habana_health_screen", hosts=update_val["target-nodes"])
+                copy_files(src="tmp/config.yaml", dst=f"{self.remote_path}/intel_gaudi_health_screen", hosts=update_val["target-nodes"])
 
             elif level == 2:
-                update_val["metadata-name"] = f"hhs-hccl-r{round}-{i}"
+                update_val["metadata-name"] = f"ighs-hccl-r{round}-{i}"
                 update_val["target-nodes"]  = node_group
                 update_val["master-node"]   = node_group[0]
                 update_val["num-nodes"]     = len(node_group)
 
-                self.update_yaml_job(source_file="template/bare-metal/pt-hhs-docker-compose-L2-launcher.yaml",
+                self.update_yaml_job(source_file="template/bare-metal/intel-gaudi-docker-compose-L2-launcher.yaml",
                                      update_val=update_val,
                                      out_dir=job_path,
-                                     out_file=f"pt-hhs-docker-compose-L2-launcher.yaml",
+                                     out_file=f"intel-gaudi-docker-compose-L2-launcher.yaml",
                                      yaml_type="mpijob_launcher")
 
-                self.update_yaml_job(source_file="template/bare-metal/pt-hhs-docker-compose-L2-worker.yaml",
+                self.update_yaml_job(source_file="template/bare-metal/intel-gaudi-docker-compose-L2-worker.yaml",
                                      update_val=update_val,
                                      out_dir=job_path,
-                                     out_file=f"pt-hhs-docker-compose-L2-worker.yaml",
+                                     out_file=f"intel-gaudi-docker-compose-L2-worker.yaml",
                                      yaml_type="mpijob_worker")
                 nodes.launcher_nodes.append(node_group[0])
                 nodes.worker_nodes.extend(node_group[1:])
@@ -451,13 +451,13 @@ class BareMetalUtils(SystemUtils):
                 copy_files(src="tmp/jobs", dst=f"{self.remote_path}", hosts=update_val["target-nodes"])
                 copy_files(src="template/bare-metal/dockerfile", dst=f"{self.remote_path}/jobs/L2/r{round}", hosts=update_val["target-nodes"])
                 copy_files(src="template/bare-metal/ssh", dst=f"{self.remote_path}/jobs/L2/r{round}", hosts=update_val["target-nodes"])
-                copy_files(src="tmp/config.yaml", dst=f"{self.remote_path}/habana_health_screen", hosts=update_val["target-nodes"])
+                copy_files(src="tmp/config.yaml", dst=f"{self.remote_path}/intel_gaudi_health_screen", hosts=update_val["target-nodes"])
 
 
         _logger.info(f"Launching Level {level} Jobs at {job_path}")
 
         if level == 1:
-            cmd    = f"{self.docker_compose_cmd} -f {self.remote_path}/jobs/L1/pt-hhs-docker-compose-L1.yaml up"
+            cmd    = f"{self.docker_compose_cmd} -f {self.remote_path}/jobs/L1/intel-gaudi-docker-compose-L1.yaml up"
             output = run_cmd(cmd).strip()
         elif level == 2:
             with open(f"{job_base_path}/L2/r{round}/hostfile_launchers", mode='wt', encoding='utf-8') as f:
@@ -466,50 +466,50 @@ class BareMetalUtils(SystemUtils):
                 f.write('\n'.join(nodes.worker_nodes))
 
             cmd_list = [
-                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_workers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/pt-hhs-docker-compose-L2-worker.yaml build",
-                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_workers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/pt-hhs-docker-compose-L2-worker.yaml up -d --remove-orphans",
-                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/pt-hhs-docker-compose-L2-launcher.yaml build",
-                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/pt-hhs-docker-compose-L2-launcher.yaml up --remove-orphans"
+                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_workers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-worker.yaml build",
+                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_workers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-worker.yaml up -d --remove-orphans",
+                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-launcher.yaml build",
+                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-launcher.yaml up --remove-orphans"
             ]
 
             for cmd in cmd_list:
                 output = run_cmd(cmd).strip()
 
     def update_yaml_job(self,
-                        source_file="template/bare-metal/pt-hhs-docker-compose-L1.yaml",
+                        source_file="template/bare-metal/intel-gaudi-docker-compose-L1.yaml",
                         out_dir="tmp/jobs",
-                        out_file="pt-hhs-docker-compose-L1.yaml",
+                        out_file="intel-gaudi-docker-compose-L1.yaml",
                         update_val={},
                         yaml_type="job"):
         with open(source_file, 'r') as f:
             template_data = yaml.safe_load(f)
 
         if yaml_type == "job":
-            template_data["services"]["hhs_level1"]["build"]["args"]["BASE_IMAGE"] = self.image
+            template_data["services"]["ighs_level1"]["build"]["args"]["BASE_IMAGE"] = self.image
 
-            template_data["services"]["hhs_level1"]["environment"].append(f"MY_NODE_NAME={update_val['metadata-name']}")
-            template_data["services"]["hhs_level1"]["environment"].append(f"LOG_DIR={self.log_dir}")
+            template_data["services"]["ighs_level1"]["environment"].append(f"MY_NODE_NAME={update_val['metadata-name']}")
+            template_data["services"]["ighs_level1"]["environment"].append(f"LOG_DIR={self.log_dir}")
         elif yaml_type == "mpijob_launcher":
-            template_data["services"]["hhs_level2_launcher"]["build"]["args"]["BASE_IMAGE"] = self.image
+            template_data["services"]["ighs_level2_launcher"]["build"]["args"]["BASE_IMAGE"] = self.image
 
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f"MY_NODE_NAME={update_val['metadata-name']}")
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f"LOG_DIR={self.log_dir}")
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f"ROUND=r{update_val['round']}")
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f"NUM_NODES={update_val['num-nodes']}")
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f'TARGET_NODES={",".join(update_val["target-nodes"])}')
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f"MASTER_ADDR={update_val['master-node']}")
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f"TCP_INTERFACE={self.tcp_interface}")
-            template_data["services"]["hhs_level2_launcher"]["environment"].append(f"JOB_ID={update_val['metadata-name']}")
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f"MY_NODE_NAME={update_val['metadata-name']}")
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f"LOG_DIR={self.log_dir}")
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f"ROUND=r{update_val['round']}")
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f"NUM_NODES={update_val['num-nodes']}")
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f'TARGET_NODES={",".join(update_val["target-nodes"])}')
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f"MASTER_ADDR={update_val['master-node']}")
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f"TCP_INTERFACE={self.tcp_interface}")
+            template_data["services"]["ighs_level2_launcher"]["environment"].append(f"JOB_ID={update_val['metadata-name']}")
         elif yaml_type == "mpijob_worker":
-            template_data["services"]["hhs_level2_worker"]["build"]["args"]["BASE_IMAGE"] = self.image
-            template_data["services"]["hhs_level2_worker"]["environment"].append(f"MY_NODE_NAME={update_val['metadata-name']}")
-            template_data["services"]["hhs_level2_worker"]["environment"].append(f"LOG_DIR={self.log_dir}")
-            template_data["services"]["hhs_level2_worker"]["environment"].append(f"JOB_ID={update_val['metadata-name']}")
+            template_data["services"]["ighs_level2_worker"]["build"]["args"]["BASE_IMAGE"] = self.image
+            template_data["services"]["ighs_level2_worker"]["environment"].append(f"MY_NODE_NAME={update_val['metadata-name']}")
+            template_data["services"]["ighs_level2_worker"]["environment"].append(f"LOG_DIR={self.log_dir}")
+            template_data["services"]["ighs_level2_worker"]["environment"].append(f"JOB_ID={update_val['metadata-name']}")
         elif yaml_type == "config":
             hostfile                                 = template_data["system-info"]["hostfile"]
             ssh_path                                 = template_data["system-info"]["ssh-path"]
-            template_data["system-info"]["hostfile"] = f"/tmp/hhs/habana_health_screen/{os.path.basename(hostfile)}"
-            template_data["system-info"]["ssh-path"] = f"/tmp/hhs/habana_health_screen/{os.path.basename(ssh_path)}"
+            template_data["system-info"]["hostfile"] = f"/tmp/ighs/intel_gaudi_health_screen/{os.path.basename(hostfile)}"
+            template_data["system-info"]["ssh-path"] = f"/tmp/ighs/intel_gaudi_health_screen/{os.path.basename(ssh_path)}"
 
         out_f = f"{out_dir}/{out_file}"
         dir_name = os.path.dirname(out_f)
@@ -521,14 +521,14 @@ class BareMetalUtils(SystemUtils):
 
         _logger.info(f"Created Yaml: {out_f}")
 
-    def monitor_hhs_status(self, level, nodes, timeout_s=240, round=0, monitor=True):
-        return super().monitor_hhs_status(level=level, nodes=nodes, timeout_s=timeout_s, round=round, monitor=False)
+    def monitor_ighs_status(self, level, nodes, timeout_s=240, round=0, monitor=True):
+        return super().monitor_ighs_status(level=level, nodes=nodes, timeout_s=timeout_s, round=round, monitor=False)
 
-    def clear_hhs_pods(self, job_type="jobs"):
+    def clear_ighs_pods(self, job_type="jobs"):
         work_dir = f"{self.remote_path}/jobs"
 
         if job_type == "jobs":
-            cmd    = f"{self.docker_compose_cmd} -f {work_dir}/L1/pt-hhs-docker-compose-L1.yaml down"
+            cmd    = f"{self.docker_compose_cmd} -f {work_dir}/L1/intel-gaudi-docker-compose-L1.yaml down"
             output = run_cmd(cmd).strip()
         else:
             files = glob.glob(f"{work_dir}/L2/**/*.yaml", recursive=True)
@@ -544,7 +544,7 @@ class BareMetalUtils(SystemUtils):
                 output = run_cmd(cmd).strip()
 
     def clear_remote_jobs(self):
-        cmd    = f"{self.pdsh_cmd} rm -R /tmp/hhs/jobs/"
+        cmd    = f"{self.pdsh_cmd} rm -R /tmp/ighs/jobs/"
         output = run_cmd(cmd)
 
     def diagnose_unhealthy_nodes(self, infected_nodes, missing_nodes):

@@ -10,16 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, datetime, shutil, yaml, sys
+import os, datetime, yaml, sys
 import argparse
 import logging
 
-from utilities import download_repos, clear_hhs_pods, create_logger, get_logging_level
+from utilities import download_repos, clear_ighs_pods, create_logger, get_logging_level
 from hccl_demo_helper import hccl_demo_check
 from system_utils import KubeUtils, BareMetalUtils
 
-from HabanaHealthReport import HabanaHealthReport
-from HNodes import HNodes, HNode
+from HealthReport import HealthReport
+from IGNodes import IGNodes, IGNode
 
 
 _logger = None
@@ -36,22 +36,22 @@ def main(args):
         args.logs_dir    = f"logs/{date_year_format}/{date_format}/{date_format}_{time_format}"
 
 
-    hhs_report_name = "health_report.csv"
-    hhs_log_dir     = args.logs_dir
+    ighs_report_name = "health_report.csv"
+    ighs_log_dir     = args.logs_dir
 
     if args.node_name:
-        hhs_level       = os.environ["HHS_LEVEL"]
-        hhs_report_name = f"health_report_{args.node_name}.csv"
-        hhs_log_dir     = f"{args.logs_dir}/L{hhs_level}"
+        ighs_level       = os.environ["IGHS_LEVEL"]
+        ighs_report_name = f"health_report_{args.node_name}.csv"
+        ighs_log_dir     = f"{args.logs_dir}/L{ighs_level}"
 
-    health_report = HabanaHealthReport(f_dir=hhs_log_dir, report_name=hhs_report_name)
+    health_report = HealthReport(f_dir=ighs_log_dir, report_name=ighs_report_name)
     job_path      = "tmp/jobs"
 
     with open(args.config, 'r') as f:
         config_data = yaml.safe_load(f)
 
     log_level  = get_logging_level(config_data["log-level"])
-    _logger, _ = create_logger(logger_name="habana_health_screener", logger_file_name="screener", f_path=args.logs_dir, level=log_level)
+    _logger, _ = create_logger(logger_name="health_screener", logger_file_name="screener", f_path=args.logs_dir, level=log_level)
 
     if config_data["system-info"]["type"] == "k8s":
         system_mode = KubeUtils(image=config_data["image"],
@@ -82,8 +82,8 @@ def main(args):
     if args.screen:
         start_time = datetime.datetime.now()
 
-        habana_nodes = HNodes(health_report=health_report)
-        habana_nodes.all_nodes = system_mode.collect_nodes(gaudi_node_label=config_data["gaudi-node-label"])
+        intel_gaudi_nodes = IGNodes(health_report=health_report)
+        intel_gaudi_nodes.all_nodes = system_mode.collect_nodes(gaudi_node_label=config_data["gaudi-node-label"])
 
         if config_data["level-1"]["run"]:
             _logger.info("Running Level 1 Checks: Card Diagnostics")
@@ -91,14 +91,14 @@ def main(args):
                 os.makedirs(f"{health_report.f_dir}/L1")
 
             system_mode.initialize_node_jobs(level=1,
-                                             nodes=habana_nodes,
+                                             nodes=intel_gaudi_nodes,
                                              job_base_path=job_path)
-            healthy_nodes, infected_nodes, missing_nodes = system_mode.monitor_hhs_status(level=1,
-                                                                          nodes=habana_nodes,
+            healthy_nodes, infected_nodes, missing_nodes = system_mode.monitor_ighs_status(level=1,
+                                                                          nodes=intel_gaudi_nodes,
                                                                           timeout_s=config_data["level-1"]["timeout_s"])
             system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
 
-            system_mode.clear_hhs_pods()
+            system_mode.clear_ighs_pods()
 
         if config_data["level-2"]["run"]:
             _logger.info("Running Level 2 Checks: Pair HCCL_DEMO All Reduce")
@@ -107,16 +107,16 @@ def main(args):
 
             for i in range(config_data["level-2"]["num-rounds"]):
                 system_mode.initialize_node_jobs(level=2,
-                                                 nodes=habana_nodes,
+                                                 nodes=intel_gaudi_nodes,
                                                  job_base_path=job_path,
                                                  round=i)
-                healthy_nodes, infected_nodes, missing_nodes = system_mode.monitor_hhs_status(level=2,
-                                                                               nodes=habana_nodes,
+                healthy_nodes, infected_nodes, missing_nodes = system_mode.monitor_ighs_status(level=2,
+                                                                               nodes=intel_gaudi_nodes,
                                                                                timeout_s=config_data["level-2"]["timeout_s"],
                                                                                round=i)
                 system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
 
-                system_mode.clear_hhs_pods(job_type="mpijobs")
+                system_mode.clear_ighs_pods(job_type="mpijobs")
 
                 if len(infected_nodes) == 0:
                     _logger.info(f"Round {i}/{config_data['level-2']['num-rounds']}: No Infected Nodes found. Exit screening early.")
@@ -127,13 +127,13 @@ def main(args):
         diff_time = (end_time - start_time)
         _logger.info(f"Total Run Time: {diff_time}")
 
-    if args.hhs_check == "node":
-        node = HNode(health_report=health_report,
+    if args.ighs_check == "node":
+        node = IGNode(health_report=health_report,
                      num_checks_link_state=config_data["level-1"]["num-checks-link-state"],
                      log_level=log_level)
         node.scan_cards()
         node.health_check(write_report=args.node_write_report)
-    elif args.hhs_check == "hccl-demo":
+    elif args.ighs_check == "hccl-demo":
         health_report.create(create_base=False, create_hccl_demo=True)
 
         target_nodes = args.target_nodes.strip("[']").replace("'","").split(',')
@@ -149,8 +149,8 @@ if __name__=="__main__":
     parser.add_argument("--job-id", type=str, default="", help="Needed to identify hccl-demo running log")
     parser.add_argument("--round", type=str, default="", help="Needed to identify hccl-demo running round log")
     parser.add_argument("--config", type=str, default="config.yaml", help="Configuration file for Health Screener")
-    parser.add_argument("--hhs-check", default="none", const="none", nargs="?", choices=["node", "hccl-demo", "none"],
-        help="Check HHS Status for Node (Ports status, Device Acquire Fail) or all_reduce (HCCL_DEMO between paris of nodes)")
+    parser.add_argument("--ighs-check", default="none", const="none", nargs="?", choices=["node", "hccl-demo", "none"],
+        help="Check IGHS Status for Node (Ports status, Device Acquire Fail, Device Temperature) or all_reduce (HCCL_DEMO between paris of nodes)")
 
     parser.add_argument("--node-write-report", action="store_true", help="Write Individual Node Health Report")
     parser.add_argument("--node-name", type=str, default="", help="Name of Node")

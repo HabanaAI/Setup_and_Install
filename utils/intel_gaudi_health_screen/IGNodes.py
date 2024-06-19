@@ -10,24 +10,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, time, yaml, csv
+import os, time, csv
 import logging
-from multiprocessing.pool import Pool
+import multiprocessing
 
-from HabanaHealthReport import HabanaHealthReport
+from HealthReport import HealthReport
 from utilities import run_cmd, create_logger
-from hccl_demo_helper import find_groups
 
-_logger = logging.getLogger("habana_health_screener")
+_logger = logging.getLogger("health_screener")
 
 
-class HNodes():
+class IGNodes():
 
-    def __init__(self, health_report=HabanaHealthReport()):
+    def __init__(self, health_report=HealthReport()):
         """ Keeps Track of Nodes and their current states
 
         Args:
-            health_report (HabanaHealthReport, optional): HHS Health Report. Defaults to creating a new HabanaHealthReport().
+            health_report (HealthReport, optional): IGHS Health Report. Defaults to creating a new HealthReport().
         """
         self.all_nodes      = list()
         self.launcher_nodes = list()
@@ -42,13 +41,12 @@ class HNodes():
 
 
 
-class HNode():
+class IGNode():
 
-    def __init__(self, name="", health_report=HabanaHealthReport(), num_checks_link_state=10, log_level=logging.INFO):
+    def __init__(self, name="", health_report=HealthReport(), num_checks_link_state=10, log_level=logging.INFO):
         self.name = name
         if name == "" and "MY_NODE_NAME" in os.environ:
             self.name = os.environ["MY_NODE_NAME"]
-
 
         self.cards                   = dict()
         self.num_checks_link_state   = num_checks_link_state
@@ -77,21 +75,31 @@ class HNode():
             memory_used   = int(row[3].split()[0])
             temperature_C = int(row[4].split()[0])
 
-            card = HCard(index=i, module_id=module_id, pci_address=pci_address, memory_used=memory_used, temperature=temperature_C, logger=self.logger)
+            card = IGCard(index=i, module_id=module_id, pci_address=pci_address, memory_used=memory_used, temperature=temperature_C, logger=self.logger)
             self.cards[i] = card
 
         self.cards = dict(sorted(self.cards.items()))
 
     def health_check(self, target_cards=[], write_report=False):
-        checked_cards       = list()
+        checked_cards = list()
+        processes     = list()
+        card_queue    = multiprocessing.Queue()
 
         if len(target_cards) == 0:
             target_cards = self.cards.keys()
 
         for i in target_cards:
             card = self.cards[str(i)]
-            card.check_health(num_checks_link_state=self.num_checks_link_state)
+            p = multiprocessing.Process(target=card.check_health, args=(self.num_checks_link_state,card_queue)) 
 
+            p.start()
+            processes.append((card,p))
+
+        for card,p in processes:
+            p.join()
+        card_queue.put(None)
+
+        for card in iter(card_queue.get, None):
             checked_cards.append(card)
             self.logger.info(card)
 
@@ -99,8 +107,7 @@ class HNode():
             self.health_report.write_rows(node_id=self.name, cards=checked_cards)
 
 
-
-class HCard():
+class IGCard():
 
     def __init__(self, index=-1, module_id=-1, pci_address="", memory_used=-1, framework="pytorch", temperature=-1, logger=None):
         self.logger                    = logger
@@ -119,10 +126,12 @@ class HCard():
         self.external_ports            = [1, 8, 9]
         self.incorrect_ports_direction = list()
 
-    def check_health(self,num_checks_link_state=10):
+    def check_health(self,num_checks_link_state=10, checked_cards=[]):
         self.check_link_state(attempts=num_checks_link_state, sleep_sec=0.2)
         self.check_device_acquire_fail()
         self.check_temperature_state()
+
+        checked_cards.put(self)
 
     def check_link_state(self, attempts=10, sleep_sec=0.5):
         self.logger.debug(f"Checking {self.pci_address} Link State. Will check {attempts} times")
@@ -170,21 +179,26 @@ class HCard():
 
     def check_device_acquire_fail(self):
         self.logger.debug(f"Checking {self.pci_address} for Device Acquire Issues")
-
-        from build.Setup_and_Install.utils import check_habana_framework_env
-
         self.device_acquire_fail = False
-        fw_test                  = check_habana_framework_env.pytorch_test
-        if self.framework == "tensorflow":
-            fw_test = check_habana_framework_env.tensorflow_test
+
+        os.environ["ID"] = str(self.module_id)
 
         try:
-            with Pool() as pool:
-                result = pool.apply(fw_test, args=(self.module_id))
-
-        except (RuntimeError, AssertionError, Exception) as e:
+            import torch
+            import habana_frameworks.torch.core
+        except Exception as e:
+            self.logger.error(f"Card {self.module_id} {self.pci_address} Failed to initialize Intel Gaudi PyTorch: {str(e)}")
             self.device_acquire_fail  = True
-            self.logger.warning(f"{self.pci_address} Device Acquire Failure")
+
+        try:
+            x = torch.tensor([2]).to('hpu')
+            y = x + x
+
+            assert y == 4, 'Sanity check failed: Wrong Add output'
+            assert 'hpu' in y.device.type.lower(), 'Sanity check failed: Operation not executed on Habana Device'
+        except (RuntimeError, AssertionError, Exception) as e:
+            self.logger.error(f"{self.pci_address} Device Acquire Failure: {e}")
+            self.device_acquire_fail  = True
 
         return self.device_acquire_fail
 
@@ -197,16 +211,8 @@ class HCard():
             self.temperature_state_C = "CRITICAL"
         elif self.temperature_C - base_temperature >= max_delta:
             self.temperature_state_C = "WARN"
-
-    def check_temperature_state(self):
-        max_good_temperature = 83
-        base_temperature     = 25
-        max_delta            = 25
-
-        if self.temperature_C >= max_good_temperature:
-            self.temperature_state_C = "CRITICAL"
-        elif self.temperature_C - base_temperature >= max_delta:
-            self.temperature_state_C = "WARN"
+        else:
+            self.temperature_state_C = "NORMAL"
 
     def __str__(self):
         report_str = f""" Index: {self.index}

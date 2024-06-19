@@ -17,7 +17,7 @@ from datetime import datetime
 import logging
 from logging import handlers
 
-_logger = logging.getLogger("habana_health_screener")
+_logger = logging.getLogger("health_screener")
 
 def get_logging_level(log_level):
     log_level = log_level.lower()
@@ -96,15 +96,10 @@ def run_cmd(cmd, timeout_s=1_800, verbose=False):
     return result.stdout
 
 def download_repos():
-    """ Download Habana's Setup_and_Install and HCCL_DEMO Repos to assist in health checks
+    """ Download HCCL_DEMO Repo to assist in health checks
     """
     if not os.path.exists("build"):
         os.makedirs("build")
-
-    if not os.path.exists("build/Setup_and_Install"):
-        _logger.info(f"Downloading Setup_and_Install into build/")
-        cmd = "git clone https://github.com/HabanaAI/Setup_and_Install.git build/Setup_and_Install"
-        run_cmd(cmd)
 
     if not os.path.exists("build/hccl_demo"):
         _logger.info(f"Downloading hccl_demo into build/")
@@ -168,21 +163,21 @@ def clear_job(job):
             time.sleep(10)
 
 
-def clear_hhs_pods(job_type="jobs"):
-    """ Clear Pods with label=hhs,hhs-hccl
+def clear_ighs_pods(job_type="jobs"):
+    """ Clear Pods with label=ighs,ighs-hccl
 
     Args:
         job_type (str, optional): Type of Job to delete. Options: [jobs, mpijobs]. Defaults to "jobs".
     """
-    _logger.info(f"Checking for existing HHS Pods ({job_type})")
+    _logger.info(f"Checking for existing IGHS Pods ({job_type})")
 
-    metadata_app = "hhs" if (job_type == "jobs") else "hhs-hccl"
+    metadata_app = "ighs" if (job_type == "jobs") else "ighs-hccl"
 
     cmd = f"kubectl get pods -n default -l app={metadata_app} -o=custom-columns='NAME:.metadata.name' --no-headers"
     output = run_cmd(cmd).strip()
 
     if len(output) > 0:
-        _logger.info(f"Found existing HHS Pods ({job_type}). Will delete.")
+        _logger.info(f"Found existing IGHS Pods ({job_type}). Will delete.")
 
         cmd     = f"kubectl get {job_type} -n default -l app={metadata_app} -o=custom-columns='NAME:.metadata.name' --no-headers"
         output  = run_cmd(cmd).strip()
