@@ -17,7 +17,7 @@ LABEL name="PyTorch Installer"
 LABEL summary="Habanalabs PyTorch installer layer for RHEL8.6"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
-ENV PYTHONPATH=/root:/usr/lib/habanalabs/
+RUN echo "/usr/lib/habanalabs" > $(python3.8 -c "import sysconfig; print(sysconfig.get_path('platlib'))")/habanalabs-graph.pth
 
 RUN dnf install -y \
     curl \
@@ -34,7 +34,7 @@ RUN dnf install -y \
     dnf clean all && rm -rf /var/cache/yum
 
 RUN dnf config-manager --add-repo https://yum.repos.intel.com/mkl/setup/intel-mkl.repo -y && \
-    dnf install --allowerasing -y intel-mkl-2020.4-912 && \
+    dnf install --allowerasing -y intel-mkl-64bit-2020.4-912 && \
     dnf clean all && rm -rf /var/cache/yum
 
 COPY install_packages.sh .

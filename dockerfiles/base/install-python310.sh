@@ -35,11 +35,11 @@ case "${_BASE_NAME}" in
 esac
 
 # install Python
-wget -nv -O /opt/Python-3.10.9.tgz https://www.python.org/ftp/python/3.10.9/Python-3.10.9.tgz
+wget -nv -O /opt/Python-3.10.14.tgz https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz
 cd /opt/
-tar xzf Python-3.10.9.tgz
-rm -f Python-3.10.9.tgz
-cd Python-3.10.9
+tar xzf Python-3.10.14.tgz
+rm -f Python-3.10.14.tgz
+cd Python-3.10.14
 ./configure --enable-optimizations --enable-loadable-sqlite-extensions --enable-shared $_SSL_LIB
 make -j && make altinstall
 
