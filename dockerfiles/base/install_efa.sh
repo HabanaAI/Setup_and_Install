@@ -13,6 +13,7 @@ case $(. /etc/os-release ; echo -n $ID) in
         rm -f RPMS/RHEL8/x86_64/dkms*.rpm
     ;;
     tencentos)
+        dnf install -y RPMS/ROCKYLINUX8/x86_64/rdma-core/libibverbs-46.0-1.el8.x86_64.rpm RPMS/ROCKYLINUX8/x86_64/rdma-core/libibverbs-utils-46.0-1.el8.x86_64.rpm
         patch -f -p1 -i /tmp/tencentos_efa_patch.txt --reject-file=tencentos_efa_patch.rej --no-backup-if-mismatch
     ;;
 esac

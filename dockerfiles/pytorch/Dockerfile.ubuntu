@@ -13,6 +13,7 @@ ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
 
+ENV LANG=en_US.UTF-8
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
 RUN apt-get update && apt-get install -y \

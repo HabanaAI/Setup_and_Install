@@ -12,11 +12,11 @@ ARG VERSION
 ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
-
 LABEL name="PyTorch Installer"
 LABEL summary="Habanalabs PyTorch installer layer for RHEL8.6"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
+ENV LANG=en_US.UTF-8
 RUN echo "/usr/lib/habanalabs" > $(python3.8 -c "import sysconfig; print(sysconfig.get_path('platlib'))")/habanalabs-graph.pth
 
 RUN dnf install -y \

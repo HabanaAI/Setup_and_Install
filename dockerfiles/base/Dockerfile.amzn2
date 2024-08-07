@@ -28,7 +28,7 @@ RUN amazon-linux-extras enable python3.8 && \
     yum clean all && rm -rf /var/cache/yum
 
 # Install jemalloc-3.6.0-1.el7.x86_64 package with required /lib64/libjemalloc.so.1 lib need for topologies
-RUN yum install -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm && \
+RUN yum install -y https://archives.fedoraproject.org/pub/archive/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm && \
     yum install -y jemalloc && \
     yum clean all && rm -rf /var/cache/yum
 
@@ -98,6 +98,8 @@ RUN python3 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
+RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
+RUN export LANG=en_US.UTF-8
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
