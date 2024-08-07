@@ -1,0 +1,72 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: template-metadata-name
+  namespace: default
+  labels:
+    app: ighs
+spec:
+  template:
+    metadata:
+      labels:
+        app: ighs
+    spec:
+      restartPolicy: "Never"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - IGHS-DUMMY-VAL
+      volumes:
+        - name: mydir
+          emptyDir: {}
+      tolerations:
+        - key: ""
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: template-container-name
+          image: template-container-image
+          imagePullPolicy: IfNotPresent
+          workingDir: /workdir
+          command: ["/bin/bash", "-c"]
+          args:
+            - >-
+              while [ ! -d /workdir/intel_gaudi_health_screen ]; do
+                sleep 2s;
+              done;
+              sleep 2s;
+
+              cd /workdir/intel_gaudi_health_screen;
+              python /workdir/intel_gaudi_health_screen/screen.py --ighs-check node --logs-dir $LOG_DIR;
+          volumeMounts:
+            - name: mydir
+              mountPath: /workdir
+          env:
+            - name: IGHS_LEVEL
+              value: "1"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              habana.ai/gaudi: 8
+              hugepages-2Mi: 29000Mi
+              cpu: 95
+            requests:
+              habana.ai/gaudi: 8
+              hugepages-2Mi: 29000Mi
+              cpu: 95

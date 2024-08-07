@@ -15,7 +15,6 @@ ARG ARTIFACTORY_URL
 ARG GPERFTOOLS_PREFIX="/usr/local"
 ARG GPERFTOOLS="gperftools-2.7"
 
-ENV LANG=en_US.UTF-8
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
 RUN yum install -y \
