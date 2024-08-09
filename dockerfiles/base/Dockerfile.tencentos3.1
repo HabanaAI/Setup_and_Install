@@ -44,6 +44,10 @@ RUN dnf install -y \
     dnf versionlock add redhat-release* && \
     dnf clean all && rm -rf /var/cache/yum
 
+COPY install-python310.sh .
+RUN ./install-python310.sh tencentos3.1 && rm install-python310.sh
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
 COPY install_efa.sh .
 COPY tencentos_efa_patch.txt /tmp/tencentos_efa_patch.txt
 RUN ./install_efa.sh && rm -f install_efa.sh /tmp/tencentos_efa_patch.txt && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
@@ -91,13 +95,9 @@ RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archi
     cd / && \
     rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
-RUN python3.8 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
+RUN python3 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
 
-RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
-    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
-    alternatives --set python3 /usr/bin/python3.8
-
-RUN python3.8 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
@@ -108,8 +108,6 @@ RUN mkdir -p /var/run/sshd && \
     ssh-keygen -A && \
     mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc
 
-RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
-RUN export LANG=en_US.UTF-8
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw

@@ -134,8 +134,6 @@ RUN mkdir -p /var/run/sshd && \
     ssh-keygen -A && \
     mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc
 
-RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
-RUN export LANG=en_US.UTF-8
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw

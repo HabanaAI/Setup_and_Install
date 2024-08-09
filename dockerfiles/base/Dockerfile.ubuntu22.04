@@ -33,7 +33,6 @@ RUN apt-get update && \
     libgoogle-glog0v5 \
     libjemalloc2 \
     libpq-dev \
-    locales \
     lsof \
     make \
     openssh-client \
@@ -48,23 +47,8 @@ RUN apt-get update && \
     vim \
     libkrb5-3 \
     libgnutls30 \
-    util-linux \
-    bash \
-    mount \
-    bsdutils \
-    libsmartcols1 \
-    libblkid1 \
-    libmount1 \
-    libuuid1 \
     wget && \
     apt-get autoremove && apt-get clean
-
-RUN locale-gen en_US.UTF-8
-
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
-ENV LC_CTYPE=en_US.UTF-8
 
 # There is no need to store pip installation files inside docker image
 ENV PIP_NO_CACHE_DIR=on

@@ -15,7 +15,7 @@ import os
 import concurrent.futures
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Check health of HPUs for PyTorch")
+    parser = argparse.ArgumentParser(description="Check health of Intel Gaudi for PyTorch")
 
     parser.add_argument("--cards",
                         default=1,
@@ -29,11 +29,11 @@ def parse_arguments():
     return args
 
 def pytorch_test(device_id=0):
-    """ Checks health of HPU through running a basic
-    PyTorch example on HPU
+    """ Checks health of Intel Gaudi through running a basic
+    PyTorch example on Intel Gaudi
 
     Args:
-        device_id (int, optional): ID of HPU. Defaults to 0.
+        device_id (int, optional): ID of Intel Gaudi. Defaults to 0.
     """
 
     os.environ["ID"] = str(device_id)
@@ -42,7 +42,7 @@ def pytorch_test(device_id=0):
         import torch
         import habana_frameworks.torch.core
     except Exception as e:
-        print(f"Card {device_id} Failed to initialize Habana PyTorch: {str(e)}")
+        print(f"Card {device_id} Failed to initialize Intel Gaudi PyTorch: {str(e)}")
         raise
 
     try:
@@ -50,7 +50,7 @@ def pytorch_test(device_id=0):
         y = x + x
 
         assert y == 4, 'Sanity check failed: Wrong Add output'
-        assert 'hpu' in y.device.type.lower(), 'Sanity check failed: Operation not executed on Habana Device'
+        assert 'hpu' in y.device.type.lower(), 'Sanity check failed: Operation not executed on Intel Gaudi Card'
     except (RuntimeError, AssertionError) as e:
         print(f"Card {device_id} Failure: {e}")
         raise
@@ -64,7 +64,7 @@ if __name__ == '__main__':
             for device_id, res in zip(range(args.cards), executor.map(pytorch_test, range(args.cards))):
                 print(f"Card {device_id} PASSED")
     except Exception as e:
-            print(f"Failed to initialize Habana, error: {str(e)}")
+            print(f"Failed to initialize on Intel Gaudi, error: {str(e)}")
             print(f"Check FAILED")
             exit(1)
 

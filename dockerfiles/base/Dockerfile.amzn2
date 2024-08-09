@@ -98,8 +98,6 @@ RUN python3 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
-RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
-RUN export LANG=en_US.UTF-8
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
