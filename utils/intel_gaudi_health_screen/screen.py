@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, datetime, yaml, sys, time
+import os, datetime, yaml, sys, time, json
 import argparse
 import logging
 
@@ -24,45 +24,40 @@ from IGNodes import IGNodes, IGNode
 
 _logger = None
 
-def monitor_ighs_status(system_mode, level, nodes, job_path="tmp/jobs", log_dir="", timeout_s=240, round=0, monitor=True):
+def monitor_ighs_status(system_mode, level, nodes, timeout_s=240, round=0):
         sleep_time_s       = 2
         max_attempts       = (timeout_s // sleep_time_s) + min(timeout_s % sleep_time_s, 1)
         current_run_status = dict()
+        lvl_check_msg      = f"Checking IGHS Level {level}"
 
-        if len(nodes.healthy_nodes) > 0:
-            num_nodes = len(nodes.healthy_nodes)
-        else:
-            num_nodes = len(nodes.all_nodes)
+        num_nodes          = len(nodes.all_nodes)
+        if level == 2:
+            num_nodes      = len(nodes.current_node_groups) * 2
+            lvl_check_msg += f" Round {round}"
 
-        _logger.info(f"Checking IGHS Level {level} Status")
+        _logger.info(f"{lvl_check_msg} Status")
 
-        if monitor:
-            for attempt in range(max_attempts):
-                num_found_nodes = system_mode.check_screen_complete(current_run_status=current_run_status, health_report=nodes.health_report, level=level, round=round)
+        for attempt in range(max_attempts):
+            num_found_nodes = system_mode.check_screen_complete(current_run_status=current_run_status, health_report=nodes.health_report, level=level, round=round)
 
-                if num_found_nodes == num_nodes:
-                    _logger.info(f"Found {num_found_nodes}/{num_nodes} Nodes during Health Screen")
-                    break
+            if num_found_nodes == num_nodes:
+                _logger.info(f"Found {num_found_nodes}/{num_nodes} Nodes during Health Screen")
+                break
 
-                _logger.info(f"Attempt {attempt}/{max_attempts}: Found {num_found_nodes}/{num_nodes} Nodes - Will Check again in {sleep_time_s} seconds")
-                time.sleep(sleep_time_s)
-
-            num_found_nodes = system_mode.check_screen_complete(current_run_status=current_run_status, health_report=nodes.health_report, level=level, round=round, final_check=True)
-        else:
-            hosts = nodes.all_nodes
-            if len(nodes.launcher_nodes) > 0:
-                hosts = nodes.launcher_nodes
-
-            nodes.health_report.gather_health_report(level, remote_path="/tmp/ighs", hosts=hosts)
-            nodes.health_report.consolidate_health_report(level=level, report_dir=f"{log_dir}")
+            _logger.info(f"Attempt {attempt}/{max_attempts}: Found {num_found_nodes}/{num_nodes} Nodes - Will Check again in {sleep_time_s} seconds")
+            time.sleep(sleep_time_s)
+        num_found_nodes = system_mode.check_screen_complete(current_run_status=current_run_status, health_report=nodes.health_report, level=level, round=round, final_check=True)
 
         if level == 1:
             detected_nodes, infected_nodes, missing_nodes = nodes.health_report.extract_node_info()
             missing_nodes.update(set(nodes.all_nodes).difference(detected_nodes))
+            undetected_nodes = []
 
             nodes.health_report.update_health_report(detected_nodes=detected_nodes, infected_nodes=infected_nodes, missing_nodes=missing_nodes)
         elif level == 2:
             detected_nodes, infected_nodes, missing_nodes = nodes.health_report.extract_hccl_demo_info()
+            undetected_nodes = set(nodes.all_nodes).difference(detected_nodes)
+
             nodes.health_report.update_health_report(detected_nodes=detected_nodes, infected_nodes=infected_nodes, missing_nodes=missing_nodes)
 
             detected_nodes_l1, infected_nodes_l1, missing_nodes = nodes.health_report.extract_node_info()
@@ -74,13 +69,17 @@ def monitor_ighs_status(system_mode, level, nodes, job_path="tmp/jobs", log_dir=
         healthy_nodes  = sorted(list(healthy_nodes))
         missing_nodes  = sorted(list(missing_nodes))
         infected_nodes = sorted(list(infected_nodes))
+        nodes.update_node_status(healthy_nodes, infected_nodes, missing_nodes, undetected_nodes=undetected_nodes)
+
+        watch_nodes    = sorted(list(nodes.watch_nodes))
         detected_nodes = sorted(list(detected_nodes))
 
         if level == 1:
-            nodes.healthy_nodes = healthy_nodes
+            nodes.healthy_nodes = set(healthy_nodes)
 
         _logger.info(f"Infected {len(infected_nodes)} Node: {infected_nodes}")
         _logger.info(f"Missing {len(missing_nodes)} Node: {missing_nodes}")
+        _logger.info(f"Unverified {len(watch_nodes)} Node: {watch_nodes}")
         _logger.info(f"Healthy {len(healthy_nodes)} Node: {healthy_nodes}")
         _logger.info(f"Detected {len(detected_nodes)} Node: {detected_nodes}")
 
@@ -120,7 +119,6 @@ def main(args):
                                 hostfile=config_data["system-info"]["hostfile"],
                                 namespace=config_data["system-info"]["namespace"],
                                 log_dir=args.logs_dir)
-        monitor     = True
     elif config_data["system-info"]["type"] == "bare-metal":
 
         system_mode = BareMetalUtils(image=config_data["image"],
@@ -128,7 +126,6 @@ def main(args):
                                      ssh_path=config_data["system-info"]["ssh-path"],
                                      tcp_interface=config_data["system-info"]["tcp-interface"],
                                      log_dir=args.logs_dir)
-        monitor     = False
     else:
         _logger.error(f"system_mode: {system_mode} in {args.config} is not set correctly. system_mode has to be set to k8s or bare-metal")
         sys.exit(1)
@@ -146,54 +143,82 @@ def main(args):
     if args.screen:
         start_time = datetime.datetime.now()
 
-        intel_gaudi_nodes = IGNodes(health_report=health_report)
-        intel_gaudi_nodes.all_nodes = system_mode.collect_nodes(gaudi_node_label=config_data["gaudi-node-label"])
+        intel_gaudi_nodes             = IGNodes(health_report=health_report)
+        intel_gaudi_nodes.all_nodes   = system_mode.collect_nodes(gaudi_node_label=config_data["gaudi-node-label"])
+        intel_gaudi_nodes.watch_nodes = set(intel_gaudi_nodes.all_nodes)
+        healthy_nodes, infected_nodes, missing_nodes    = list(), list(), list()
+        occupied_nodes, missing_cards_nodes, misc_nodes = list(), list(), list()
 
         if config_data["level-1"]["run"]:
             _logger.info("Running Level 1 Checks: Card Diagnostics")
             if not os.path.exists(f"{health_report.f_dir}/L1"):
                 os.makedirs(f"{health_report.f_dir}/L1")
 
-            system_mode.initialize_node_jobs(level=1,
+            nodes_initialized = system_mode.initialize_node_jobs(level=1,
                                              nodes=intel_gaudi_nodes,
                                              job_base_path=job_path)
-            healthy_nodes, infected_nodes, missing_nodes = monitor_ighs_status(system_mode=system_mode,
-                                                                          level=1,
-                                                                          nodes=intel_gaudi_nodes,
-                                                                          job_path=job_path,
-                                                                          log_dir=args.logs_dir,
-                                                                          timeout_s=config_data["level-1"]["timeout_s"],
-                                                                          monitor=monitor)
-            system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
+            if nodes_initialized:
+                healthy_nodes, infected_nodes, missing_nodes = monitor_ighs_status(system_mode=system_mode,
+                                                                            level=1,
+                                                                            nodes=intel_gaudi_nodes,
+                                                                            timeout_s=config_data["level-1"]["timeout_s"])
+                occupied_nodes, missing_cards_nodes, misc_nodes = system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
+                system_mode.clear_ighs_pods()
 
-            system_mode.clear_ighs_pods()
+            summary = {
+                "level": 1,
+                "infected": infected_nodes,
+                "missing": missing_nodes,
+                "occupied": occupied_nodes,
+                "missing_cards": missing_cards_nodes,
+                "untested": misc_nodes,
+                "healthy": healthy_nodes
+            }
+
+            with open(f"{args.logs_dir}/ighs_L1_summary.json", 'w', encoding ='utf8') as f:
+                json.dump(summary, f, indent=4)
 
         if config_data["level-2"]["run"]:
             _logger.info("Running Level 2 Checks: Pair HCCL_DEMO All Reduce")
             if not os.path.exists(f"{health_report.f_dir}/L2"):
                 os.makedirs(f"{health_report.f_dir}/L2")
 
+            intel_gaudi_nodes.healthy_nodes = set()
+            intel_gaudi_nodes.watch_nodes = set(intel_gaudi_nodes.all_nodes)
+
             for i in range(config_data["level-2"]["num-rounds"]):
-                system_mode.initialize_node_jobs(level=2,
+                nodes_initialized = system_mode.initialize_node_jobs(level=2,
                                                  nodes=intel_gaudi_nodes,
                                                  job_base_path=job_path,
                                                  round=i)
+                if not nodes_initialized:
+                    _logger.info(f"Round {i}/{config_data['level-2']['num-rounds']}: No other Nodes to screen. Exit screening early.")
+                    break
+
                 healthy_nodes, infected_nodes, missing_nodes = monitor_ighs_status(system_mode=system_mode,
                                                                                 level=2,
                                                                                 nodes=intel_gaudi_nodes,
-                                                                                job_path=job_path,
-                                                                                log_dir=args.logs_dir,
                                                                                 timeout_s=config_data["level-2"]["timeout_s"],
-                                                                                round=i,
-                                                                                monitor=monitor)
-                system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
-
+                                                                                round=i)
+                occupied_nodes, missing_cards_nodes, misc_nodes = system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
                 system_mode.clear_ighs_pods(job_type="mpijobs")
 
-                if len(infected_nodes) == 0 and len(missing_nodes) == 0:
-                    _logger.info(f"Round {i}/{config_data['level-2']['num-rounds']}: No Infected or Missing Nodes found. Exit screening early.")
+                if len(intel_gaudi_nodes.watch_nodes) == 0:
+                    _logger.info(f"Round {i}/{config_data['level-2']['num-rounds']}: No other Nodes to screen. Exit screening early.")
                     break
 
+            summary = {
+                "level": 2,
+                "infected": infected_nodes,
+                "missing": missing_nodes,
+                "occupied": occupied_nodes,
+                "missing_cards": missing_cards_nodes,
+                "untested": misc_nodes,
+                "healthy": healthy_nodes
+            }
+
+            with open(f"{args.logs_dir}/ighs_L2_summary.json", 'w', encoding ='utf8') as f:
+                json.dump(summary, f, indent=4)
 
         end_time  = datetime.datetime.now()
         diff_time = (end_time - start_time)

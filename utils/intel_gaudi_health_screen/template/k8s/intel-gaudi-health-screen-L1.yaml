@@ -46,6 +46,10 @@ spec:
           volumeMounts:
             - name: mydir
               mountPath: /workdir
+          securityContext:
+            capabilities:
+              add:
+                - SYSLOG
           env:
             - name: IGHS_LEVEL
               value: "1"

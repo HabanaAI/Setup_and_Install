@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time, os, shutil, yaml, glob, json
+import time, os, shutil, yaml, glob, json, re
 import multiprocessing
 import logging
 
@@ -79,7 +79,8 @@ class KubeUtils(SystemUtils):
                              nodes,
                              job_base_path="tmp/jobs",
                              round=0):
-        update_val = {
+        nodes_initialized = False
+        update_val        = {
             "metadata-name": "",
             "round": round,
             "container-image": self.image,
@@ -100,13 +101,17 @@ class KubeUtils(SystemUtils):
             yaml_type                  = "mpijob"
             metadata_app               = "ighs-hccl"
 
-            if len(nodes.healthy_nodes) > 0:
-                nodes_to_test = nodes.healthy_nodes
-            else:
-                nodes_to_test = nodes.all_nodes.copy()
+            healthy_nodes = list(nodes.healthy_nodes.copy())
+            watch_nodes   = list(nodes.watch_nodes.copy())
 
-            node_groups, nodes.groups_tracker = find_groups(nodes_to_test, nodes.groups_tracker)
-            job_path                    = f"{job_base_path}/L2/r{round}"
+            node_groups, nodes.groups_tracker = find_groups(healthy_nodes, watch_nodes, nodes.groups_tracker)
+            nodes.current_node_groups         = node_groups
+            job_path                          = f"{job_base_path}/L2/r{round}"
+
+        if len(node_groups) == 0 :
+            _logger.warn(f"No Node Groups to test found during initialization")
+            return nodes_initialized
+
 
         for i, node_group in enumerate(node_groups):
             if level == 1:
@@ -134,6 +139,10 @@ class KubeUtils(SystemUtils):
         cwd = os.getcwd()
         p   = multiprocessing.Process(target=self.cp_ighs, args=(self.namespace,cwd, metadata_app)) 
         p.start()
+
+        nodes_initialized = True
+
+        return nodes_initialized
 
     def cp_ighs(self, namespace, cwd, metadata_app):
         pods_done = dict()
@@ -238,10 +247,10 @@ class KubeUtils(SystemUtils):
                 if len(output) == 0:
                     break
 
-                _logger.info(f"Attempt {attempts}: Pods are still up. Will wait 10 seconds to check again")
-                time.sleep(10)
+                _logger.info(f"Attempt {attempts}: Pods are still up. Will wait 5 seconds to check again")
+                time.sleep(5)
 
-    def check_screen_complete(self, current_run_status, health_report, level, round=0, final_check=False):
+    def check_screen_complete(self, current_run_status, health_report, level, round=0, job_path="tmp/jobs", final_check=False):
         if level == 1:
             metadata_app = "ighs"
             log_dir      = f"{self.log_dir}/L{level}"
@@ -310,7 +319,7 @@ class KubeUtils(SystemUtils):
         elif level == 2:
             num_nodes = 0
 
-            # L2 runs MPIJobs that containers 2 or 3 Nodes
+            # L2 runs MPIJobs that contains 2 nodes
             for k,v in current_run_status.items():
                 num_nodes += v[1]
 
@@ -356,6 +365,7 @@ class KubeUtils(SystemUtils):
         if(len(misc_list)):
             _logger.info(f"{len(misc_list)} Unaccounted Nodes: {misc_list}")
 
+        return in_use_list, missing_cards_list, misc_list
 
 
 class BareMetalUtils(SystemUtils):
@@ -388,6 +398,11 @@ class BareMetalUtils(SystemUtils):
         _logger.debug("Activating ssh-agent")
         cmd    = f"ssh-agent -s"
         output = run_cmd(cmd)
+        _OUTPUT_PATTERN = re.compile(r'SSH_AUTH_SOCK=(?P<SSH_AUTH_SOCK>[^;]+).*SSH_AGENT_PID=(?P<SSH_AGENT_PID>\d+)', re.MULTILINE | re.DOTALL)
+        match = _OUTPUT_PATTERN.search(output)
+        data  = match.groupdict()
+        os.environ['SSH_AUTH_SOCK'] = data['SSH_AUTH_SOCK']
+        os.environ['SSH_AGENT_PID'] = data['SSH_AGENT_PID']
 
         _logger.debug("Adding ighs private key to ssh-agent")
         cmd    = f"ssh-add {self.ssh_path}/ighs_rsa"
@@ -395,15 +410,16 @@ class BareMetalUtils(SystemUtils):
 
 
     def initialize_system(self):
+        _logger.info(f"Setting up ssh connection for hosts: {self.hosts}")
+        for h in self.hosts:
+            cmd    = f"ssh-copy-id -o StrictHostKeyChecking=no -i {self.ssh_path}/ighs_rsa.pub {os.environ['USER']}@{h}"
+            output = run_cmd(cmd,verbose=True)
+
         self.clear_ighs_pods()
         self.clear_ighs_pods(job_type="mpijobs")
         self.clear_jobs()
         self.clear_remote_jobs()
 
-        _logger.info(f"Setting up ssh connection for hosts: {self.hosts}")
-        for h in self.hosts:
-            cmd    = f"ssh-copy-id -o StrictHostKeyChecking=no -i {self.ssh_path}/ighs_rsa.pub {os.environ['USER']}@{h}"
-            output = run_cmd(cmd)
 
         self.initialize_ssh()
         copy_files(src="../", dst=f"{self.remote_path}", exclude={"logs", "ssh", "tmp"}, hosts=self.hosts)
@@ -418,7 +434,8 @@ class BareMetalUtils(SystemUtils):
                              nodes,
                              job_base_path="tmp/jobs",
                              round=0):
-        update_val = {
+        nodes_initialized = False
+        update_val        = {
             "metadata-name": "",
             "round": round,
             "container-image": self.image,
@@ -433,15 +450,18 @@ class BareMetalUtils(SystemUtils):
             node_groups                = nodes.all_nodes
             job_path                   = f"{job_base_path}/L1"
         elif level == 2:
-            if len(nodes.healthy_nodes) > 0:
-                nodes_to_test = [n.replace("ighs-","").replace(":48","") for n in nodes.healthy_nodes]
-            else:
-                nodes_to_test = nodes.all_nodes.copy()
+            healthy_nodes = list(nodes.healthy_nodes.copy())
+            watch_nodes   = list(nodes.watch_nodes.copy())
 
-            node_groups, nodes.groups_tracker = find_groups(nodes_to_test, nodes.groups_tracker)
+            node_groups, nodes.groups_tracker = find_groups(healthy_nodes, watch_nodes, nodes.groups_tracker)
+            nodes.current_node_groups         = node_groups
             job_path                          = f"{job_base_path}/L2/r{round}"
             nodes.launcher_nodes              = list()
             nodes.worker_nodes                = list()
+
+        if len(node_groups) == 0:
+            _logger.warn(f"No Node Groups to test found during initialization")
+            return nodes_initialized
 
         self.update_yaml_job(source_file="config.yaml", out_dir="tmp", out_file="config.yaml", yaml_type="config")
         for i, node_group in enumerate(node_groups):
@@ -497,11 +517,16 @@ class BareMetalUtils(SystemUtils):
                 f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_workers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-worker.yaml build",
                 f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_workers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-worker.yaml up -d --remove-orphans",
                 f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-launcher.yaml build",
-                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-launcher.yaml up --remove-orphans"
+                f"pdsh -w ^{job_base_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-launcher.yaml up -d --remove-orphans"
             ]
 
             for cmd in cmd_list:
-                output = run_cmd(cmd).strip()
+                verbose = ("up" in cmd)
+                output = run_cmd(cmd, verbose=verbose).strip()
+
+        nodes_initialized = True
+
+        return nodes_initialized
 
     def update_yaml_job(self,
                         source_file="template/bare-metal/intel-gaudi-docker-compose-L1.yaml",
@@ -571,6 +596,96 @@ class BareMetalUtils(SystemUtils):
     def clear_remote_jobs(self):
         cmd    = f"{self.pdsh_cmd} rm -R /tmp/ighs/jobs/"
         output = run_cmd(cmd)
+
+    def check_screen_complete(self, current_run_status, health_report, level, round=0, job_path="tmp/jobs", final_check=False):
+        docker_status_cmd = "ps -a --format json --filter status=exited"
+
+        if level == 1:
+            log_dir          = f"{self.log_dir}/L{level}"
+            docker_compose_f = f"{self.remote_path}/jobs/L1/intel-gaudi-docker-compose-L1.yaml"
+            cmd              = f"{self.docker_compose_cmd} -f {docker_compose_f} {docker_status_cmd}"
+        elif level == 2:
+            log_dir          = f"{self.log_dir}/L{level}/r{round}"
+            docker_compose_f = f"{self.remote_path}/jobs/L2/r{round}/intel-gaudi-docker-compose-L2-launcher.yaml"
+            cmd              = f"pdsh -w ^{job_path}/L2/r{round}/hostfile_launchers {self.docker_compose_alias} -f {docker_compose_f} {docker_status_cmd}"
+
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        check_log_cmd = f"{self.docker_compose_alias} -f {docker_compose_f} logs"
+
+        output = run_cmd(cmd).strip()
+        pods   = output.split("\n")
+
+        for p in pods:
+            if ":" not in p:
+                continue
+
+            colon_index = p.index(":")
+            name = p[:colon_index]
+            data_txt = p[colon_index+1:]
+
+            data = json.loads(data_txt)
+
+            if data["State"] == "exited":
+                cmd = f"ssh {name} {check_log_cmd}"
+                output = run_cmd(cmd).strip().split("\n")
+
+                start_analyze = False
+                for l in output:
+                    if "START of Node Report" in l:
+                        start_analyze = True
+                        continue
+                    elif "END of Node Report" in l:
+                        start_analyze = False
+                        continue
+
+                    #### analyze output
+                    if start_analyze:
+                        # Ignore Logger output level
+                        bracket_index = l.index("{")
+                        node_status_txt = l[bracket_index:]
+                        status_dict = json.loads(node_status_txt)
+
+                        if not name in current_run_status:
+                            if level == 1:
+                                health_report.write_rows(data=status_dict["cards"], level=level)
+                                current_run_status[name] = True
+                            elif level == 2:
+                                health_report.write_rows(data=[status_dict], level=level)
+                                current_run_status[name] = (True, status_dict["num_nodes"])
+                                name = f"ighs-hccl-r{status_dict['round']}-{status_dict['group_id']}"
+
+                            with open(f"{log_dir}/{name}.json", 'w', encoding ='utf8') as f:
+                                json.dump(status_dict, f, indent=4)
+                            with open(f"{log_dir}/{name}.log", 'w', encoding ='utf8') as f:
+                                f.write('\n'.join(output))
+            elif level==2 and final_check:
+                cmd = f"ssh {name} {check_log_cmd}"
+                output = run_cmd(cmd).strip().split("\n")
+
+                if not name in current_run_status:
+                    hccL_results = hccl_demo_check(job_id=name, health_report=health_report, hccl_log=output, write=False)
+                    f_name = f"ighs-hccl-r{hccL_results['round']}-{hccL_results['group_id']}"
+
+                    with open(f"{log_dir}/{f_name}.json", 'w', encoding ='utf8') as f:
+                        json.dump(hccL_results, f, indent=4)
+                    with open(f"{log_dir}/{f_name}.log", 'w', encoding ='utf8') as f:
+                        f.write('\n'.join(output))
+
+                    health_report.write_rows(data=[hccL_results], level=level)
+                    current_run_status[name] = (True, hccL_results["num_nodes"])
+
+        if level == 1:
+            num_nodes = len(current_run_status)
+        elif level == 2:
+            num_nodes = 0
+
+            # L2 runs MPIJobs that contains 2 nodes
+            for k,v in current_run_status.items():
+                num_nodes += v[1]
+
+        return num_nodes
 
     def diagnose_unhealthy_nodes(self, infected_nodes, missing_nodes):
         pass

@@ -57,7 +57,7 @@ def create_logger(logger_name, logger_file_name, f_path="", level=logging.INFO, 
 
     file_path = f"{f_path}/{logger_file_name}.log" if f_path != "" else f"logs/{date_format}/{date_format}_{time_format}/{logger_file_name}.log"
     d_path    = os.path.dirname(file_path)
-    print(f"d_path: {d_path} file_path: {file_path}")
+    _logger.debug(f"d_path: {d_path} file_path: {file_path}")
 
     if(not os.path.exists(d_path)):
         os.makedirs(d_path)

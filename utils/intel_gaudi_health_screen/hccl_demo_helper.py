@@ -15,99 +15,117 @@ import random, math, os, yaml, glob, json
 import logging
 _logger = logging.getLogger("health_screener")
 
-def find_groups(nodes_to_test, groups_tracker):
+def find_groups(healthy_nodes, watch_nodes, groups_tracker):
     """ Find a list of node groups to run hccl_demo all reduce test
 
     Args:
-        nodes_to_test ([str]): Nodes list used to create a group of nodes for hccl_demo
+        healthy_nodes ([str]): Nodes that previously passed a pair testing of hccl_demo
+        watch_nodes ([str]): Nodes that haven't has a passing round of hccl_demo
         groups_tracker ([str]): History of used groups. A group has to be unique
 
     Returns:
         ([str],[str]): Unique list of groups of nodes, History of used groups
     """
-    random.shuffle(nodes_to_test)
+    random.shuffle(healthy_nodes)
+    random.shuffle(watch_nodes)
 
     found_unique      = True
-    num_nodes         = len(nodes_to_test)
+    num_nodes         = len(healthy_nodes) + len(watch_nodes)
     node_groups       = list()
     max_num_groups    = num_nodes // 2
     max_combinations  = (math.factorial(num_nodes)) / (math.factorial(num_nodes-2) * 2)
-    _logger.debug(f"nodes_to_test {len(nodes_to_test)}: {nodes_to_test}")
+    max_attempts      = 10
 
-    def add_unique_group_id(interval=2):
-        nonlocal node_groups, nodes_to_test
-        i            = 1
-        max_attempts = 10
-        found_unique = False
+    if num_nodes == 1:
+        _logger.warn(f"Need more than 1 Node to test pair all_reduce")
+        return False
+
+    while len(node_groups) < max_num_groups and found_unique:
+        i            = 0
+        h_i, w_i     = 0,0
 
         if len(groups_tracker) >= max_combinations:
             _logger.info(f"Reached maximum combinations {max_combinations} for {num_nodes} Nodes")
-            return found_unique
+            break
 
-        node_group, group_id = find_group_id(nodes_to_test, i, interval=interval)
+        node_group, group_id, (h_i, w_i) = find_group_id(healthy_nodes, watch_nodes, h_i, w_i)
+
+        if node_group[0] == node_group[1]:
+            _logger.info(f"Found duplicate nodes in node_group {node_group}. Exiting group id search")
+            found_unique = False
+            break
 
         while group_id in groups_tracker:
             if i > max_attempts:
                 _logger.warn(f"Max attempt {max_attempts} reached for finding unique pair combination.")
-                return found_unique
+                found_unique = False
+                break
 
-            node_group, group_id = find_group_id(nodes_to_test, i, interval=interval)
-            if group_id == "":
-                return found_unique
+            node_group, group_id, (h_i, w_i) = find_group_id(healthy_nodes, watch_nodes, h_i, w_i)
+            if group_id == "" and node_group[0] == node_group[1]:
+                found_unique = False
+                break
 
             i += 1
 
-        found_unique = True
-        groups_tracker.append(group_id)
-        node_groups.append(node_group)
+        if found_unique:
+            groups_tracker.append(group_id)
+            node_groups.append(node_group)
 
-        for n in node_group:
-            nodes_to_test.remove(n)
+            for n in node_group:
+                if n in healthy_nodes:
+                    healthy_nodes.remove(n)
+                if n in watch_nodes:
+                    watch_nodes.remove(n)
 
-        return found_unique
-
-
-    if num_nodes == 1:
-        _logger.warn(f"Need more than 1 Node to test all_reduce")
-        return False
-
-    if num_nodes % 2 != 0:
-        # Ensures that every node has a group to test.
-        found_unique = add_unique_group_id(interval=3)
-
-    while len(node_groups) < max_num_groups and found_unique:
-        found_unique = add_unique_group_id()
-
-        if not found_unique:
-            _logger.debug(f"Finished searching for Unique pair combinations")
+        if len(watch_nodes) == 0:
             break
 
     return node_groups, groups_tracker
 
-def find_group_id(nodes_to_test, start, interval=2):
+def find_group_id(healthy_nodes, watch_nodes, h_i=0, w_i=0):
     """ Finds a group of nodes and combines to form a group id
 
     Args:
-        nodes_to_test ([str]): Viable node list
-        start (int): Index of next potential node id
-        interval (int, optional): The size of the group id. Most common is pairs of nodes. Defaults to 2.
+        healthy_nodes ([str]): Nodes that previously passed a pair testing of hccl_demo
+        watch_nodes ([str]): Nodes that haven't has a passing round of hccl_demo
+        h_i (int): Index of next potential node id for healthy_nodes
+        w_i (int): Index of next potential node id for watch_nodes
 
     Returns:
         ([str], str): Potential nodes and their group id
     """
-    group_id = ""
+    group_id    = ""
+    node_group  = []
+    max_attempt = 10
 
-    if len(nodes_to_test) == 0:
-        return [], group_id
+    # Goal of testing is to test watch_nodes and pair it with a healhty_node if available
+    if len(watch_nodes) == 0 or (len(watch_nodes) == 1 and len(healthy_nodes)==0):
+        return node_group, group_id, (h_i, w_i)
 
-    node_group = [nodes_to_test[0]]
-    node_group.extend(nodes_to_test[start:start+interval-1])
+    for i in range(max_attempt):
+        if len(watch_nodes) and w_i < len(watch_nodes):
+            node_group.append(watch_nodes[w_i])
+            w_i += 1
+        if len(healthy_nodes) and h_i < len(healthy_nodes):
+            node_group.append(healthy_nodes[h_i])
+            h_i += 1
+
+        if h_i > len(healthy_nodes):
+            random.shuffle(healthy_nodes)
+            h_i = 0
+        if w_i > len(watch_nodes):
+            random.shuffle(watch_nodes)
+            w_i = 0
+
+        if len(node_group) >= 2:
+            break
 
     if len(node_group) > 1:
         node_group.sort()
-        group_id = "".join(node_group)
+        group_id = "-".join(node_group)
 
-    return node_group, group_id
+    return node_group, group_id, (h_i, w_i)
 
 def gather_hccl_logs(job_path, round, log_dir, health_report):
     """ Retrieve hccl_demo log files based on the job yamls executed

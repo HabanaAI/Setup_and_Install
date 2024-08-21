@@ -12,6 +12,7 @@ CMD="python ${WORK_DIR}/run_hccl_demo.py \
 --test all_reduce \
 --loop 1000 \
 --size 32m \
+-clean \
 -mpi ";
 
 mkdir -p $HOME_DIR/$LOG_DIR/L2/$ROUND/;
@@ -35,6 +36,6 @@ $CMD \
 2>&1 | ts '[%Y-%m-%d %H:%M:%S]' | tee -a $HOME_DIR/$LOG_DIR/L2/$ROUND/$JOB_ID.log;
 
 cd ${HOME_DIR};
-python $HOME_DIR/screen.py --ighs-check hccl-demo --logs-dir $LOG_DIR --job-id $JOB_ID --target-nodes $TARGET_NODES --node-name $MY_NODE_NAME;
+python $HOME_DIR/screen.py --ighs-check hccl-demo --logs-dir $LOG_DIR --job-id $JOB_ID --target-nodes $TARGET_NODES --round $ROUND;
 
 chmod 777 -R $HOME_DIR/$LOG_DIR

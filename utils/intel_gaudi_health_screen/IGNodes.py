@@ -28,18 +28,68 @@ class IGNodes():
         Args:
             health_report (HealthReport, optional): IGHS Health Report. Defaults to creating a new HealthReport().
         """
-        self.all_nodes      = list()
-        self.launcher_nodes = list()
-        self.worker_nodes   = list()
-        self.healthy_nodes  = list()
-        self.infected_nodes = list()
+        self.all_nodes           = list()
+        self.launcher_nodes      = list()
+        self.worker_nodes        = list()
+        self.healthy_nodes       = set()
+        self.watch_nodes         = set()
+        self.infected_nodes      = set()
+        self.missing_nodes       = set()
 
-        self.groups_tracker = list()
+        self.groups_tracker      = list()
+        self.current_node_groups = list()
 
-        self.health_report  = health_report
-        self.log_dir        = health_report.f_dir
+        self.health_report       = health_report
+        self.log_dir             = health_report.f_dir
 
+    def update_node_status(self, healthy_nodes, infected_nodes, missing_nodes, undetected_nodes=[]):
+        """Update the node lists status based on current node groups. If a node
+        paring fails with known healthy node, then the other node is considered
+        infected. Otherwise it will be moved to the healthy node list
 
+        Args:
+            healthy_nodes ([str]): List of Healthy nodes that pass IGHS testing
+            infected_nodes ([str]): List of nodes that failed to pass IGHS testing
+            missing_nodes ([str]): List of nodes that IGHS did not run testing on
+            undetected_nodes ([str]): List of nodes that IGHS did not run testing on b/c it wasn't scheduled on
+        """
+        watch_nodes       = self.watch_nodes.copy()
+
+        # Remove Nodes that haven't been tested yet from the healthy list
+        for n in undetected_nodes:
+            if n in watch_nodes and n in healthy_nodes:
+                healthy_nodes.remove(n)
+
+        self.healthy_nodes.update(healthy_nodes)
+
+        for group in self.current_node_groups:
+            n1, n2 = group
+            self.determine_node_health(infected_nodes, missing_nodes, n1, n2)
+            self.determine_node_health(infected_nodes, missing_nodes, n2, n1)
+
+        self.watch_nodes  = self.watch_nodes.difference(self.healthy_nodes)
+
+    def determine_node_health(self, infected_nodes, missing_nodes, n1, n2):
+        """Determine whether a node is healthy .
+
+        Args:
+            infected_nodes ([str]): List of nodes that failed to pass IGHS testing
+            missing_nodes ([str]): List of nodes that IGHS did not run testing on
+            n1 (str): Node name to investigate if it passes the IGHS test
+            n2 (str): Node name that should be considered healthy. This assist in verifying status of N1
+        """
+        if n2 in self.healthy_nodes:
+            remove_from_watch = False
+
+            if n1 in infected_nodes:
+                self.infected_nodes.add(n1)
+                remove_from_watch = True
+            if n1 in missing_nodes:
+                self.missing_nodes.add(n1)
+                remove_from_watch = True
+
+            if remove_from_watch and n1 in self.watch_nodes:
+                self.watch_nodes.remove(n1)
 
 class IGNode():
 
@@ -83,6 +133,14 @@ class IGNode():
 
         self.cards = dict(sorted(self.cards.items()))
 
+    def record_dmesg(self):
+        cmd    = f"dmesg -T"
+        output = run_cmd(cmd)
+
+        self.logger.info("***** START of DMESG *****")
+        self.logger.info(output)
+        self.logger.info("***** END of DMESG *****")
+
     def health_check(self, target_cards=[], write_report=False):
         checked_cards = list()
         processes     = list()
@@ -107,9 +165,10 @@ class IGNode():
             checked_cards.append(card)
             self.logger.info(card)
 
+        self.record_dmesg()
         self.write_json(checked_cards)
         if(write_report):
-            self.health_report.write_rows(node_id=self.name, cards=checked_cards)
+            self.health_report.write_rows(data=checked_cards)
 
     def write_json(self, cards):
         node_status = dict()
@@ -147,10 +206,11 @@ class IGCard():
         self.multi_node_fail           = False
         self.is_infected               = False
 
-        self.external_ports            = [1, 8, 9]
-        self.incorrect_ports_direction = list()
+        self.internal_ports            = list()
+        self.external_ports            = list()
 
     def check_health(self,num_checks_link_state=10, checked_cards=[]):
+        self.check_port_type()
         self.check_link_state(attempts=num_checks_link_state, sleep_sec=0.2)
         self.check_device_acquire_fail()
         self.check_temperature_state()
@@ -159,7 +219,10 @@ class IGCard():
 
     def check_link_state(self, attempts=10, sleep_sec=0.5):
         self.logger.debug(f"Checking {self.pci_address} Link State. Will check {attempts} times")
-        cmd = f"hl-smi -n link -i {self.pci_address}"
+        all_ports = self.internal_ports + self.external_ports
+        all_ports_txt = ",".join(all_ports)
+
+        cmd = f"hl-smi -n link -i {self.pci_address} -P {all_ports_txt}"
         down_links = set()
 
         for a in range(attempts):
@@ -179,30 +242,21 @@ class IGCard():
         return self.down_links
 
 
-    def check_port_direction(self):
-        self.logger.debug(f"Checking {self.pci_address} Port Directions")
+    def check_port_type(self):
+        self.logger.debug(f"Checking {self.pci_address} Port Types (Internal|External)")
 
-        incorrect_ports_direction = list()
         cmd    = f"hl-smi -n ports -i {self.pci_address}"
         output = run_cmd(cmd)
+        output_list = output.strip().split("\n")
 
-        ports_direction = output.strip().split("\n")
-        if ports_direction[-1] == "":
-            ports_direction.pop()
+        for output in output_list:
+            port_txt, port_type = output.split(":")
+            port = port_txt.split(" ")[1]
 
-        for i, direction in enumerate(ports_direction):
-            if i in self.external_ports:
-                if "internal" in direction:
-                    incorrect_ports_direction.append(i)
-                    self.is_infected = True
+            if "external" in port_type:
+                self.external_ports.append(port)
             else:
-                if "external" in direction:
-                    incorrect_ports_direction.append(i)
-                    self.is_infected = True
-
-        self.incorrect_ports_direction = incorrect_ports_direction
-
-        return incorrect_ports_direction
+                self.internal_ports.append(port)
 
     def check_device_acquire_fail(self):
         self.logger.debug(f"Checking {self.pci_address} for Device Acquire Issues")

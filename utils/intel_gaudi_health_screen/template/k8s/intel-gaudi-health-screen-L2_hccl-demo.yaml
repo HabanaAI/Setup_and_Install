@@ -28,6 +28,10 @@ spec:
               volumeMounts:
                 - name: mydir
                   mountPath: /workdir
+              securityContext:
+                capabilities:
+                  add:
+                    - SYSLOG
               env:
                 - name: JOB_ID
                   valueFrom:
@@ -116,6 +120,10 @@ spec:
             - image: template-container-image
               name: ighs-worker
               imagePullPolicy: IfNotPresent
+              securityContext:
+                capabilities:
+                  add:
+                    - SYSLOG
               resources:
                 limits:
                   habana.ai/gaudi: 8

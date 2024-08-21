@@ -134,3 +134,11 @@ To run a full IGHS test, run the below command:
 # Will check Level 1 and 2 by default
 python screen.py --initialize --screen
 ```
+
+IGHS can alternatively be run through below script:
+
+``` bash
+# Creates IGHS Report and screens clusters for any infected nodes.
+# Will check Level 1 and 2 by default
+./run_ighs.sh
+```
