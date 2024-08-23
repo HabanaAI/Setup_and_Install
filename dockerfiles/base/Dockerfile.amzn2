@@ -55,7 +55,7 @@ ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana AWS Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/AmazonLinux2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/api/v2/repositories/AmazonLinux2/keyPairs/primary/public" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN yum makecache && \
     yum install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".amzn2 && \

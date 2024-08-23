@@ -149,10 +149,10 @@ system-info:
   tcp-interface: "10.3.124.0/24"
 
 # Image to run Intel Gaudi Health Screen
-image: "vault.habana.ai/gaudi-docker/1.16.0/ubuntu22.04/habanalabs/pytorch-installer-2.2.2:latest"
+image: "vault.habana.ai/gaudi-docker/1.17.0/ubuntu22.04/habanalabs/pytorch-installer-2.3.1:latest"
 
 # Node Label used to identify a Intel Gaudi Node
-gaudi-node-label: "ighs_label=gaudi"
+gaudi-node-label: "habana.ai/gaudi:NoSchedule"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"
@@ -236,7 +236,7 @@ system-info:
 image: "vault.habana.ai/gaudi-docker/1.17.0/ubuntu22.04/habanalabs/pytorch-installer-2.3.1:latest"
 
 # Node Label used to identify a Intel Gaudi Node
-gaudi-node-label: "brightcomputing.com/node-category=gaudi"
+gaudi-node-label: "habana.ai/gaudi:NoSchedule"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"

@@ -80,7 +80,7 @@ ENV FI_EFA_USE_DEVICE_RDMA=1
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana RH8 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.6" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/8/8.6/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/api/v2/repositories/rhel/keyPairs/primary/public" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN echo "[powertools]" > /etc/yum.repos.d/powertools.repo && \
     echo "name=powertools" >> /etc/yum.repos.d/powertools.repo && \
