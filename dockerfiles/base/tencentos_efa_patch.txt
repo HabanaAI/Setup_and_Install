@@ -1,5 +1,5 @@
 diff --git a/common.sh b/common.sh
-index cae76fc..afe440a 100755
+index 3c3a0e4..b463f42 100755
 --- a/common.sh
 +++ b/common.sh
 @@ -50,6 +50,15 @@ has_substring() {
@@ -18,70 +18,88 @@ index cae76fc..afe440a 100755
  is_amazon_linux_2() {
  	. /etc/os-release
  	if [ "$NAME" = "Amazon Linux" ] && [ "$VERSION_ID" = "2" ]; then
-@@ -183,7 +192,7 @@ is_suse_15() {
+@@ -164,7 +173,7 @@ is_suse_15() {
  }
 
  install_cmd() {
--	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_centos_8 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_centos_8 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
  		if [ $1 == "localinstall" ]; then
  			shift
- 			if is_centos_8; then
-@@ -207,7 +216,7 @@ install_cmd() {
+ 			yum -y localinstall $@
+@@ -181,7 +190,7 @@ install_cmd() {
  	fi
  }
  search_cmd() {
--	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_centos_8 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_centos_8 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
  		yum list installed $@
  	elif is_suse_15; then
  		zypper search --installed-only --match-exact $@
-@@ -219,7 +228,7 @@ search_cmd() {
- 	fi
+@@ -194,7 +203,7 @@ search_cmd() {
  }
  remove_cmd() {
--	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_centos_8 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_centos_8 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
- 		yum -y remove $@
- 	elif is_suse_15; then
- 		zypper remove -y $@
+ 	# we don't remove the dependencies of the efa packages as it may have reverse dependencies on other system packages
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15 || is_tencentos_3; then
+ 		rpm --erase --nodeps $@
+ 	elif is_debian_10 || is_debian_11 || is_ubuntu_2004 || is_ubuntu_2204 || is_ubuntu_2404; then
+ 		# purge is identical to remove except that packages are removed and purged
+@@ -207,7 +216,7 @@ remove_cmd() {
+ }
+ # Get the list of file installed by the package name
+ query_file_list_cmd() {
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15 || is_tencentos_3; then
+ 		rpm -ql $@
+ 	elif is_debian_10 || is_debian_11 || is_ubuntu_2004 || is_ubuntu_2204 || is_ubuntu_2404; then
+ 		dpkg -L $@
+@@ -220,7 +229,7 @@ query_file_list_cmd() {
+ # reverse dependencies (some other installed packages depend on them)
+ # this command will return non-zero
+ remove_dryrun_cmd() {
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15 || is_tencentos_3; then
+ 		rpm --erase --test $@
+ 	elif is_debian_10 || is_debian_11 || is_ubuntu_2004 || is_ubuntu_2204 || is_ubuntu_2404; then
+ 		dpkg -r --dry-run $@
 diff --git a/efa_installer.sh b/efa_installer.sh
-index 35a3628..5e94a21 100755
+index 544673f..faf3369 100755
 --- a/efa_installer.sh
 +++ b/efa_installer.sh
-@@ -49,7 +49,7 @@ EOF
+@@ -97,7 +97,7 @@ select_mpi() {
  }
 
  detect_os() {
--	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
  		PACKAGE_TYPE="rpm"
  		KERNEL_SEARCH_STRING=kernel
  		INSTALL_ARGS="--setopt=skip_missing_names_on_install=False"
-@@ -170,7 +170,7 @@ setup_install_package_paths() {
- 		if is_centos_7 || is_rhel_7; then
- 			base_dir="RPMS/CENT7/${arch}"
- 			debug_dir="RPMS/CENT7/${arch}/debug"
--		elif is_rhel_8 || is_rockylinux_8; then
-+		elif is_rhel_8 || is_rockylinux_8 || is_tencentos_3; then
+@@ -209,7 +209,7 @@ setup_install_package_paths() {
+ 	local kmod_path
+
+ 	if [ "${PACKAGE_TYPE}" = "rpm" ]; then
+-		if is_rhel_8 || is_rockylinux_8; then
++		if is_rhel_8 || is_rockylinux_8|| is_tencentos_3; then
  			base_dir="RPMS/ROCKYLINUX8/${arch}"
  			debug_dir="RPMS/ROCKYLINUX8/${arch}/debug"
  		elif is_rockylinux_9 || is_rhel_9; then
-@@ -390,7 +390,7 @@ install_apt_package() {
+@@ -465,7 +465,7 @@ install_apt_package() {
  install_dependencies() {
  	local packages
 
--	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
  		packages="pciutils rpmdevtools"
  		if [ ${SKIP_KMOD} -eq 0 ]; then
  			for kernel in ${INSTALLED_KERNELS[@]}; do
-@@ -642,7 +642,7 @@ uninstall_efa() {
+@@ -785,7 +785,7 @@ uninstall_efa() {
 
  uninstall_old_efa_packages() {
  	# Uninstall 'openmpi' and 'libfabric' if packaged by AWS.
--	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_centos_7 || is_rhel_7 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 | is_tencentos_3; then
+-	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
  		for pkg in openmpi libfabric libfabric-debuginfo; do
  			rpm -ql $pkg | grep -q /opt/amazon
  			if [ $? -eq 0 ]; then

@@ -1,0 +1,12 @@
+{
+    "model":"meta-llama/Llama-2-7b-hf",
+    "tokenizer":"meta-llama/Llama-2-7b-hf",
+    "disable_log_requests": "false",
+    "gpu_memory_utilization": 0.5,
+    "enforce_eager": "true",
+    "max_num_seqs": 512,
+    "swap_space": 16,
+    "dtype": "bfloat16",
+    "tensor_parallel_size": 1,
+    "max_num_batched_tokens": 8192
+}

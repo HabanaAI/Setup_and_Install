@@ -25,7 +25,7 @@ This folder contains some Intel Gaudi utility scripts that users can access as r
 
 ## manage_network_ifs
 
-Moved to habanalabs-qual Example: (/opt/habanalabs/qual/gaudi2/bin/manage_network_ifs.sh).
+Moved to habanalabs-qual Example: (/opt/habanalabs/qual/gaudi2/bin/manage_network_ifs.sh or /opt/habanalabs/qual/gaudi3/bin/manage_network_ifs.sh).
 
 This script can be used as reference to bring up, take down, set IPs, unset IPs and check for status of the Intel Gaudi network interfaces.
 
@@ -38,8 +38,10 @@ options:
        --up         toggle up all Intel Gaudi network interfaces
        --down       toggle down all Intel Gaudi network interfaces
        --status     print status of all Intel Gaudi network interfaces
-       --set-ip     set IP for all internal Intel Gaudi network interfaces
-       --unset-ip   unset IP from all internal Intel Gaudi network interfaces
+       --set-pfc    set PFC (enabled=0,1,2,3)
+       --unset-pfc  unset PFC (enabled=none)
+       --check-pfc  dump PFC configuration
+       --no-progbar do not show progress bar
   -v,  --verbose    print more logs
   -h,  --help       print this help
 
@@ -56,7 +58,6 @@ Use the following command to bring all Intel Gaudi network interfaces online:
 ```
 sudo manage_network_ifs.sh --up
 ```
-Once all the Intel Gaudi interfaces are toggled up, IPs will be set by default. Please refer [Set Ip](#set-ip) for more detail. To unset IPs, run this script with '--unset-ip'
 ### Down
 
 Use the following command to bring all Intel Gaudi network interfaces offline:
@@ -69,18 +70,24 @@ Print the current operational state of all Intel Gaudi network interfaces such a
 ```
 sudo manage_network_ifs.sh --status
 ```
-### Set IP
+### Set PFC
 
-Use the following command to assign a default IP for all Intel Gaudi network interfaces:
+Use the following command to set PFC for all Intel Gaudi network interfaces:
 ```
-sudo manage_network_ifs.sh --set-ip
+sudo manage_network_ifs.sh --set-pfc
 ```
-Note: Default IPs are 192.168.100.1, 192.168.100.2, 192.168.100.3 and so on
-### Unset IP
+### Unset PFC
 
-Remove IP from all available Intel Gaudi network interfaces by the following command:
+Use the following command to unset PFC for all Intel Gaudi network interfaces:
 ```
-sudo manage_network_ifs.sh --unset-ip
+sudo manage_network_ifs.sh --unset-pfc
+```
+
+### Check current PFC configuration
+
+Use the following command to check current PFC status for all Intel Gaudi network interfaces:
+```
+sudo manage_network_ifs.sh --check-pfc
 ```
 
 ## check_framework_env

@@ -14,7 +14,7 @@ import os, datetime, yaml, sys, time, json
 import argparse
 import logging
 
-from utilities import download_repos, clear_ighs_pods, create_logger, get_logging_level
+from utilities import download_repos, create_logger, get_logging_level
 from hccl_demo_helper import hccl_demo_check
 from system_utils import KubeUtils, BareMetalUtils
 
@@ -77,11 +77,11 @@ def monitor_ighs_status(system_mode, level, nodes, timeout_s=240, round=0):
         if level == 1:
             nodes.healthy_nodes = set(healthy_nodes)
 
-        _logger.info(f"Infected {len(infected_nodes)} Node: {infected_nodes}")
+        _logger.info(f"Detected {len(detected_nodes)} Node: {detected_nodes}")
+        _logger.info(f"  Healthy {len(healthy_nodes)} Node: {healthy_nodes}")
+        _logger.info(f"  Infected {len(infected_nodes)} Node: {infected_nodes}")
         _logger.info(f"Missing {len(missing_nodes)} Node: {missing_nodes}")
         _logger.info(f"Unverified {len(watch_nodes)} Node: {watch_nodes}")
-        _logger.info(f"Healthy {len(healthy_nodes)} Node: {healthy_nodes}")
-        _logger.info(f"Detected {len(detected_nodes)} Node: {detected_nodes}")
 
         return healthy_nodes, infected_nodes, missing_nodes
 
@@ -101,7 +101,7 @@ def main(args):
     ighs_log_dir     = args.logs_dir
 
     if args.node_name:
-        ighs_level       = os.environ["IGHS_LEVEL"]
+        ighs_level       = os.environ["IGHS_LEVEL"] if "IGHS_LEVEL" in os.environ else 1
         ighs_report_name = f"health_report_{args.node_name}.csv"
         ighs_log_dir     = f"{args.logs_dir}/L{ighs_level}"
 
@@ -111,18 +111,21 @@ def main(args):
     with open(args.config, 'r') as f:
         config_data = yaml.safe_load(f)
 
+    hostfile = ""
+    if "hostfile" in config_data["system-info"]:
+        hostfile = config_data["system-info"]["hostfile"]
+
     log_level  = get_logging_level(config_data["log-level"])
     _logger, _ = create_logger(logger_name="health_screener", logger_file_name="screener", f_path=args.logs_dir, level=log_level)
 
     if config_data["system-info"]["type"] == "k8s":
         system_mode = KubeUtils(image=config_data["image"],
-                                hostfile=config_data["system-info"]["hostfile"],
+                                hostfile=hostfile,
                                 namespace=config_data["system-info"]["namespace"],
                                 log_dir=args.logs_dir)
     elif config_data["system-info"]["type"] == "bare-metal":
-
         system_mode = BareMetalUtils(image=config_data["image"],
-                                     hostfile=config_data["system-info"]["hostfile"],
+                                     hostfile=hostfile,
                                      ssh_path=config_data["system-info"]["ssh-path"],
                                      tcp_interface=config_data["system-info"]["tcp-interface"],
                                      log_dir=args.logs_dir)
@@ -145,7 +148,6 @@ def main(args):
 
         intel_gaudi_nodes             = IGNodes(health_report=health_report)
         intel_gaudi_nodes.all_nodes   = system_mode.collect_nodes(gaudi_node_label=config_data["gaudi-node-label"])
-        intel_gaudi_nodes.watch_nodes = set(intel_gaudi_nodes.all_nodes)
         healthy_nodes, infected_nodes, missing_nodes    = list(), list(), list()
         occupied_nodes, missing_cards_nodes, misc_nodes = list(), list(), list()
 
@@ -162,7 +164,7 @@ def main(args):
                                                                             level=1,
                                                                             nodes=intel_gaudi_nodes,
                                                                             timeout_s=config_data["level-1"]["timeout_s"])
-                occupied_nodes, missing_cards_nodes, misc_nodes = system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
+                occupied_nodes, missing_cards_nodes, misc_nodes = system_mode.diagnose_missing_nodes(missing_nodes)
                 system_mode.clear_ighs_pods()
 
             summary = {
@@ -184,7 +186,8 @@ def main(args):
                 os.makedirs(f"{health_report.f_dir}/L2")
 
             intel_gaudi_nodes.healthy_nodes = set()
-            intel_gaudi_nodes.watch_nodes = set(intel_gaudi_nodes.all_nodes)
+            intel_gaudi_nodes.watch_nodes   = set(intel_gaudi_nodes.all_nodes).difference(set(missing_nodes))
+            intel_gaudi_nodes.missing_nodes = set(missing_nodes)
 
             for i in range(config_data["level-2"]["num-rounds"]):
                 nodes_initialized = system_mode.initialize_node_jobs(level=2,
@@ -200,7 +203,7 @@ def main(args):
                                                                                 nodes=intel_gaudi_nodes,
                                                                                 timeout_s=config_data["level-2"]["timeout_s"],
                                                                                 round=i)
-                occupied_nodes, missing_cards_nodes, misc_nodes = system_mode.diagnose_unhealthy_nodes(infected_nodes, missing_nodes)
+                occupied_nodes, missing_cards_nodes, misc_nodes = system_mode.diagnose_missing_nodes(missing_nodes)
                 system_mode.clear_ighs_pods(job_type="mpijobs")
 
                 if len(intel_gaudi_nodes.watch_nodes) == 0:

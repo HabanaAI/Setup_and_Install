@@ -48,8 +48,10 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  set -eo pipefail; 
+                  set -eo pipefail;
                   echo "Target Nodes: $TARGET_NODES";
+                  ssh-keygen -A;
+                  service ssh start;
 
                   while [ ! -d /workdir/intel_gaudi_health_screen ]; do
                     sleep 2s;
@@ -155,5 +157,6 @@ spec:
               args:
                 - >-
                   printenv | grep "MY" >> /etc/environment;
+                  ssh-keygen -A;
                   service ssh start;
                   sleep 365d;

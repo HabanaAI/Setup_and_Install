@@ -1,0 +1,13 @@
+{
+    "model":"Qwen/Qwen2-7B-Instruct",
+    "tokenizer":"Qwen/Qwen2-7B-Instruct", 
+    "disable_log_requests": "false",
+    "gpu_memory_utilization": 0.5,
+    "enforce_eager": "true",
+    "max_num_seqs": 512,
+    "swap_space": 16,
+    "dtype": "bfloat16",
+    "tensor_parallel_size": 1,
+    "max_num_batched_tokens": 131072,
+    "chat_template": "true"
+}

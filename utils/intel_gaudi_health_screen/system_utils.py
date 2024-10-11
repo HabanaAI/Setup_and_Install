@@ -71,7 +71,7 @@ class KubeUtils(SystemUtils):
             output    = run_cmd(cmd)
             all_nodes = output.strip().split()
 
-        _logger.info(f"Collected Nodes: {all_nodes}")
+        _logger.info(f"Collected {len(all_nodes)} k8s Nodes: {all_nodes}")
 
         return all_nodes
 
@@ -109,7 +109,7 @@ class KubeUtils(SystemUtils):
             job_path                          = f"{job_base_path}/L2/r{round}"
 
         if len(node_groups) == 0 :
-            _logger.warn(f"No Node Groups to test found during initialization")
+            _logger.warning(f"No Node Groups to test found during initialization")
             return nodes_initialized
 
 
@@ -266,53 +266,56 @@ class KubeUtils(SystemUtils):
         pods    = output.split("\n")
 
         for p in pods:
-            p_name, status, state = p.split()
-            if status == "Succeeded":
-                cmd    = f"kubectl logs -n {self.namespace} {p_name}"
-                output = run_cmd(cmd).strip().split("\n")
+            try:
+                p_name, status, state = p.split()
+                if status == "Succeeded":
+                    cmd    = f"kubectl logs -n {self.namespace} {p_name}"
+                    output = run_cmd(cmd).strip().split("\n")
 
-                start_analyze = False
-                for l in output:
-                    if "START of Node Report" in l:
-                        start_analyze = True
-                        continue
-                    elif "END of Node Report" in l:
-                        start_analyze = False
-                        continue
-                    
-                    #### analyze output
-                    if start_analyze:
-                        # Ignore Logger output level
-                        bracket_index = l.index("{")
-                        node_status_txt = l[bracket_index:]
-                        status_dict = json.loads(node_status_txt)
+                    start_analyze = False
+                    for l in output:
+                        if "START of Node Report" in l:
+                            start_analyze = True
+                            continue
+                        elif "END of Node Report" in l:
+                            start_analyze = False
+                            continue
+                        
+                        #### analyze output
+                        if start_analyze:
+                            # Ignore Logger output level
+                            bracket_index = l.index("{")
+                            node_status_txt = l[bracket_index:]
+                            status_dict = json.loads(node_status_txt)
 
-                        if not p_name in current_run_status:
-                            with open(f"{log_dir}/{p_name}.json", 'w', encoding ='utf8') as f:
-                                json.dump(status_dict, f, indent=4)
-                            with open(f"{log_dir}/{p_name}.log", 'w', encoding ='utf8') as f:
-                                f.write('\n'.join(output))
+                            if not p_name in current_run_status:
+                                with open(f"{log_dir}/{p_name}.json", 'w', encoding ='utf8') as f:
+                                    json.dump(status_dict, f, indent=4)
+                                with open(f"{log_dir}/{p_name}.log", 'w', encoding ='utf8') as f:
+                                    f.write('\n'.join(output))
 
-                            if level == 1:
-                                health_report.write_rows(data=status_dict["cards"], level=level)
-                                current_run_status[p_name] = True
-                            elif level == 2:
-                                health_report.write_rows(data=[status_dict], level=level)
-                                current_run_status[p_name] = (True, status_dict["num_nodes"])
-            elif state == "CrashLoopBackOff" and level==2 or (final_check and "launcher" in p_name and status=="Running"):
-                cmd    = f"kubectl logs -n {self.namespace} {p_name}"
-                output = run_cmd(cmd).strip().split("\n")
+                                if level == 1:
+                                    health_report.write_rows(data=status_dict["cards"], level=level)
+                                    current_run_status[p_name] = True
+                                elif level == 2:
+                                    health_report.write_rows(data=[status_dict], level=level)
+                                    current_run_status[p_name] = (True, status_dict["num_nodes"])
+                elif state == "CrashLoopBackOff" and level==2 or (final_check and "launcher" in p_name and status=="Running"):
+                    cmd    = f"kubectl logs -n {self.namespace} {p_name}"
+                    output = run_cmd(cmd).strip().split("\n")
 
-                hccL_results = hccl_demo_check(job_id=p_name, health_report=health_report, hccl_log=output, write=False)
+                    hccL_results = hccl_demo_check(job_id=p_name, health_report=health_report, hccl_log=output, write=False)
 
-                if not p_name in current_run_status:
-                    with open(f"{log_dir}/{p_name}.json", 'w', encoding ='utf8') as f:
-                        json.dump(hccL_results, f, indent=4)
-                    with open(f"{log_dir}/{p_name}.log", 'w', encoding ='utf8') as f:
-                        f.write('\n'.join(output))
+                    if not p_name in current_run_status:
+                        with open(f"{log_dir}/{p_name}.json", 'w', encoding ='utf8') as f:
+                            json.dump(hccL_results, f, indent=4)
+                        with open(f"{log_dir}/{p_name}.log", 'w', encoding ='utf8') as f:
+                            f.write('\n'.join(output))
 
-                    health_report.write_rows(data=[hccL_results], level=level)
-                    current_run_status[p_name] = (True, hccL_results["num_nodes"])
+                        health_report.write_rows(data=[hccL_results], level=level)
+                        current_run_status[p_name] = (True, hccL_results["num_nodes"])
+            except ValueError:
+                _logger.error(f"Not able to retrieve Running Pods. Expected to recieve list of pods but got output: {pods}")
 
         if level == 1:
             num_nodes = len(current_run_status)
@@ -325,10 +328,11 @@ class KubeUtils(SystemUtils):
 
         return num_nodes
 
-    def diagnose_unhealthy_nodes(self, infected_nodes, missing_nodes):
+    def diagnose_missing_nodes(self, missing_nodes):
         in_use_set = set()
         missing_cards_set = set()
         misc_set = set()
+        _logger.info(f"Diagnose {len(missing_nodes)} missing_nodes:")
 
         for n in missing_nodes:
             cmd        = f"kubectl describe nodes -n {self.namespace} {n}"
@@ -359,11 +363,11 @@ class KubeUtils(SystemUtils):
         misc_list          = sorted(list(set(missing_nodes).difference(in_use_set).difference(missing_cards_set)))
 
         if(len(in_use_list)):
-            _logger.info(f"{len(in_use_list)} Occupied Nodes: {in_use_list}")
+            _logger.info(f"  {len(in_use_list)} Occupied Nodes: {in_use_list}")
         if(len(missing_cards_list)):
-            _logger.info(f"{len(missing_cards_list)} Nodes w/ missing cards: {missing_cards_list}")
+            _logger.info(f"  {len(missing_cards_list)} Nodes w/ missing cards: {missing_cards_list}")
         if(len(misc_list)):
-            _logger.info(f"{len(misc_list)} Unaccounted Nodes: {misc_list}")
+            _logger.info(f"  {len(misc_list)} Untested Nodes: {misc_list}")
 
         return in_use_list, missing_cards_list, misc_list
 
@@ -426,7 +430,7 @@ class BareMetalUtils(SystemUtils):
 
 
     def collect_nodes(self, gaudi_node_label=""):
-        _logger.info(f"Collected Nodes: {self.hosts}")
+        _logger.info(f"Collected {len(self.hosts)} Nodes: {self.hosts}")
 
         return self.hosts
 
@@ -460,7 +464,7 @@ class BareMetalUtils(SystemUtils):
             nodes.worker_nodes                = list()
 
         if len(node_groups) == 0:
-            _logger.warn(f"No Node Groups to test found during initialization")
+            _logger.warning(f"No Node Groups to test found during initialization")
             return nodes_initialized
 
         self.update_yaml_job(source_file="config.yaml", out_dir="tmp", out_file="config.yaml", yaml_type="config")
@@ -618,63 +622,66 @@ class BareMetalUtils(SystemUtils):
         pods   = output.split("\n")
 
         for p in pods:
-            if ":" not in p:
-                continue
+            try:
+                if ":" not in p:
+                    continue
 
-            colon_index = p.index(":")
-            name = p[:colon_index]
-            data_txt = p[colon_index+1:]
+                colon_index = p.index(":")
+                name = p[:colon_index]
+                data_txt = p[colon_index+1:]
 
-            data = json.loads(data_txt)
+                data = json.loads(data_txt)
 
-            if data["State"] == "exited":
-                cmd = f"ssh {name} {check_log_cmd}"
-                output = run_cmd(cmd).strip().split("\n")
+                if data["State"] == "exited":
+                    cmd = f"ssh {name} {check_log_cmd}"
+                    output = run_cmd(cmd).strip().split("\n")
 
-                start_analyze = False
-                for l in output:
-                    if "START of Node Report" in l:
-                        start_analyze = True
-                        continue
-                    elif "END of Node Report" in l:
-                        start_analyze = False
-                        continue
+                    start_analyze = False
+                    for l in output:
+                        if "START of Node Report" in l:
+                            start_analyze = True
+                            continue
+                        elif "END of Node Report" in l:
+                            start_analyze = False
+                            continue
 
-                    #### analyze output
-                    if start_analyze:
-                        # Ignore Logger output level
-                        bracket_index = l.index("{")
-                        node_status_txt = l[bracket_index:]
-                        status_dict = json.loads(node_status_txt)
+                        #### analyze output
+                        if start_analyze:
+                            # Ignore Logger output level
+                            bracket_index = l.index("{")
+                            node_status_txt = l[bracket_index:]
+                            status_dict = json.loads(node_status_txt)
 
-                        if not name in current_run_status:
-                            if level == 1:
-                                health_report.write_rows(data=status_dict["cards"], level=level)
-                                current_run_status[name] = True
-                            elif level == 2:
-                                health_report.write_rows(data=[status_dict], level=level)
-                                current_run_status[name] = (True, status_dict["num_nodes"])
-                                name = f"ighs-hccl-r{status_dict['round']}-{status_dict['group_id']}"
+                            if not name in current_run_status:
+                                if level == 1:
+                                    health_report.write_rows(data=status_dict["cards"], level=level)
+                                    current_run_status[name] = True
+                                elif level == 2:
+                                    health_report.write_rows(data=[status_dict], level=level)
+                                    current_run_status[name] = (True, status_dict["num_nodes"])
+                                    name = f"ighs-hccl-r{status_dict['round']}-{status_dict['group_id']}"
 
-                            with open(f"{log_dir}/{name}.json", 'w', encoding ='utf8') as f:
-                                json.dump(status_dict, f, indent=4)
-                            with open(f"{log_dir}/{name}.log", 'w', encoding ='utf8') as f:
-                                f.write('\n'.join(output))
-            elif level==2 and final_check:
-                cmd = f"ssh {name} {check_log_cmd}"
-                output = run_cmd(cmd).strip().split("\n")
+                                with open(f"{log_dir}/{name}.json", 'w', encoding ='utf8') as f:
+                                    json.dump(status_dict, f, indent=4)
+                                with open(f"{log_dir}/{name}.log", 'w', encoding ='utf8') as f:
+                                    f.write('\n'.join(output))
+                elif level==2 and final_check:
+                    cmd = f"ssh {name} {check_log_cmd}"
+                    output = run_cmd(cmd).strip().split("\n")
 
-                if not name in current_run_status:
-                    hccL_results = hccl_demo_check(job_id=name, health_report=health_report, hccl_log=output, write=False)
-                    f_name = f"ighs-hccl-r{hccL_results['round']}-{hccL_results['group_id']}"
+                    if not name in current_run_status:
+                        hccL_results = hccl_demo_check(job_id=name, health_report=health_report, hccl_log=output, write=False)
+                        f_name = f"ighs-hccl-r{hccL_results['round']}-{hccL_results['group_id']}"
 
-                    with open(f"{log_dir}/{f_name}.json", 'w', encoding ='utf8') as f:
-                        json.dump(hccL_results, f, indent=4)
-                    with open(f"{log_dir}/{f_name}.log", 'w', encoding ='utf8') as f:
-                        f.write('\n'.join(output))
+                        with open(f"{log_dir}/{f_name}.json", 'w', encoding ='utf8') as f:
+                            json.dump(hccL_results, f, indent=4)
+                        with open(f"{log_dir}/{f_name}.log", 'w', encoding ='utf8') as f:
+                            f.write('\n'.join(output))
 
-                    health_report.write_rows(data=[hccL_results], level=level)
-                    current_run_status[name] = (True, hccL_results["num_nodes"])
+                        health_report.write_rows(data=[hccL_results], level=level)
+                        current_run_status[name] = (True, hccL_results["num_nodes"])
+            except:
+                _logger.error(f"Not able to retrieve Running Pods. Expected to recieve list of pods but got output: {pods}")
 
         if level == 1:
             num_nodes = len(current_run_status)
@@ -687,5 +694,5 @@ class BareMetalUtils(SystemUtils):
 
         return num_nodes
 
-    def diagnose_unhealthy_nodes(self, infected_nodes, missing_nodes):
-        pass
+    def diagnose_missing_nodes(self, missing_nodes):
+        return [],[],[]

@@ -4,6 +4,9 @@ set -ex
 pt_package_name="pytorch_modules-v${PT_VERSION}_${VERSION}_${REVISION}.tgz"
 os_string="ubuntu${OS_NUMBER}"
 case "${BASE_NAME}" in
+    *sles15.5* | *suse15.5*)
+        os_string="suse155"
+    ;;
     *rhel9.2*)
         os_string="rhel92"
     ;;

@@ -1,9 +1,9 @@
-# Copyright (c) 2023 HabanaLabs, Ltd.
+# Copyright (c) 2024 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile base installer layer for Ubuntu 22.04
-FROM ubuntu:jammy
+# HabanaLabs Dockerfile base installer layer for Ubuntu 24.04
+FROM ubuntu:noble
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
@@ -11,7 +11,7 @@ ARG REVISION
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
-ENV OS_NUMBER=2204
+ENV OS_NUMBER=2404
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
 ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins
 
@@ -30,7 +30,7 @@ RUN apt-get update && \
     gpg-agent \
     graphviz \
     libgl1 \
-    libgoogle-glog0v5 \
+    libgoogle-glog0v6t64 \
     libjemalloc2 \
     libpq-dev \
     lsof \
@@ -55,7 +55,7 @@ RUN apt-get update && \
 ENV PIP_NO_CACHE_DIR=on
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN python3 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
+RUN python3 -m pip install pip==24.0 setuptools==75.1.0 wheel==0.42.0 --break-system-packages
 
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
@@ -75,7 +75,7 @@ ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/habana-artifactory.gpg && \
     chown root:root /usr/share/keyrings/habana-artifactory.gpg && \
     chmod 644 /usr/share/keyrings/habana-artifactory.gpg  && \
-    echo "deb [signed-by=/usr/share/keyrings/habana-artifactory.gpg] https://${ARTIFACTORY_URL}/artifactory/debian jammy main" | tee -a /etc/apt/sources.list && \
+    echo "deb [signed-by=/usr/share/keyrings/habana-artifactory.gpg] https://${ARTIFACTORY_URL}/artifactory/debian noble main" | tee -a /etc/apt/sources.list && \
     apt-get update && \
     cp /etc/dpkg/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes.bak && \
     sed -i '/path-exclude=\/usr\/share\/doc/d' /etc/dpkg/dpkg.cfg.d/excludes && \
@@ -100,7 +100,7 @@ RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archi
     cd / && \
     rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
-RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --break-system-packages
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
@@ -110,3 +110,5 @@ RUN mkdir -p /var/run/sshd && \
     sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config && \
     echo "/etc/init.d/ssh start \"-p 3022\"" >> ~/.bashrc && \
     sed -i '/[ -z "$PS1" ] && return/s/^/#/g' ~/.bashrc
+
+RUN mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MANAGED.old

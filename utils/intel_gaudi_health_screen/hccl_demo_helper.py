@@ -35,10 +35,11 @@ def find_groups(healthy_nodes, watch_nodes, groups_tracker):
     max_num_groups    = num_nodes // 2
     max_combinations  = (math.factorial(num_nodes)) / (math.factorial(num_nodes-2) * 2)
     max_attempts      = 10
+    groups_tracker    = set(groups_tracker)
 
     if num_nodes == 1:
-        _logger.warn(f"Need more than 1 Node to test pair all_reduce")
-        return False
+        _logger.warning(f"Need more than 1 Node to test pair all_reduce")
+        return node_groups, list(groups_tracker)
 
     while len(node_groups) < max_num_groups and found_unique:
         i            = 0
@@ -49,27 +50,27 @@ def find_groups(healthy_nodes, watch_nodes, groups_tracker):
             break
 
         node_group, group_id, (h_i, w_i) = find_group_id(healthy_nodes, watch_nodes, h_i, w_i)
-
-        if node_group[0] == node_group[1]:
-            _logger.info(f"Found duplicate nodes in node_group {node_group}. Exiting group id search")
+        i += 1
+        if len(node_group) < 2 or node_group[0] == node_group[1]:
+            _logger.info(f"Found invalid node_group {node_group}. Exiting group id search")
             found_unique = False
             break
 
         while group_id in groups_tracker:
-            if i > max_attempts:
-                _logger.warn(f"Max attempt {max_attempts} reached for finding unique pair combination.")
+            if i >= max_attempts:
+                _logger.warning(f"Max attempt {max_attempts} reached for finding unique pair combination.")
                 found_unique = False
                 break
 
             node_group, group_id, (h_i, w_i) = find_group_id(healthy_nodes, watch_nodes, h_i, w_i)
-            if group_id == "" and node_group[0] == node_group[1]:
+            i += 1
+            if len(node_group) < 2 or node_group[0] == node_group[1]:
+                _logger.info(f"Internal while Found invalid node_group {node_group}. Exiting group id search")
                 found_unique = False
                 break
 
-            i += 1
-
         if found_unique:
-            groups_tracker.append(group_id)
+            groups_tracker.add(group_id)
             node_groups.append(node_group)
 
             for n in node_group:
@@ -81,7 +82,7 @@ def find_groups(healthy_nodes, watch_nodes, groups_tracker):
         if len(watch_nodes) == 0:
             break
 
-    return node_groups, groups_tracker
+    return node_groups, list(groups_tracker)
 
 def find_group_id(healthy_nodes, watch_nodes, h_i=0, w_i=0):
     """ Finds a group of nodes and combines to form a group id
@@ -111,10 +112,10 @@ def find_group_id(healthy_nodes, watch_nodes, h_i=0, w_i=0):
             node_group.append(healthy_nodes[h_i])
             h_i += 1
 
-        if h_i > len(healthy_nodes):
+        if h_i >= len(healthy_nodes):
             random.shuffle(healthy_nodes)
             h_i = 0
-        if w_i > len(watch_nodes):
+        if w_i >= len(watch_nodes):
             random.shuffle(watch_nodes)
             w_i = 0
 

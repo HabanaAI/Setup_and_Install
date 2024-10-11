@@ -24,8 +24,10 @@ RUN amazon-linux-extras enable python3.8 && \
     wget \
     lsof \
     tar \
-    mesa-libGL && \
-    yum clean all && rm -rf /var/cache/yum
+    mesa-libGL \
+    sox-devel && \
+    yum clean all && rm -rf /var/cache/yum && \
+    rm -f /etc/ssh/ssh_host_*_key*
 
 # Install jemalloc-3.6.0-1.el7.x86_64 package with required /lib64/libjemalloc.so.1 lib need for topologies
 RUN yum install -y https://archives.fedoraproject.org/pub/archive/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm && \
@@ -39,7 +41,7 @@ RUN yum install -y sudo system-lsb-core cmake
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
-ENV LIBFABRIC_VERSION="1.20.0"
+ENV LIBFABRIC_VERSION="1.22.0"
 ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT/lib:${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
@@ -74,7 +76,6 @@ RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config &&
     sed -i 's/[ #]\(.*ForwardAgent \).*/ \1yes/g' /etc/ssh/ssh_config && \
     echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
     sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config && \
-    ssh-keygen -A && \
     mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc
 
 # There is no need to store pip installation files inside docker image
@@ -94,7 +95,7 @@ RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archi
     cd / && \
     rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
-RUN python3 -m pip install pip==23.3.1 setuptools==67.3.3 wheel==0.38.4
+RUN python3 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 

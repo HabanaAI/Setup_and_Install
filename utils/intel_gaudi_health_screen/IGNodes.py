@@ -114,12 +114,15 @@ class IGNode():
     def scan_cards(self):
         self.logger.info(f"Scanning cards info on Node: {self.name}")
 
-        cmd = "hl-smi -Q index,module_id,bus_id,memory.used,temperature.aip -f csv,noheader"
+        cmd = "hl-smi -Q index,module_id,bus_id,memory.used,temperature.aip,name -f csv,noheader"
         output = run_cmd(cmd)
 
         reader = csv.reader(output.split('\n'), delimiter=',')
         for row in reader:
             if len(row) == 0:
+                continue
+            elif len(row) < 6:
+                _logger.error(f"hl-smi output is not correct: Recieved output: {row}")
                 continue
 
             i             = row[0]
@@ -127,8 +130,9 @@ class IGNode():
             pci_address   = row[2]
             memory_used   = int(row[3].split()[0])
             temperature_C = int(row[4].split()[0])
+            system_name   = row[5]
 
-            card = IGCard(index=i, module_id=module_id, pci_address=pci_address, memory_used=memory_used, temperature=temperature_C, logger=self.logger)
+            card = IGCard(system_name=system_name, index=i, module_id=module_id, pci_address=pci_address, memory_used=memory_used, temperature=temperature_C, logger=self.logger)
             self.cards[i] = card
 
         self.cards = dict(sorted(self.cards.items()))
@@ -166,9 +170,9 @@ class IGNode():
             self.logger.info(card)
 
         self.record_dmesg()
-        self.write_json(checked_cards)
+        checked_cards_dict = self.write_json(checked_cards)
         if(write_report):
-            self.health_report.write_rows(data=checked_cards)
+            self.health_report.write_rows(data=checked_cards_dict)
 
     def write_json(self, cards):
         node_status = dict()
@@ -188,9 +192,12 @@ class IGNode():
         self.logger.info(json.dumps(node_status))
         self.logger.info("***** END of Node Report *****")
 
+        return node_status["cards"]
+
 class IGCard():
 
-    def __init__(self, index=-1, module_id=-1, pci_address="", memory_used=-1, framework="pytorch", temperature=-1, logger=None):
+    def __init__(self, system_name="", index=-1, module_id=-1, pci_address="", memory_used=-1, framework="pytorch", temperature=-1, logger=None):
+        self.system_name               = system_name
         self.node_id                   = ""
         self.logger                    = logger
         self.index                     = index
@@ -286,14 +293,22 @@ class IGCard():
         return self.device_acquire_fail
 
     def check_temperature_state(self):
-        max_good_temperature = 83
-        base_temperature     = 25
-        max_delta            = 25
+        if self.system_name == "HL-325":
+            # Gaudi-3 System
+            max_good_temperature = 200
+            base_temperature     = 45
+            max_delta            = 80
+        else:
+            # Gaudi-2 System
+            max_good_temperature = 83
+            base_temperature     = 25
+            max_delta            = 25
+            
 
         if self.temperature_C >= max_good_temperature:
             self.temperature_state_C = "CRITICAL"
             self.is_infected = True
-        elif self.temperature_C - base_temperature >= max_delta:
+        elif abs(self.temperature_C - base_temperature) >= max_delta:
             self.temperature_state_C = "WARN"
             self.is_infected = True
         else:

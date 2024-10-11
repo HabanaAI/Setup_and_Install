@@ -26,7 +26,7 @@ RUN echo "[CRB]" > /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo
 
 RUN dnf install --allowerasing -y \
-    curl \
+    curl-7.76.1-29.el9_4.1 \
     cairo-devel \
     numactl-devel \
     iproute \
@@ -38,9 +38,18 @@ RUN dnf install --allowerasing -y \
     gperftools-devel && \
     dnf clean all && rm -rf /var/cache/yum
 
-RUN dnf config-manager --add-repo https://yum.repos.intel.com/mkl/setup/intel-mkl.repo -y && \
-    dnf install --allowerasing -y intel-mkl-64bit-2020.4-912 && \
+RUN echo "[oneAPI]" >> /etc/yum.repos.d/oneAPI.repo && \
+    echo "name=Intel® oneAPI repository" >> /etc/yum.repos.d/oneAPI.repo && \
+    echo "baseurl=https://yum.repos.intel.com/oneapi" >> /etc/yum.repos.d/oneAPI.repo && \
+    echo 'enabled=1'  >> /etc/yum.repos.d/oneAPI.repo && \
+    echo "gpgcheck=1" >> /etc/yum.repos.d/oneAPI.repo && \
+    echo "repo_gpgcheck=1" >> /etc/yum.repos.d/oneAPI.repo && \
+    echo "gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB" >> /etc/yum.repos.d/oneAPI.repo
+
+RUN dnf install --allowerasing -y intel-oneapi-mkl-2024.2.0 && \
     dnf clean all && rm -rf /var/cache/yum
+
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/mkl/2024.2/lib:${LD_LIBRARY_PATH}
 
 COPY install_packages.sh .
 

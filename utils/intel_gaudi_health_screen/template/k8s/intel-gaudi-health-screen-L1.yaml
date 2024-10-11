@@ -36,6 +36,9 @@ spec:
           command: ["/bin/bash", "-c"]
           args:
             - >-
+              ssh-keygen -A;
+              service ssh start;
+
               while [ ! -d /workdir/intel_gaudi_health_screen ]; do
                 sleep 2s;
               done;

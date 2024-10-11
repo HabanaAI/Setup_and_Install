@@ -1,4 +1,4 @@
-# Intel Gaudi Health Screen 2.2.0
+# Intel Gaudi Health Screen 2.2.2
 
 A large scale Intel Gaudi cluster contains a lot of moving parts. To ensure distributed training proceeds smoothly, it is recommended to check the
 cluster network health. Troubleshooting issues on a large cluster can be a tedious act. To simplify the debugging process the
@@ -127,16 +127,16 @@ been tested, such as having missing cards, it is occupied by another session, or
 ## Setup
 
 IGHS is compatible with python3 default packages and does not require additional packages
-to be installed
+to be installed.
 
-If your setup envionrment requires custom configruation, update the yaml files located in the templates folder.
+If your setup Environment requires custom configruation, update the yaml files located in the templates folder.
 
 If running on bare metal system, then install `pdsh` to your system.
 
-Update [config.yaml](config.yaml) to match your system envionrment
+Update [config.yaml](config.yaml) to match your system Environment
 
 ``` yaml
-# Sets IGHS to screen for K8s or Bare Metal Envionrment (k8s, bare-metal).
+# Sets IGHS to screen for K8s or Bare Metal Environment (k8s, bare-metal).
 system-info:
   type: "k8s"
   # Namespace is only required for k8s settings
@@ -149,10 +149,10 @@ system-info:
   tcp-interface: "10.3.124.0/24"
 
 # Image to run Intel Gaudi Health Screen
-image: "vault.habana.ai/gaudi-docker/1.16.0/ubuntu22.04/habanalabs/pytorch-installer-2.2.2:latest"
+image: "vault.habana.ai/gaudi-docker/1.18.0/ubuntu22.04/habanalabs/pytorch-installer-2.4.0:latest"
 
 # Node Label used to identify a Intel Gaudi Node
-gaudi-node-label: "ighs_label=gaudi"
+gaudi-node-label: "habana.ai/gaudi:NoSchedule"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"
@@ -220,7 +220,7 @@ IGHS can alternatively be run through below script:
 To run on bare-metal systems update the [config.yaml](config.yaml) to use bare-metal configuration.
 
 ``` yaml
-# Sets IGHS to screen for K8s or Bare Metal Envionrment (k8s, bare-metal).
+# Sets IGHS to screen for K8s or Bare Metal Environment (k8s, bare-metal).
 system-info:
   type: "bare-metal"
   # Namespace is only required for k8s settings
@@ -233,10 +233,10 @@ system-info:
   tcp-interface: "10.3.124.0/24"
 
 # Image to run Intel Gaudi Health Screen
-image: "vault.habana.ai/gaudi-docker/1.17.0/ubuntu22.04/habanalabs/pytorch-installer-2.3.1:latest"
+image: "vault.habana.ai/gaudi-docker/1.18.0/ubuntu22.04/habanalabs/pytorch-installer-2.4.0:latest"
 
 # Node Label used to identify a Intel Gaudi Node
-gaudi-node-label: "brightcomputing.com/node-category=gaudi"
+gaudi-node-label: "habana.ai/gaudi:NoSchedule"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"
@@ -260,11 +260,13 @@ Before running the screening test, you need to generate the ssh key used for pas
 
 ``` bash
 # Keys to setup initial bare-metal passwordless ssh connection between systems
+mkdir -p ssh;
 ssh-keygen -t rsa -f ssh/ighs_rsa;
 chmod 600 ssh/ighs_rsa;
 chmod 644 ssh/ighs_rsa.pub;
 
 # Keys to setup containers passwordless ssh connection
+mkdir -p template/bare-metal/ssh;
 ssh-keygen -t rsa -f template/bare-metal/ssh/id_rsa;
 chmod 600 template/bare-metal/ssh/id_rsa;
 chmod 644 template/bare-metal/ssh/id_rsa.pub;

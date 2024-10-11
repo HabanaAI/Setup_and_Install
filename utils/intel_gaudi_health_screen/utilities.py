@@ -91,7 +91,7 @@ def run_cmd(cmd, timeout_s=1_800, verbose=False):
 
     if (verbose):
         _logger.debug(f"Running cmd: {cmd}")
-        _logger.info(result.stdout)
+        _logger.debug(result.stdout)
 
     return result.stdout
 
@@ -161,41 +161,3 @@ def clear_job(job):
 
             _logger.info(f"Attempt {attempts} Pods are still up. Will wait 10 seconds to check again")
             time.sleep(10)
-
-
-def clear_ighs_pods(job_type="jobs"):
-    """ Clear Pods with label=ighs,ighs-hccl
-
-    Args:
-        job_type (str, optional): Type of Job to delete. Options: [jobs, mpijobs]. Defaults to "jobs".
-    """
-    _logger.info(f"Checking for existing IGHS Pods ({job_type})")
-
-    metadata_app = "ighs" if (job_type == "jobs") else "ighs-hccl"
-
-    cmd = f"kubectl get pods -n default -l app={metadata_app} -o=custom-columns='NAME:.metadata.name' --no-headers"
-    output = run_cmd(cmd).strip()
-
-    if len(output) > 0:
-        _logger.info(f"Found existing IGHS Pods ({job_type}). Will delete.")
-
-        cmd     = f"kubectl get {job_type} -n default -l app={metadata_app} -o=custom-columns='NAME:.metadata.name' --no-headers"
-        output  = run_cmd(cmd).strip()
-        jobs = output.split()
-
-        _logger.info(f"Deleting jobs {jobs}")
-        for job in jobs:
-            cmd      = f"kubectl delete {job_type} -n default {job}"
-            output   = run_cmd(cmd)
-
-        cmd         = f"kubectl get pods -n default -l app={metadata_app} -o=custom-columns='NAME:.metadata.name' --no-headers"
-        max_attempt = 15
-        for attempts in range(max_attempt):
-            output = run_cmd(cmd).strip()
-
-            if(len(output) == 0):
-                break
-
-            _logger.info(f"Attempt {attempts}: Pods are still up. Will wait 10 seconds to check again")
-            time.sleep(10)
-

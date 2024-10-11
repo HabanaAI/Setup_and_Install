@@ -3,6 +3,7 @@ FROM ${BASE_IMAGE}
 
 RUN mkdir ~/.ssh && \
 cd ~/.ssh && \
+ssh-keygen -A && \
 sed -i 's/#Port 22/Port 3122/g' /etc/ssh/sshd_config && \
 sed -i 's/#   Port 22/    Port 3122/g' /etc/ssh/ssh_config && \
 sed -i 's/3022/3122/g' ~/.bashrc && \
@@ -11,6 +12,7 @@ echo "ForwardAgent yes" >> ~/.ssh/config && \
 echo "StrictHostKeyChecking no" >> ~/.ssh/config && \
 echo "UserKnownHostsFile /dev/null" >> ~/.ssh/config && \
 echo "LogLevel ERROR" >> ~/.ssh/config && \
+service ssh start && \
 chmod 600 ~/.ssh/config
 
 
