@@ -149,3 +149,7 @@ IGHS can alternatively be run through below script:
 # Will check Level 1 and 2 by default
 ./run_ighs.sh
 ```
+
+## Multi Server SSH setup
+
+Refer to the README in the multi_server folder for details on how to setup multiple docker containers for SSH communication in a cluster.
