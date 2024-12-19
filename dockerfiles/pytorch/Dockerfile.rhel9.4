@@ -17,7 +17,7 @@ LABEL name="PyTorch Installer"
 LABEL summary="Habanalabs PyTorch installer layer for RHEL9.4"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
-RUN echo "/usr/lib/habanalabs" > $(python3.11 -c "import sysconfig; print(sysconfig.get_path('platlib'))")/habanalabs-graph.pt
+RUN echo "/usr/lib/habanalabs" > $(python3 -c "import sysconfig; print(sysconfig.get_path('platlib'))")/habanalabs-graph.pt
 
 RUN echo "[CRB]" > /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "name=CentOS Linux 9 - CRB" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
@@ -25,31 +25,17 @@ RUN echo "[CRB]" > /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo
 
-RUN dnf install --allowerasing -y \
-    curl-7.76.1-29.el9_4.1 \
-    cairo-devel \
-    numactl-devel \
-    iproute \
-    which \
-    zlib-devel \
-    lapack-devel \
-    openblas-devel \
-    numactl \
-    gperftools-devel && \
-    dnf clean all && rm -rf /var/cache/yum
-
-RUN echo "[oneAPI]" >> /etc/yum.repos.d/oneAPI.repo && \
-    echo "name=Intel® oneAPI repository" >> /etc/yum.repos.d/oneAPI.repo && \
-    echo "baseurl=https://yum.repos.intel.com/oneapi" >> /etc/yum.repos.d/oneAPI.repo && \
-    echo 'enabled=1'  >> /etc/yum.repos.d/oneAPI.repo && \
-    echo "gpgcheck=1" >> /etc/yum.repos.d/oneAPI.repo && \
-    echo "repo_gpgcheck=1" >> /etc/yum.repos.d/oneAPI.repo && \
-    echo "gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB" >> /etc/yum.repos.d/oneAPI.repo
-
-RUN dnf install --allowerasing -y intel-oneapi-mkl-2024.2.0 && \
-    dnf clean all && rm -rf /var/cache/yum
-
-ENV LD_LIBRARY_PATH=/opt/intel/oneapi/mkl/2024.2/lib:${LD_LIBRARY_PATH}
+RUN dnf update -y && dnf install --nodocs --setopt=install_weak_deps=false --allowerasing -y \
+        cairo-devel \
+        numactl-devel \
+        iproute \
+        which \
+        zlib-devel \
+        lapack-devel \
+        openblas-devel \
+        numactl \
+        gperftools-devel && \
+    dnf clean all
 
 COPY install_packages.sh .
 
@@ -60,5 +46,3 @@ RUN ./install_packages.sh && rm -f install_packages.sh && \
 # avoid warnings during docker creation
 ENV LD_PRELOAD=/lib64/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
-
-RUN rm -rf /tmp/*

@@ -56,7 +56,7 @@ spec:
                   while [ ! -d /workdir/intel_gaudi_health_screen ]; do
                     sleep 2s;
                   done;
-                    sleep 2s;
+                  sleep 10s;
 
                   declare -xr HOSTSFILE=$OMPI_MCA_orte_default_hostfile;
 
@@ -131,9 +131,11 @@ spec:
                   habana.ai/gaudi: 8
                   hugepages-2Mi: 29000Mi
                   cpu: 95
+                  memory: 200Gi
                 requests:
                   habana.ai/gaudi: 8
                   hugepages-2Mi: 29000Mi
+                  memory: 200Gi
                   cpu: 95
               volumeMounts:
                 - name: mydir

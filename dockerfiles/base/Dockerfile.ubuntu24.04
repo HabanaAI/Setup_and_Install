@@ -32,6 +32,7 @@ RUN apt-get update && \
     libgl1 \
     libgoogle-glog0v6t64 \
     libjemalloc2 \
+    libjpeg-dev \
     libpq-dev \
     lsof \
     make \
@@ -60,7 +61,7 @@ RUN python3 -m pip install pip==24.0 setuptools==75.1.0 wheel==0.42.0 --break-sy
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
-ENV LIBFABRIC_VERSION="1.20.0"
+ENV LIBFABRIC_VERSION="1.22.0"
 ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT/lib:${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH

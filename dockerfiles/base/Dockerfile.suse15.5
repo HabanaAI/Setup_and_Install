@@ -44,7 +44,8 @@ RUN zypper install -y --allow-downgrade \
     Mesa-libGL1 \
     openssh-clients \
     openssh-server \
-    openssl openssl-devel \
+    openssl \
+    openssl-devel \
     python311 \
     python311-devel \
     python311-pip \
@@ -53,11 +54,14 @@ RUN zypper install -y --allow-downgrade \
     zlib-devel && \
     rm -f /etc/ssh/ssh_host_*_key*
 
+ENV PIP_NO_CACHE_DIR=on
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
 RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
     alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
-    alternatives --set python3 /usr/bin/python3.11 && \
-    alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1 && \
-    alternatives --set pip3 /usr/bin/pip3.11
+    alternatives --set python3 /usr/bin/python3.11
+
+RUN python3 -m pip install setuptools==75.1.0 wheel==0.44.0
 
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
@@ -82,10 +86,8 @@ RUN zypper --gpg-auto-import-keys install -y habanalabs-rdma-core-"$VERSION"-"$R
         habanalabs-thunk-"$VERSION"-"$REVISION" \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION" \
         habanalabs-graph-"$VERSION"-"$REVISION" && \
-    rm -f /etc/yum.repos.d/habanalabs.repo
+    rm -f /etc/zypp/repos.d/habanalabs.repo
 
-ENV PIP_NO_CACHE_DIR=on
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
@@ -102,10 +104,7 @@ RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archi
     cd / && \
     rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
-RUN python3.11 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
-
-
-RUN python3.11 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

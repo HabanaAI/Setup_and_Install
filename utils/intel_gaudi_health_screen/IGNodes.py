@@ -270,6 +270,7 @@ class IGCard():
         self.device_acquire_fail = False
 
         os.environ["ID"] = str(self.module_id)
+        os.environ["HABANA_VISIBLE_MODULES"] = str(self.module_id)
 
         try:
             import torch

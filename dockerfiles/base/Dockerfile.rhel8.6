@@ -37,7 +37,8 @@ RUN dnf install -y \
     unzip \
     llvm \
     lsof \
-    python38-devel \
+    python3.11-devel \
+    python3.11-pip \
     bzip2 \
     bzip2-devel \
     openssh-clients \
@@ -93,6 +94,11 @@ RUN echo "[powertools]" > /etc/yum.repos.d/powertools.repo && \
     echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/powertools.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/powertools.repo
 
+ENV PYTHON_VERSION=3.11
+RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
+    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
+    alternatives --set python3 /usr/bin/python3.11
+
 RUN dnf install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".el8 \
         habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
@@ -127,14 +133,9 @@ RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archi
     cd / && \
     rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
-ENV PYTHON_VERSION=3.8
-RUN python3.8 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
+RUN python3 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
 
-RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
-    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
-    alternatives --set python3 /usr/bin/python3.8
-
-RUN python3.8 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

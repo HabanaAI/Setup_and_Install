@@ -16,23 +16,18 @@ ARG ARTIFACTORY_URL
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
 RUN apt-get update && apt-get install -y \
-    curl \
-    libcurl4 \
-    moreutils \
-    iproute2 \
-    libcairo2-dev \
-    libglib2.0-dev \
-    libhdf5-dev \
-    libselinux1-dev \
-    libnuma-dev \
-    libpcre2-dev \
-    libjpeg-dev \
-    liblapack-dev \
-    libopenblas-dev \
-    numactl \
-    pdsh \
-    libmkl-dev \
-    libgoogle-perftools-dev && \
+        curl \
+        libcurl4 \
+        moreutils \
+        iproute2 \
+        libhdf5-dev \
+        libnuma-dev \
+        libjpeg-dev \
+        liblapack-dev \
+        libopenblas-dev \
+        numactl \
+        pdsh \
+        libgoogle-perftools-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN bash -c "\
@@ -49,5 +44,3 @@ RUN ./install_packages.sh && rm -f install_packages.sh && \
 
 ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
-
-RUN rm -rf /tmp/*

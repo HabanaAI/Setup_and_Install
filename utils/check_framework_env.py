@@ -36,7 +36,8 @@ def pytorch_test(device_id=0):
         device_id (int, optional): ID of Intel Gaudi. Defaults to 0.
     """
 
-    os.environ["ID"] = str(device_id)
+    os.environ["HLS_MODULE_ID"] = str(device_id)
+    os.environ["HABANA_VISIBLE_MODULES"] = str(device_id)
 
     try:
         import torch
@@ -52,20 +53,27 @@ def pytorch_test(device_id=0):
         assert y == 4, 'Sanity check failed: Wrong Add output'
         assert 'hpu' in y.device.type.lower(), 'Sanity check failed: Operation not executed on Intel Gaudi Card'
     except (RuntimeError, AssertionError) as e:
-        print(f"Card {device_id} Failure: {e}")
+        print(f"Card Module ID {device_id} Failure: {e}")
         raise
 
+    return device_id
 
 if __name__ == '__main__':
     args = parse_arguments()
+    passed_cards = set()
 
-    try:
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            for device_id, res in zip(range(args.cards), executor.map(pytorch_test, range(args.cards))):
-                print(f"Card {device_id} PASSED")
-    except Exception as e:
-            print(f"Failed to initialize on Intel Gaudi, error: {str(e)}")
-            print(f"Check FAILED")
-            exit(1)
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(pytorch_test, device_id) for device_id in range(args.cards)]
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                dev_id = future.result()
+                passed_cards.add(dev_id)
+                print(f"Card module_id {dev_id} PASSED")
 
-    print(f"Check PASSED for {args.cards} cards")
+            except Exception as e:
+                print(f"Failed to initialize on Intel Gaudi, error: {str(e)}")
+
+    failed_cards =  set(range(args.cards)) - passed_cards
+
+    print(f"Failed cards Module ID: {failed_cards}")
+    print(f"Passed cards Module ID: {passed_cards}")

@@ -74,7 +74,7 @@ def create_logger(logger_name, logger_file_name, f_path="", level=logging.INFO, 
 
     return t_logger, d_path
 
-def run_cmd(cmd, timeout_s=1_800, verbose=False):
+def run_cmd(cmd, timeout_s=900, verbose=False):
     """ Run Command through subprocess.run()
 
     Args:

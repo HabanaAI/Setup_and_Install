@@ -29,6 +29,12 @@ class SystemUtils():
         self.log_dir     = log_dir
         self.remote_path = remote_path
 
+    def clear_tmp_ighs(self):
+        ighs_path = "/tmp/intel_gaudi_health_screen"
+
+        _logger.info(f"Clearing out {ighs_path}")
+        shutil.rmtree(ighs_path)
+
     def clear_jobs(self):
         if not os.path.exists(self.job_path):
             os.makedirs(self.job_path)
@@ -57,6 +63,7 @@ class KubeUtils(SystemUtils):
         self.hostfile = hostfile
 
     def initialize_system(self):
+        self.clear_tmp_ighs()
         self.clear_ighs_pods()
         self.clear_ighs_pods(job_type="mpijobs")
         self.clear_jobs()
@@ -145,6 +152,11 @@ class KubeUtils(SystemUtils):
         return nodes_initialized
 
     def cp_ighs(self, namespace, cwd, metadata_app):
+        def ignore_dirs(dir, contents):
+            return [f for f in contents if os.path.isdir(os.path.join(dir, f)) and f in ["logs", ".git"]]
+
+        shutil.copytree(cwd, f"/tmp/intel_gaudi_health_screen", ignore=ignore_dirs, dirs_exist_ok=True)
+
         pods_done = dict()
         cmd       = f"kubectl get pods -n {namespace} -l app={metadata_app} -o=custom-columns='NAME:.metadata.name,STATUS:.status.phase' --no-headers"
         output    = run_cmd(cmd).strip()
@@ -159,7 +171,7 @@ class KubeUtils(SystemUtils):
             for p in pods:
                 p_name, state = p.split()
                 if p_name not in pods_done and state == "Running":
-                    cmd     = f"kubectl cp -n {namespace} {cwd} {p_name}:/workdir/intel_gaudi_health_screen"
+                    cmd     = f"kubectl cp -n {namespace} /tmp/intel_gaudi_health_screen {p_name}:/workdir/intel_gaudi_health_screen"
                     output  = run_cmd(cmd).strip()
 
                     pods_done[p_name] = True

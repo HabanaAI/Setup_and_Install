@@ -68,6 +68,7 @@ RUN dnf install -y \
 ENV PYTHON_VERSION=3.10
 COPY install-python310.sh .
 RUN ./install-python310.sh rhel9.2 && rm install-python310.sh
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/python.conf && ldconfig
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 COPY install_efa.sh .
@@ -128,11 +129,11 @@ RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archi
     cd / && \
     rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
-RUN python3.10 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
+RUN python3 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-RUN python3.10 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
