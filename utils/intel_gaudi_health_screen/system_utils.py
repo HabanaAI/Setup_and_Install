@@ -31,6 +31,8 @@ class SystemUtils():
 
     def clear_tmp_ighs(self):
         ighs_path = "/tmp/intel_gaudi_health_screen"
+        if not os.path.exists(ighs_path):
+            os.makedirs(ighs_path)
 
         _logger.info(f"Clearing out {ighs_path}")
         shutil.rmtree(ighs_path)

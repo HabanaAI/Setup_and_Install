@@ -152,7 +152,7 @@ system-info:
 image: "vault.habana.ai/gaudi-docker/1.19.0/ubuntu22.04/habanalabs/pytorch-installer-2.5.1:latest"
 
 # Node Label used to identify a Intel Gaudi Node
-gaudi-node-label: "habana.ai/gaudi:NoSchedule"
+gaudi-node-label: "habana.ai/gaudi=NoSchedule"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"
@@ -236,7 +236,7 @@ system-info:
 image: "vault.habana.ai/gaudi-docker/1.19.0/ubuntu22.04/habanalabs/pytorch-installer-2.5.1:latest"
 
 # Node Label used to identify a Intel Gaudi Node
-gaudi-node-label: "habana.ai/gaudi:NoSchedule"
+gaudi-node-label: "habana.ai/gaudi=NoSchedule"
 
 # Controls granularity of Logs (INFO, DEBUG, WARN, ERROR, CRITICAL)
 log-level: "DEBUG"
