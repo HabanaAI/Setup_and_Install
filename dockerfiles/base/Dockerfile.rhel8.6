@@ -13,8 +13,13 @@ LABEL release="${VERSION}-${REVISION}"
 
 COPY LICENSE /licenses/
 
+RUN dnf install -y \
+        python3-dnf-plugin-versionlock && \
+    dnf versionlock add redhat-release* && \
+    dnf clean all
+
 RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
-    dnf clean all && rm -rf /var/cache/yum
+    dnf clean all
 
 RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "name=CentOS Linux 8 - BaseOS" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
@@ -22,45 +27,41 @@ RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
 
-RUN dnf install -y \
-    clang \
-    cmake3 \
-    cpp \
-    gcc \
-    gcc-c++ \
-    glibc \
-    glibc-headers \
-    glibc-devel \
-    jemalloc \
-    libarchive \
-    libksba \
-    unzip \
-    llvm \
-    lsof \
-    python3.11-devel \
-    python3.11-pip \
-    bzip2 \
-    bzip2-devel \
-    openssh-clients \
-    libjpeg-devel \
-    openssh-server \
-    redhat-lsb-core \
-    wget \
-    git \
-    mesa-libGL \
-    iproute \
-    python3-dnf-plugin-versionlock && \
-    # update pkgs (except OS version) for resolving potentials CVEs
-    dnf versionlock add redhat-release* && \
-    dnf update -y && \
-    dnf clean all && rm -rf /var/cache/yum && \
+RUN dnf update -y && dnf install -y \
+        bzip2 \
+        bzip2-devel \
+        clang \
+        cmake3 \
+        cpp \
+        gcc \
+        gcc-c++ \
+        git \
+        glibc \
+        glibc-devel \
+        glibc-headers \
+        iproute \
+        jemalloc \
+        libarchive \
+        libjpeg-devel \
+        libksba \
+        llvm \
+        lsof \
+        mesa-libGL \
+        openssh-clients \
+        openssh-server \
+        python3.11-devel \
+        python3.11-pip \
+        redhat-lsb-core \
+        unzip \
+        wget && \
+    dnf clean all && \
     rm -f /etc/ssh/ssh_host_*_key*
 
 # CVE-2023-47038 RHSA-2024:3128
-RUN dnf module reset perl -y && \
-    dnf module enable perl:5.32 -y  && \
-    dnf --allowerasing module install perl:5.32 -y && \
-    dnf clean all && rm -rf /var/cache/yum
+RUN dnf module reset -y perl && \
+    dnf module enable -y perl:5.32 && \
+    dnf module install -y --allowerasing perl:5.32 && \
+    dnf clean all
 
 RUN echo "[appstream]" > /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "name=CentOS Linux 8 - AppStream" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
@@ -69,7 +70,7 @@ RUN echo "[appstream]" > /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo
 
 COPY install_efa.sh .
-RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+RUN ./install_efa.sh && rm install_efa.sh && rm -f /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
 ENV OPENMPI_VERSION=4.1.6
 ENV LIBFABRIC_VERSION="1.20.0"
@@ -99,18 +100,18 @@ RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
     alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
     alternatives --set python3 /usr/bin/python3.11
 
-RUN dnf install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".el8 \
+RUN dnf install -y \
+        habanalabs-rdma-core-"$VERSION"-"$REVISION".el8 \
         habanalabs-thunk-"$VERSION"-"$REVISION".el8 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".el8 \
         habanalabs-graph-"$VERSION"-"$REVISION".el8 && \
-    rm -f /etc/yum.repos.d/habanalabs.repo && rm -rf /tmp/* && \
-    dnf clean all && rm -rf /var/cache/yum
+    dnf clean all && \
+    rm -f /etc/yum.repos.d/habanalabs.repo
 
 RUN rpm -V habanalabs-rdma-core && rpm -V habanalabs-thunk && rpm -V habanalabs-firmware-tools && rpm -V habanalabs-graph
 
-# There is no need to store pip installation files inside docker image
-ENV PIP_NO_CACHE_DIR=on
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=on
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 

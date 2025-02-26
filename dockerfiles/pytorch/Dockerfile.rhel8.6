@@ -19,19 +19,20 @@ LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
 RUN echo "/usr/lib/habanalabs" > $(python3 -c "import sysconfig; print(sysconfig.get_path('platlib'))")/habanalabs-graph.pth
 
-RUN dnf install -y \
-    curl \
-    cairo-devel \
-    numactl-devel \
-    iproute \
-    which \
-    zlib-devel \
-    lapack-devel \
-    openblas-devel \
-    numactl \
-    pdsh \
-    gcc-toolset-11 \
-    gperftools-devel && \
+RUN dnf update -y && dnf install -y \
+        cairo-devel \
+        curl \
+        gcc-toolset-11 \
+        gperftools-devel \
+        iproute \
+        jq \
+        lapack-devel \
+        numactl \
+        numactl-devel \
+        openblas-devel \
+        pdsh \
+        which \
+        zlib-devel && \
     dnf clean all
 
 COPY install_packages.sh .

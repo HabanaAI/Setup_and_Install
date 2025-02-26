@@ -17,42 +17,44 @@ RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.n
     dnf clean all && rm -rf /var/cache/yum
 
 RUN dnf install -y \
-    clang \
-    cmake3 \
-    cpp \
-    gcc \
-    gcc-c++ \
-    glibc \
-    glibc-headers \
-    glibc-devel \
-    jemalloc \
-    libarchive \
-    libksba \
-    unzip \
-    llvm \
-    lsof \
-    python38-devel \
-    openssh-clients \
-    libjpeg-devel \
-    openssh-server \
-    redhat-lsb-core \
-    wget \
-    git \
-    mesa-libGL \
-    iproute \
-    python3-dnf-plugin-versionlock && \
+        python3-dnf-plugin-versionlock && \
     dnf versionlock add redhat-release* && \
-    dnf clean all && rm -rf /var/cache/yum && \
+    dnf clean all
+
+RUN dnf update -y && dnf install -y \
+        clang \
+        cmake3 \
+        cpp \
+        gcc \
+        gcc-c++ \
+        git \
+        glibc \
+        glibc-devel \
+        glibc-headers \
+        iproute \
+        jemalloc \
+        libarchive \
+        libjpeg-devel \
+        libksba \
+        llvm \
+        lsof \
+        mesa-libGL \
+        openssh-clients \
+        openssh-server \
+        redhat-lsb-core \
+        unzip \
+        wget && \
+    dnf clean all && \
     rm -f /etc/ssh/ssh_host_*_key*
 
 COPY install-python310.sh .
-RUN ./install-python310.sh tencentos3.1 && rm install-python310.sh
+RUN ./install-python310.sh tencentos3.1 && rm -f install-python310.sh
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/python.conf && ldconfig
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 COPY install_efa.sh .
 COPY tencentos_efa_patch.txt /tmp/tencentos_efa_patch.txt
-RUN ./install_efa.sh && rm -f install_efa.sh /tmp/tencentos_efa_patch.txt && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+RUN ./install_efa.sh && rm -f install_efa.sh /tmp/tencentos_efa_patch.txt /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
 ENV LIBFABRIC_VERSION="1.22.0"
 ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
@@ -69,18 +71,18 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
-RUN dnf install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".tl3 \
+RUN dnf install -y \
+        habanalabs-rdma-core-"$VERSION"-"$REVISION".tl3 \
         habanalabs-thunk-"$VERSION"-"$REVISION".tl3 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".tl3 \
         habanalabs-graph-"$VERSION"-"$REVISION".tl3 && \
-    rm -f /etc/yum.repos.d/habanalabs.repo && rm -rf /tmp/* && \
-    dnf clean all && rm -rf /var/cache/yum
+    rm -f /etc/yum.repos.d/habanalabs.repo && \
+    dnf clean all
 
 RUN rpm -V habanalabs-rdma-core && rpm -V habanalabs-thunk && rpm -V habanalabs-firmware-tools && rpm -V habanalabs-graph
 
-# There is no need to store pip installation files inside docker image
-ENV PIP_NO_CACHE_DIR=on
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=on
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 

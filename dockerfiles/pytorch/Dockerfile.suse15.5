@@ -20,11 +20,13 @@ LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
-RUN zypper install -y --allow-downgrade \
+RUN zypper update -y && zypper install -y --allow-downgrade \
         cairo-devel \
-        numactl \
+        gperftools-devel \
+        jq \
         lapack-devel \
-        gperftools-devel
+        numactl && \
+    zypper clean
 
 COPY install_packages.sh .
 

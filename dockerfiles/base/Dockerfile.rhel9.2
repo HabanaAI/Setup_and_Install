@@ -13,8 +13,13 @@ LABEL release="${VERSION}-${REVISION}"
 
 COPY LICENSE /licenses/
 
+RUN dnf install -y \
+        python3-dnf-plugin-versionlock && \
+    dnf versionlock add redhat-release* && \
+    dnf clean all
+
 RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    dnf clean all && rm -rf /var/cache/yum
+    dnf clean all
 
 RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "name=CentOS Linux 9 - BaseOS" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
@@ -28,41 +33,37 @@ RUN echo "[centos9]" > /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-AppStream.repo
 
-RUN dnf install -y \
-    clang \
-    cmake3 \
-    cpp \
-    gcc \
-    gcc-c++ \
-    glibc \
-    glibc-headers \
-    glibc-devel \
-    jemalloc \
-    libarchive \
-    libksba \
-    unzip \
-    llvm \
-    lsof \
-    python3-devel \
-    openssh-clients \
-    openssl \
-    openssl-devel \
-    libjpeg-devel \
-    openssh-server \
-    lsb_release \
-    wget \
-    git \
-    libffi-devel \
-    bzip2 \
-    bzip2-devel \
-    zlib-devel \
-    mesa-libGL \
-    iproute \
-    python3-dnf-plugin-versionlock && \
-    # update pkgs (except OS version) for resolving potentials CVEs
-    dnf versionlock add redhat-release* && \
-    dnf update -y && \
-    dnf clean all && rm -rf /var/cache/yum && \
+RUN dnf update -y && dnf install -y \
+        bzip2 \
+        bzip2-devel \
+        clang \
+        cmake3 \
+        cpp \
+        gcc \
+        gcc-c++ \
+        git \
+        glibc \
+        glibc-devel \
+        glibc-headers \
+        iproute \
+        jemalloc \
+        libarchive \
+        libffi-devel \
+        libjpeg-devel \
+        libksba \
+        llvm \
+        lsb_release \
+        lsof \
+        mesa-libGL \
+        openssh-clients \
+        openssh-server \
+        openssl \
+        openssl-devel \
+        python3-devel \
+        unzip \
+        wget \
+        zlib-devel && \
+    dnf clean all && \
     rm -f /etc/ssh/ssh_host_*_key*
 
 ENV PYTHON_VERSION=3.10
@@ -95,18 +96,18 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
 # for Habana GPG key with SHA-1 signature
 RUN update-crypto-policies --set DEFAULT:SHA1
 
-RUN dnf install -y habanalabs-rdma-core-"$VERSION"-"$REVISION".el9 \
+RUN dnf install -y \
+        habanalabs-rdma-core-"$VERSION"-"$REVISION".el9 \
         habanalabs-thunk-"$VERSION"-"$REVISION".el9 \
         habanalabs-firmware-tools-"$VERSION"-"$REVISION".el9 \
         habanalabs-graph-"$VERSION"-"$REVISION".el9 && \
-    rm -f /etc/yum.repos.d/habanalabs.repo && rm -f /etc/yum.repos.d/habana.repo && rm -rf /tmp/* && \
-    dnf clean all && rm -rf /var/cache/yum
+    dnf clean all && \
+    rm -f /etc/yum.repos.d/habanalabs.repo
 
 RUN rpm -V habanalabs-rdma-core && rpm -V habanalabs-thunk && rpm -V habanalabs-firmware-tools && rpm -V habanalabs-graph
 
-# There is no need to store pip installation files inside docker image
-ENV PIP_NO_CACHE_DIR=on
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=on
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 

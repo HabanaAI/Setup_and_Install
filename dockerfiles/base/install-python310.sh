@@ -6,13 +6,9 @@ _SSL_LIB=""
 
 # preinstall dependencies and define variables
 case "${_BASE_NAME}" in
-    *ubuntu22.04*)
-        echo "Skip install Python3.10 from source on Ubuntu22.04"
+    *ubuntu22.04* | *ubuntu24.04*)
+        echo "Skip installation of Python 3.10 from sources on Ubuntu 22.04 and Ubuntu 24.04"
         exit 0;
-    ;;
-    *ubuntu*)
-        apt update
-        apt install -y libsqlite3-dev libreadline-dev
     ;;
     *rhel*)
         dnf install -y sqlite-devel readline-devel xz-devel

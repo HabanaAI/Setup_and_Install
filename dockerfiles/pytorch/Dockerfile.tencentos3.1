@@ -19,19 +19,20 @@ LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
-RUN dnf install -y \
-        curl \
+RUN dnf update -y && dnf install -y \
         cairo-devel \
-        numactl-devel \
-        iproute \
-        which \
-        zlib-devel \
-        lapack-devel \
-        openblas-devel \
-        numactl \
-        pdsh \
+        curl \
         gcc-toolset-11 \
-        gperftools-devel && \
+        gperftools-devel \
+        iproute \
+        jq \
+        lapack-devel \
+        numactl \
+        numactl-devel \
+        openblas-devel \
+        pdsh \
+        which \
+        zlib-devel && \
     dnf clean all
 
 # Configure GCC 11

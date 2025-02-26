@@ -25,17 +25,18 @@ RUN echo "[CRB]" > /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo
 
-RUN dnf install --allowerasing -y \
-        curl \
+RUN dnf update -y && dnf install --allowerasing -y \
         cairo-devel \
-        numactl-devel \
+        curl \
+        gperftools-devel \
         iproute \
-        which \
-        zlib-devel \
+        jq \
         lapack-devel \
-        openblas-devel \
         numactl \
-        gperftools-devel && \
+        numactl-devel \
+        openblas-devel \
+        which \
+        zlib-devel && \
     dnf clean all
 
 COPY install_packages.sh .

@@ -15,46 +15,45 @@ ENV OS_NUMBER=2204
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
 ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    apt-transport-https \
-    apt-utils \
-    bc \
-    build-essential \
-    ca-certificates \
-    dkms \
-    ethtool \
-    gcc \
-    git \
-    gnupg \
-    gpg-agent \
-    graphviz \
-    libgl1 \
-    libgoogle-glog0v5 \
-    libjemalloc2 \
-    libjpeg-dev \
-    libpq-dev \
-    lsof \
-    make \
-    openssh-client \
-    openssh-server \
-    protobuf-compiler \
-    python3 \
-    python3-dev \
-    python3-pip \
-    python3-tk \
-    python3-venv \
-    unzip \
-    vim \
-    libkrb5-3 \
-    libgnutls30 \
-    wget && \
-    apt-get autoremove && apt-get clean && \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        apt-transport-https \
+        apt-utils \
+        bc \
+        build-essential \
+        ca-certificates \
+        dkms \
+        ethtool \
+        gcc \
+        git \
+        gnupg \
+        gpg-agent \
+        graphviz \
+        libgl1 \
+        libgnutls30 \
+        libgoogle-glog0v5 \
+        libjemalloc2 \
+        libjpeg-dev \
+        libkrb5-3 \
+        libpq-dev \
+        lsof \
+        make \
+        openssh-client \
+        openssh-server \
+        protobuf-compiler \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-tk \
+        python3-venv \
+        unzip \
+        vim \
+        wget && \
+    apt-get upgrade -y libc6 && \
+    apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
     rm -f /etc/ssh/ssh_host_*_key*
 
-# There is no need to store pip installation files inside docker image
-ENV PIP_NO_CACHE_DIR=on
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=on
 
 RUN python3 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
 
@@ -77,16 +76,16 @@ RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --d
     chown root:root /usr/share/keyrings/habana-artifactory.gpg && \
     chmod 644 /usr/share/keyrings/habana-artifactory.gpg  && \
     echo "deb [signed-by=/usr/share/keyrings/habana-artifactory.gpg] https://${ARTIFACTORY_URL}/artifactory/debian jammy main" | tee -a /etc/apt/sources.list && \
-    apt-get update && \
     cp /etc/dpkg/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes.bak && \
     sed -i '/path-exclude=\/usr\/share\/doc/d' /etc/dpkg/dpkg.cfg.d/excludes && \
-    apt-get install -y habanalabs-rdma-core="$VERSION"-"$REVISION" \
+    apt-get update && apt-get install -y --no-install-recommends \
+        habanalabs-rdma-core="$VERSION"-"$REVISION" \
         habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
         habanalabs-graph="$VERSION"-"$REVISION" && \
-    apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
     mv -f /etc/dpkg/dpkg.cfg.d/excludes.bak /etc/dpkg/dpkg.cfg.d/excludes && \
-    sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
+    sed -i "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
 RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/ofiwg/libfabric/releases/download/v${LIBFABRIC_VERSION}/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
     cd /tmp/ && tar xf /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \

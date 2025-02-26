@@ -32,7 +32,18 @@ case $ID in
         dnf install -y RPMS/ROCKYLINUX8/x86_64/rdma-core/*.rpm
         patch -f -p1 -i /tmp/tencentos_efa_patch.txt --reject-file=tencentos_efa_patch.rej --no-backup-if-mismatch
     ;;
+    ubuntu)
+        apt-get update
+    ;;
 esac
+
 eval $RUN_EFA_INSTALLER
+
+case $ID in
+    ubuntu)
+        apt-get autoremove && rm -rf /var/lib/apt/lists/*
+    ;;
+esac
+
 popd
 rm -rf $tmp_dir
