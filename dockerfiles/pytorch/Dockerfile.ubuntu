@@ -36,6 +36,9 @@ RUN bash -c "\
             *ubuntu22.04*) \
                update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
             ;; \
+            *ubuntu24.04*) \
+               update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
+            ;; \
         esac"
 
 COPY install_packages.sh .

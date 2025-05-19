@@ -25,7 +25,7 @@ RUN echo "[CRB]" > /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgkey=https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo
 
-RUN dnf update -y && dnf install --allowerasing -y \
+RUN dnf update -y && dnf install --nobest --allowerasing -y \
         cairo-devel \
         curl \
         gperftools-devel \

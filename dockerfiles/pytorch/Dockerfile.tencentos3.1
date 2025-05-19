@@ -19,6 +19,8 @@ LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
+RUN dnf versionlock add openmpi* perftest*
+
 RUN dnf update -y && dnf install -y \
         cairo-devel \
         curl \
@@ -30,6 +32,7 @@ RUN dnf update -y && dnf install -y \
         numactl \
         numactl-devel \
         openblas-devel \
+        libevent \
         pdsh \
         which \
         zlib-devel && \
@@ -40,8 +43,9 @@ ENV PATH=/opt/rh/gcc-toolset-11/root/usr/bin:${PATH}
 ENV MANPATH=/opt/rh/gcc-toolset-11/root/usr/share/man:${MANPATH}
 ENV INFOPATH=/opt/rh/gcc-toolset-11/root/usr/share/info:${INFOPATH}
 ENV PCP_DIR=/opt/rh/gcc-toolset-11/root
-ENV LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:/opt/rh/gcc-toolset-11/root/usr/lib:/opt/rh/gcc-toolset-11/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-11/root/usr/lib/dyninst:${LD_LIBRARY_PATH}
-ENV PKG_CONFIG_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64/pkgconfig:${PKG_CONFIG_PATH}
+ENV LD_LIBRARY_PATH=/usr/mpi/gcc/openmpi-4.1.5a1/lib64:/opt/rh/gcc-toolset-11/root/usr/lib64:/opt/rh/gcc-toolset-11/root/usr/lib:/opt/rh/gcc-toolset-11/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-11/root/usr/lib/dyninst:${LD_LIBRARY_PATH}
+ENV PKG_CONFIG_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64/pkgconfig:/usr/mpi/gcc/openmpi-4.1.5a1/lib64/pkgconfig:${PKG_CONFIG_PATH}
+ENV CMAKE_PREFIX_PATH=/usr/mpi/gcc/openmpi-4.1.5a1/include:${CMAKE_PREFIX_PATH}
 
 COPY install_packages.sh .
 

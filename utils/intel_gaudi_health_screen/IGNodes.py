@@ -294,7 +294,7 @@ class IGCard():
         return self.device_acquire_fail
 
     def check_temperature_state(self):
-        if self.system_name == "HL-325":
+        if "HL-325" in self.system_name:
             # Gaudi-3 System
             max_good_temperature = 200
             base_temperature     = 45

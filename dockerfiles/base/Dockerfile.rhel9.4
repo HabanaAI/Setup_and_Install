@@ -13,6 +13,20 @@ LABEL release="${VERSION}-${REVISION}"
 
 COPY LICENSE /licenses/
 
+RUN dnf install -y \
+        python3-dnf-plugin-versionlock && \
+    dnf versionlock add redhat-release* && \
+    dnf clean all
+
+RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    dnf clean all
+
+RUN dnf update -y && dnf install -y \
+        openssl \
+        openssl-devel && \
+    dnf versionlock add openssl* openssl-devel* && \
+    dnf clean all
+
 RUN echo "[BaseOS]" > /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "name=CentOS Linux 9 - BaseOS" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
     echo "baseurl=https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os" >> /etc/yum.repos.d/CentOS-Linux-BaseOS.repo && \
@@ -32,14 +46,6 @@ RUN echo "[CRB]" > /etc/yum.repos.d/CentOS-Linux-CRB.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/CentOS-Linux-CRB.repo
 
 RUN dnf install -y \
-        python3-dnf-plugin-versionlock && \
-    dnf versionlock add redhat-release* && \
-    dnf clean all
-
-RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    dnf clean all
-
-RUN dnf update -y && dnf install -y \
         bzip2 \
         bzip2-devel \
         clang \
@@ -64,8 +70,6 @@ RUN dnf update -y && dnf install -y \
         mesa-libGL \
         openssh-clients \
         openssh-server \
-        openssl \
-        openssl-devel \
         python3-devel \
         python3.11 \
         python3.11-devel \
@@ -91,11 +95,9 @@ COPY install_efa.sh .
 RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
 ENV OPENMPI_VERSION=4.1.6
-ENV LIBFABRIC_VERSION="1.22.0"
-ENV LIBFABRIC_ROOT="/opt/habanalabs/libfabric-${LIBFABRIC_VERSION}"
 ENV MPI_ROOT=/opt/habanalabs/openmpi
-ENV LD_LIBRARY_PATH=$LIBFABRIC_ROOT/lib:${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
-ENV PATH=${LIBFABRIC_ROOT}/bin:${MPI_ROOT}/bin:$PATH
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
@@ -120,31 +122,16 @@ RUN dnf install -y \
     chmod +t /var/log/habana_logs && \
     rm -f /etc/yum.repos.d/habanalabs.repo
 
-RUN rpm -V habanalabs-rdma-core && rpm -V habanalabs-thunk && rpm -V habanalabs-firmware-tools && rpm -V habanalabs-graph
-
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
-RUN wget -nv -O /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 https://github.com/ofiwg/libfabric/releases/download/v${LIBFABRIC_VERSION}/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
-    cd /tmp/ && tar xf /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 && \
-    cd /tmp/libfabric-${LIBFABRIC_VERSION} && \
-    ./configure --prefix=$LIBFABRIC_ROOT --enable-psm3-verbs --enable-verbs=yes --with-synapseai=/usr && \
-    make && make install && cd / && rm -rf /tmp/libfabric-${LIBFABRIC_VERSION}.tar.bz2 /tmp/libfabric-${LIBFABRIC_VERSION}
-
 RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OPENMPI_VERSION}.tar.gz && \
     tar -xzf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz -C /tmp && \
     cd /tmp/openmpi-${OPENMPI_VERSION} && \
-    ./configure --prefix=${MPI_ROOT} --with-libfabric=$LIBFABRIC_ROOT --with-verbs && \
+    ./configure --prefix=${MPI_ROOT} --with-verbs && \
     make -j$(nproc) && make install && cd / && rm -rf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz /tmp/openmpi-${OPENMPI_VERSION}
-
-RUN wget -nv -O /tmp/main.zip https://github.com/HabanaAI/hccl_ofi_wrapper/archive/refs/heads/main.zip && \
-    unzip /tmp/main.zip -d /tmp && \
-    cd /tmp/hccl_ofi_wrapper-main && \
-    make && cp -f libhccl_ofi_wrapper.so /usr/lib/habanalabs/libhccl_ofi_wrapper.so && \
-    cd / && \
-    rm -rf /tmp/main.zip /tmp/hccl_ofi_wrapper-main
 
 RUN python3 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0
 
