@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile base installer layer for Ubuntu 22.04
+# HabanaLabs Dockerfile base installer layer for Ubuntu 22.04 with python 3.11
 FROM ubuntu:jammy
 ARG ARTIFACTORY_URL
 ARG VERSION
@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gnupg \
         gpg-agent \
         graphviz \
+        libcairo2-dev \
         libgl1 \
         libgnutls30 \
         libgoogle-glog0v5 \
@@ -45,9 +46,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
         vim \
         wget && \
-    apt-get upgrade -y && \
-    apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
+    apt-get upgrade -y libc6 && \
+    apt-get install -y --no-install-recommends software-properties-common && \
+    add-apt-repository -y ppa:deadsnakes/ppa && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        python3.11 \
+        python3.11-dev && \
+    apt-get remove -y software-properties-common && \
+    apt-get autoremove -y && rm -rf /var/lib/apt/lists/* && \
     rm -f /etc/ssh/ssh_host_*_key*
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.11 2 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on
@@ -56,10 +68,10 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py && \
     rm -f get-pip.py && \
     python3 -m pip install setuptools==79.0.1 wheel && \
-    python3 -m pip install --upgrade Jinja2 protobuf urllib3 requests
+    python3 -m pip install --upgrade cryptography Jinja2 meson oauthlib pycairo PyJWT zipp protobuf urllib3 requests
 
 COPY install_efa.sh .
-RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+RUN ./install_efa.sh && rm -f install_efa.sh /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
 ENV MPI_ROOT=/opt/amazon/openmpi
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH

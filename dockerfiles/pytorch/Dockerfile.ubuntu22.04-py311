@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu22.04
+# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu22.04 with python 3.11
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -20,31 +20,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         iproute2 \
         jq \
+        libcairo2-dev \
         libcurl4 \
+        libglib2.0-dev \
         libgoogle-perftools-dev \
         libhdf5-dev \
         libjpeg-dev \
         liblapack-dev \
         libnuma-dev \
         libopenblas-dev \
+        libpcre2-dev \
+        libselinux1-dev \
         moreutils \
         numactl \
         pdsh && \
     apt-get autoremove && rm -rf /var/lib/apt/lists/*
 
-RUN bash -c "\
-        case $BASE_NAME in \
-            *ubuntu22.04*) \
-               update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
-            ;; \
-            *ubuntu24.04*) \
-               update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-            ;; \
-        esac"
-
 COPY install_packages.sh .
 
-RUN ./install_packages.sh && rm -f install_packages.sh && \
+RUN PYTHON_SUFFIX=py311 ./install_packages.sh && rm -f install_packages.sh && \
     /sbin/ldconfig && echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
 
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4

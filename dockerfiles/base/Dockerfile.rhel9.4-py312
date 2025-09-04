@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile base installer layer for RedHat 9.4
+# HabanaLabs Dockerfile base installer layer for RedHat 9.4 with python 3.12
 FROM registry.access.redhat.com/ubi9/ubi:9.4
 ARG ARTIFACTORY_URL
 ARG VERSION
@@ -66,23 +66,21 @@ RUN dnf update -y && dnf install -y \
         openssh-server \
         openssl \
         openssl-devel \
-        python3-devel \
-        python3.11 \
-        python3.11-devel \
-        python3.11-rpm \
+        python3.12 \
+        python3.12-devel \
+        python3.12-libs \
+        python3.12-rpm \
         unzip \
         wget \
         zlib-devel && \
     dnf versionlock add \
-        python3-rpm \
         rpm* && \
     dnf clean all && \
     rm -f /etc/ssh/ssh_host_*_key*
 
-RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
+RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 2 && \
     alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
-    alternatives --install /usr/bin/python3-config python3-config /usr/bin/python3.11-config 1 && \
-    alternatives --set python3 /usr/bin/python3.11
+    alternatives --set python3 /usr/bin/python3.12
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on

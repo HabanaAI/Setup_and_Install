@@ -1,8 +1,8 @@
-# Copyright (c) 2024 HabanaLabs, Ltd.
+# Copyright (c) 2025 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for RHEL 9.4
+# HabanaLabs Dockerfile PyTorch installer layer for OpenCloudOS 9.2
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -15,13 +15,14 @@ ARG ARTIFACTORY_URL
 ARG TORCH_TYPE
 
 LABEL name="PyTorch Installer"
-LABEL summary="Habanalabs PyTorch installer layer for RHEL9.4"
+LABEL summary="Habanalabs PyTorch installer layer for OpenCloudOS 9.2"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
-RUN echo "/usr/lib/habanalabs" > $(python3 -c "import sysconfig; print(sysconfig.get_path('platlib'))")/habanalabs-graph.pth
+ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
-RUN dnf update --nobest -y && dnf install --nobest --nodocs --setopt=install_weak_deps=false --allowerasing -y \
+RUN dnf update --nobest -y && dnf install --nobest --allowerasing -y \
         cairo-devel \
+        curl \
         gperftools-devel \
         iproute \
         jq \
@@ -42,3 +43,5 @@ RUN ./install_packages.sh && rm -f install_packages.sh && \
 # avoid warnings during docker creation
 ENV LD_PRELOAD=/usr/lib64/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
+
+RUN rm -f /etc/yum.repos.d/habana.repo

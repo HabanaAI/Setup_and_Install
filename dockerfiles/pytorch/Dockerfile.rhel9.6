@@ -1,8 +1,8 @@
-# Copyright (c) 2023 HabanaLabs, Ltd.
+# Copyright (c) 2025 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for RHEL 8.6
+# HabanaLabs Dockerfile PyTorch installer layer for RHEL 9.6
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -12,17 +12,16 @@ ARG VERSION
 ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
+ARG TORCH_TYPE
 
 LABEL name="PyTorch Installer"
-LABEL summary="Habanalabs PyTorch installer layer for RHEL8.6"
+LABEL summary="Habanalabs PyTorch installer layer for RHEL9.6"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
 RUN echo "/usr/lib/habanalabs" > $(python3 -c "import sysconfig; print(sysconfig.get_path('platlib'))")/habanalabs-graph.pth
 
-RUN dnf update -y && dnf install -y \
+RUN dnf update --nobest -y && dnf install --nobest --nodocs --setopt=install_weak_deps=false --allowerasing -y \
         cairo-devel \
-        curl \
-        gcc-toolset-11 \
         gperftools-devel \
         iproute \
         jq \
@@ -30,7 +29,6 @@ RUN dnf update -y && dnf install -y \
         numactl \
         numactl-devel \
         openblas-devel \
-        pdsh \
         which \
         zlib-devel && \
     dnf clean all
@@ -40,13 +38,7 @@ COPY install_packages.sh .
 RUN ./install_packages.sh && rm -f install_packages.sh && \
     /sbin/ldconfig && echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
 
-# Configure GCC 11
-ENV PATH=/opt/rh/gcc-toolset-11/root/usr/bin:${PATH}
-ENV MANPATH=/opt/rh/gcc-toolset-11/root/usr/share/man:${MANPATH}
-ENV INFOPATH=/opt/rh/gcc-toolset-11/root/usr/share/info:${INFOPATH}
-ENV PCP_DIR=/opt/rh/gcc-toolset-11/root
-ENV LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:/opt/rh/gcc-toolset-11/root/usr/lib:/opt/rh/gcc-toolset-11/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-11/root/usr/lib/dyninst:${LD_LIBRARY_PATH}
-ENV PKG_CONFIG_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64/pkgconfig:${PKG_CONFIG_PATH}
-
-ENV LD_PRELOAD=/lib64/libtcmalloc.so.4
+# Set LD_PRELOAD after all required installations to
+# avoid warnings during docker creation
+ENV LD_PRELOAD=/usr/lib64/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768

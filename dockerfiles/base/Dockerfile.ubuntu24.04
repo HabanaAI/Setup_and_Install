@@ -45,7 +45,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
         vim \
         wget && \
-    apt-get update && apt-get upgrade -y libtasn1-6 && \
     apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
     rm -f /etc/ssh/ssh_host_*_key*
 
@@ -56,8 +55,8 @@ RUN mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MAN
     wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py && \
     rm -f get-pip.py && \
-    python3 -m pip install setuptools wheel && \
-    python3 -m pip install --upgrade Jinja2
+    python3 -m pip install setuptools==79.0.1 wheel && \
+    python3 -m pip install --upgrade Jinja2 protobuf urllib3 requests
 
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm -f install_efa.sh /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
@@ -78,7 +77,8 @@ RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --d
     echo "deb [signed-by=/usr/share/keyrings/habana-artifactory.gpg] https://${ARTIFACTORY_URL}/artifactory/debian noble main" | tee -a /etc/apt/sources.list && \
     cp /etc/dpkg/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes.bak && \
     sed -i '/path-exclude=\/usr\/share\/doc/d' /etc/dpkg/dpkg.cfg.d/excludes && \
-    apt-get update && apt-get install -y --no-install-recommends \
+    apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
         habanalabs-rdma-core="$VERSION"-"$REVISION" \
         habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \

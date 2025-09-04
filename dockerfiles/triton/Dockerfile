@@ -31,14 +31,14 @@ ENV PYTHONPATH=/root:/usr/lib/habanalabs
 RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian jammy main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
     apt-key add public && rm public && apt-get update && \
-    apt-get install -y habanalabs-rdma-core="$VERSION"-"$REVISION" \
+    apt-get install -y --no-install-recommends habanalabs-rdma-core="$VERSION"-"$REVISION" \
         habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
         habanalabs-graph="$VERSION"-"$REVISION" && \
     apt-get autoremove --yes && apt-get clean && rm -rf /var/lib/apt/lists/* && \
     sed --in-place "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libjemalloc2 \
     libcairo2-dev \
     libglib2.0-dev \
@@ -72,5 +72,5 @@ RUN ln -s /usr/bin/python3.10 /usr/bin/python && wget --no-verbose "${PT_ARTIFAC
     pip install pillow-simd==7.0.0.post3 --disable-pip-version-check && \
     rm -rf /root/habanalabs pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz /tmp/*
 
-ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libtcmalloc.so.4
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768

@@ -10,14 +10,24 @@ RUN_EFA_INSTALLER="./efa_installer.sh -y --skip-kmod --skip-limit-conf --no-veri
 pushd $tmp_dir/aws-efa-installer
 . /etc/os-release
 case $ID in
+    navix)
+        find RPMS/ -name 'dkms*.rpm' -exec rm -f {} \;
+        find RPMS/ -name 'efa-*.rpm' -exec rm -f {} \;
+        dnf install -y RPMS/ROCKYLINUX9/x86_64/rdma-core/*.rpm
+        RUN_EFA_INSTALLER="echo 'Skipping EFA installer on RHEL'"
+    ;;
+    opencloudos)
+        find RPMS/ -name 'dkms*.rpm' -exec rm -f {} \;
+        find RPMS/ -name 'efa-*.rpm' -exec rm -f {} \;
+        rm -rf RPMS/ROCKYLINUX9/x86_64/rdma-core/python3-pyverbs*.rpm
+        dnf install -y RPMS/ROCKYLINUX9/x86_64/rdma-core/*.rpm
+        RUN_EFA_INSTALLER="echo 'Skipping EFA installer on opencloudos'"
+    ;;
     rhel)
         # we cannot install dkms packages on RHEL images due to OCP rules
         find RPMS/ -name 'dkms*.rpm' -exec rm -f {} \;
         find RPMS/ -name 'efa-*.rpm' -exec rm -f {} \;
         case $VERSION_ID in
-            8*)
-                dnf install -y RPMS/ROCKYLINUX8/x86_64/rdma-core/*.rpm
-            ;;
             9*)
                 dnf install -y RPMS/ROCKYLINUX9/x86_64/rdma-core/*.rpm
             ;;

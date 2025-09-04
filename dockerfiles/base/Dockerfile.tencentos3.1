@@ -8,7 +8,6 @@ ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 
-# for RHEL certification
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
 
@@ -18,7 +17,7 @@ RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.n
 
 RUN dnf install -y \
         python3-dnf-plugin-versionlock && \
-    dnf versionlock add redhat-release* && \
+    dnf versionlock add tencentos-release* && \
     dnf clean all
 
 RUN dnf update -y && dnf install -y \
@@ -52,6 +51,15 @@ RUN ./install-python310.sh tencentos3.1 && rm -f install-python310.sh
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/python.conf && ldconfig
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=on
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py && \
+    rm -f get-pip.py && \
+    python3 -m pip install setuptools==79.0.1 wheel && \
+    python3 -m pip install --upgrade Jinja2 protobuf requests urllib3
+
 COPY install_efa.sh .
 COPY tencentos_efa_patch.txt /tmp/tencentos_efa_patch.txt
 RUN ./install_efa.sh && rm -f install_efa.sh /tmp/tencentos_efa_patch.txt /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
@@ -69,6 +77,10 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
+RUN _GPG_TEMP=$(mktemp -d) && \
+    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
+    rm -rf "${_GPG_TEMP}"
+
 RUN dnf install -y \
         habanalabs-rdma-core-"$VERSION"-"$REVISION".tl3 \
         habanalabs-thunk-"$VERSION"-"$REVISION".tl3 \
@@ -77,13 +89,25 @@ RUN dnf install -y \
     rm -f /etc/yum.repos.d/habanalabs.repo && \
     dnf clean all
 
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
-ENV PIP_NO_CACHE_DIR=on
+RUN alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 4 && \
+    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 3 && \
+    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
+    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
+    alternatives --install /usr/bin/unversioned-python unversioned-python /usr/bin/python3 10 && \
+    alternatives --install /usr/bin/python3-config python3-config /usr/local/bin/python3.10-config 1 && \
+    alternatives --set python3 /usr/local/bin/python3.10 && \
+    alternatives --set python3-config /usr/local/bin/python3.10-config && \
+    alternatives --set unversioned-python /usr/bin/python3 && \
+    export PATH="/usr/local/bin:$PATH" && \
+    if [ ! -L /usr/bin/python ] || [ "$(readlink /usr/bin/python)" != "/etc/alternatives/unversioned-python" ]; then \
+        rm -f /usr/bin/python; \
+        ln -s /etc/alternatives/unversioned-python /usr/bin/python; \
+    fi
+
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
-RUN python3 -m pip install pip==24.2 setuptools==75.1.0 wheel==0.44.0 && \
-    python3 -m pip install --upgrade Jinja2
+RUN alternatives --set python /usr/bin/python3
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 

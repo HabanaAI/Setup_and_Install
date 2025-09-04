@@ -31,12 +31,12 @@ case "${_BASE_NAME}" in
 esac
 
 # install Python
-wget -nv -O /opt/Python-3.10.14.tgz https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz
+wget -nv -O /opt/Python-3.10.18.tgz https://www.python.org/ftp/python/3.10.18/Python-3.10.18.tgz
 cd /opt/
-tar xzf Python-3.10.14.tgz
-rm -f Python-3.10.14.tgz
-cd Python-3.10.14
-./configure --enable-optimizations --enable-loadable-sqlite-extensions --enable-shared $_SSL_LIB
+tar xzf Python-3.10.18.tgz
+rm -f Python-3.10.18.tgz
+cd Python-3.10.18
+./configure --enable-optimizations --enable-loadable-sqlite-extensions --enable-shared $_SSL_LIB --with-ensurepip=no
 make -j && make altinstall
 
 # post install
@@ -52,10 +52,12 @@ case "${_BASE_NAME}" in
         alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 3 && \
         alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
         alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
-        alternatives --set python3 /usr/local/bin/python3.10
+        alternatives --install /usr/bin/unversioned-python unversioned-python /usr/bin/python3 10 && \
+        alternatives --install /usr/bin/python3-config python3-config /usr/local/bin/python3.10-config 1 && \
+        alternatives --set python3 /usr/local/bin/python3.10 && \
+        alternatives --set python3-config /usr/local/bin/python3.10-config && \
+        alternatives --set unversioned-python /usr/bin/python3
         export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+        PATH="/usr/local/bin:$PATH"
     ;;
 esac
-
-python3 -m pip install --upgrade pip setuptools
-

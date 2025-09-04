@@ -1,0 +1,124 @@
+# Copyright (c) 2025 Habana Labs, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# HabanaLabs Dockerfile base installer layer for OpenCloudOS 9.2
+FROM opencloudos/opencloudos9-minimal:9.2-v20250327
+ARG ARTIFACTORY_URL
+ARG VERSION
+ARG REVISION
+
+LABEL vendor="Habanalabs Ltd."
+LABEL release="${VERSION}-${REVISION}"
+
+COPY LICENSE /licenses/
+
+RUN dnf install -y python3-dnf-plugin-versionlock && \
+    dnf versionlock add opencloudos-release* opencloudos-repos* && \
+    dnf clean all
+
+RUN dnf update -y && dnf install -y --setopt=install_weak_deps=false \
+        bzip2 \
+        bzip2-devel \
+        clang \
+        cmake3 \
+        cpp \
+        ffmpeg \
+        gcc \
+        gcc-c++ \
+        git \
+        glibc \
+        glibc-devel \
+        glibc-headers \
+        iproute \
+        jemalloc \
+        libarchive \
+        libffi-devel \
+        libjpeg-devel \
+        libksba \
+        llvm \
+        gawk \
+        lsb_release \
+        lsof \
+        mesa-libGL \
+        openssh-clients \
+        openssh-server \
+        openssl \
+        openssl-devel \
+        python3-devel \
+        unzip \
+        wget \
+        zlib-devel && \
+    dnf clean all && \
+    rm -f /etc/ssh/ssh_host_*_key*
+
+RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
+    echo "name=Habana OpenCloudOS repo" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/opencloudos/9/9.2" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/opencloudos/9/9.2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo 'gpgcheck=1'  >> /etc/yum.repos.d/habanalabs.repo && \
+    echo 'enable=1'  >> /etc/yum.repos.d/habanalabs.repo
+
+RUN _GPG_TEMP=$(mktemp -d) && \
+    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
+    rm -rf "${_GPG_TEMP}"
+
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=on
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py && \
+    rm -f get-pip.py && \
+    python3 -m pip install setuptools==79.0.1 wheel && \
+    python3 -m pip install --upgrade Jinja2 urllib3 requests
+
+COPY install_efa.sh .
+RUN ./install_efa.sh 1.41.0 && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+
+ENV OPENMPI_VERSION=4.1.6
+ENV MPI_ROOT=/opt/habanalabs/openmpi
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV PATH=${MPI_ROOT}/bin:$PATH
+ENV OPAL_PREFIX=${MPI_ROOT}
+ENV MPICC=${MPI_ROOT}/bin/mpicc
+ENV RDMAV_FORK_SAFE=1
+ENV FI_EFA_USE_DEVICE_RDMA=0
+ENV OMPI_MCA_btl=^openib
+
+RUN dnf install -y \
+        habanalabs-rdma-core-"$VERSION"-"$REVISION".oc9 \
+        habanalabs-thunk-"$VERSION"-"$REVISION".oc9 \
+        habanalabs-firmware-tools-"$VERSION"-"$REVISION".oc9 \
+        habanalabs-graph-"$VERSION"-"$REVISION".oc9 && \
+    dnf clean all && \
+    chmod +t /var/log/habana_logs && \
+    rm -f /etc/yum.repos.d/habana.repo
+
+ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
+ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
+
+RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OPENMPI_VERSION}.tar.gz && \
+    tar -xzf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz -C /tmp && \
+    cd /tmp/openmpi-${OPENMPI_VERSION} && \
+    ./configure --prefix=${MPI_ROOT} --with-verbs && \
+    make -j$(nproc) && make install && cd / && rm -rf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz /tmp/openmpi-${OPENMPI_VERSION}
+
+RUN python3 -m pip install pyverbs && \
+    python3 -m pip install --upgrade protobuf
+
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+
+# SSH configuration necessary to support mpi-operator v2
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
+    sed -i 's/#\(ForwardAgent \).*/\1yes/g' /etc/ssh/ssh_config && \
+    echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
+    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config && \
+    mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc
+
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
+ENV HABANA_LOGS=/var/log/habana_logs/
+ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
+ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins
