@@ -1,13 +1,14 @@
-# Copyright (c) 2024 Habana Labs, Ltd.
+# Copyright (c) 2025 Habana Labs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile base installer layer for RedHat 9.4
-FROM registry.access.redhat.com/ubi9/ubi:9.4
+# HabanaLabs Dockerfile base installer layer for RedHat 9.6
+FROM registry.access.redhat.com/ubi9/ubi:9.6
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 
+# for RHEL certification
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
 
@@ -17,6 +18,8 @@ RUN dnf install -y \
         python3-dnf-plugin-versionlock && \
     dnf versionlock add redhat-release* && \
     dnf clean all
+
+RUN rpm -e --nodeps openssl-fips-provider-so
 
 RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     dnf clean all
@@ -66,23 +69,19 @@ RUN dnf update -y && dnf install -y \
         openssh-server \
         openssl \
         openssl-devel \
+        perl-Net-SSLeay \
         python3-devel \
-        python3.11 \
-        python3.11-devel \
-        python3.11-rpm \
+        python3.12 \
+        python3.12-devel \
         unzip \
         wget \
         zlib-devel && \
-    dnf versionlock add \
-        python3-rpm \
-        rpm* && \
     dnf clean all && \
     rm -f /etc/ssh/ssh_host_*_key*
 
-RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
+RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 2 && \
     alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
-    alternatives --install /usr/bin/python3-config python3-config /usr/bin/python3.11-config 1 && \
-    alternatives --set python3 /usr/bin/python3.11
+    alternatives --set python3 /usr/bin/python3.12
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on
@@ -108,16 +107,13 @@ ENV OMPI_MCA_btl=^openib
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana RH9 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/rhel/9/9.4" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/9/9.4/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/rhel/9/9.6" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/9/9.6/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/habanalabs.repo
 
 RUN _GPG_TEMP=$(mktemp -d) && \
     wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
     rm -rf "${_GPG_TEMP}"
-
-# for Habana GPG key with SHA-1 signature
-RUN update-crypto-policies --set DEFAULT:SHA1
 
 RUN dnf install -y \
         habanalabs-rdma-core-"$VERSION"-"$REVISION".el9 \
