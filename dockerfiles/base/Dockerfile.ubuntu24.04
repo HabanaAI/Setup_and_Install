@@ -7,6 +7,7 @@ FROM ubuntu:noble
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG OPENMPI_VER=4.1.6
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
@@ -34,9 +35,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libjemalloc2 \
         libjpeg-dev \
         libkrb5-3 \
+        libopenmpi-dev \
         libpq-dev \
         lsof \
         make \
+        openmpi-bin=${OPENMPI_VER}-* \
+        openmpi-common=${OPENMPI_VER}-* \
         openssh-client \
         openssh-server \
         protobuf-compiler \
@@ -61,11 +65,7 @@ RUN mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MAN
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm -f install_efa.sh /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
-ENV MPI_ROOT=/opt/amazon/openmpi
-ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
-ENV PATH=${MPI_ROOT}/bin:$PATH
-ENV OPAL_PREFIX=${MPI_ROOT}
-ENV MPICC=${MPI_ROOT}/bin/mpicc
+ENV LD_LIBRARY_PATH=/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV RDMAV_FORK_SAFE=1
 ENV FI_EFA_USE_DEVICE_RDMA=1
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
