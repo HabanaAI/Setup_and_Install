@@ -137,11 +137,6 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
 
-ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
-ENV HABANA_LOGS=/var/log/habana_logs/
-ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
-ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins
-
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
     sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config && \
@@ -150,6 +145,11 @@ RUN mkdir -p /var/run/sshd && \
     sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config && \
     mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc && \
     chown -R 1001:0 /opt/app-root/src
+
+ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
+ENV HABANA_LOGS=/var/log/habana_logs/
+ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
+ENV HABANA_PLUGINS_LIB_PATH=/opt/habanalabs/habana_plugins
 
 WORKDIR /opt/app-root/src
 USER 1001
