@@ -70,6 +70,7 @@ RUN dnf update -y && dnf install -y \
         python3.12-devel \
         python3.12-libs \
         python3.12-rpm \
+        python3.12-pip \
         unzip \
         wget \
         zlib-devel && \
@@ -85,14 +86,23 @@ RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 2 && \
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on
 
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py && \
-    rm -f get-pip.py && \
-    python3 -m pip install setuptools==79.0.1 wheel && \
+RUN python3 -m pip install setuptools==79.0.1 wheel && \
     python3 -m pip install --upgrade Jinja2 protobuf urllib3 requests
 
-COPY install_efa.sh .
-RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+
+RUN dnf install -y \
+        libnl3 \
+        pciutils \
+        pciutils-libs \
+        ibacm \
+        infiniband-diags \
+        libibumad \
+        libibverbs \
+        libibverbs-utils \
+        librdmacm \
+        librdmacm-utils \
+        python3-pyverbs \
+        rdma-core rdma-core-devel
 
 ENV OPENMPI_VERSION=4.1.6
 ENV MPI_ROOT=/opt/habanalabs/openmpi

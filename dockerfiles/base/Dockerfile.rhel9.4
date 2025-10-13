@@ -70,6 +70,7 @@ RUN dnf update -y && dnf install -y \
         python3.11 \
         python3.11-devel \
         python3.11-rpm \
+        python3.11-pip \
         unzip \
         wget \
         zlib-devel && \
@@ -87,16 +88,26 @@ RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 && \
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on
 
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py && \
-    rm -f get-pip.py && \
-    python3 -m pip install setuptools==79.0.1 wheel && \
+RUN python3 -m pip install setuptools==79.0.1 wheel && \
     python3 -m pip install --upgrade Jinja2 protobuf urllib3 requests
 
-COPY install_efa.sh .
-RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+RUN dnf install -y \
+        libnl3 \
+        pciutils \
+        pciutils-libs \
+        ibacm \
+        infiniband-diags \
+        libibumad \
+        libibverbs \
+        libibverbs-utils \
+        librdmacm \
+        librdmacm-utils \
+        python3-pyverbs \
+        rdma-core rdma-core-devel
 
 ENV OPENMPI_VERSION=4.1.6
+# Get hash from: https://www.open-mpi.org/software/ompi/
+ENV OPENMPI_SHA256=44da277b8cdc234e71c62473305a09d63f4dcca292ca40335aab7c4bf0e6a566
 ENV MPI_ROOT=/opt/habanalabs/openmpi
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${MPI_ROOT}/bin:$PATH
@@ -132,6 +143,7 @@ ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
 RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OPENMPI_VERSION}.tar.gz && \
+    echo "${OPENMPI_SHA256}  /tmp/openmpi-${OPENMPI_VERSION}.tar.gz" | sha256sum -c -  && \
     tar -xzf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz -C /tmp && \
     cd /tmp/openmpi-${OPENMPI_VERSION} && \
     ./configure --prefix=${MPI_ROOT} --with-verbs && \
