@@ -2,6 +2,7 @@
 set -ex
 PYTHON_SUFFIX="${PYTHON_SUFFIX:-}"
 TORCH_TYPE="${TORCH_TYPE:-fork}"
+PYPI_URL="${PYPI_URL:-https://pypi.org/simple/}"
 if [ -z "$PYTHON_SUFFIX" ]; then
     PT_PACKAGE_NAME="pytorch_modules-v${PT_VERSION}_${VERSION}_${REVISION}.tgz"
 else
@@ -31,7 +32,7 @@ TMP_PATH=$(mktemp --directory)
 wget --no-verbose "${PT_ARTIFACT_PATH}/${PT_PACKAGE_NAME}"
 tar -zxf "${PT_PACKAGE_NAME}" -C "${TMP_PATH}"/.
 pushd "${TMP_PATH}"
-./install.sh $VERSION $REVISION $TORCH_TYPE
+PYTHON_INDEX_URL="--extra-index-url ${PYPI_URL}" ./install.sh $VERSION $REVISION $TORCH_TYPE
 popd
 
 rm -rf "${TMP_PATH}" "${PT_PACKAGE_NAME}"

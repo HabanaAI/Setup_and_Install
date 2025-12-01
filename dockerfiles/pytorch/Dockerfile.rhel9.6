@@ -13,6 +13,7 @@ ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
 ARG TORCH_TYPE
+ARG PYPI_URL
 
 LABEL name="PyTorch Installer"
 LABEL summary="Habanalabs PyTorch installer layer for RHEL9.6"
@@ -35,7 +36,7 @@ RUN dnf update --nobest -y && dnf install --nobest --nodocs --setopt=install_wea
 
 COPY install_packages.sh .
 
-RUN ./install_packages.sh && rm -f install_packages.sh && \
+RUN PYPI_URL=${PYPI_URL} ./install_packages.sh && rm -f install_packages.sh && \
     /sbin/ldconfig && echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
 
 # Set LD_PRELOAD after all required installations to

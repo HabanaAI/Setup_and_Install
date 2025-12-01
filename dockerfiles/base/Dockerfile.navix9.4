@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # HabanaLabs Dockerfile base installer layer for Navix 9.4
-# wget https://dlnavix.navercorp.com/cloud-images/Navix-Container-Base-9.4-20241121.0.x86_64.tar.xz
-# docker load Navix-Container-Base-9.4-20241121.0.x86_64.tar.xz
 FROM navix-container-base-9.4-20241121.0.x86_64:latest
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG PYPI_URL
 
 RUN sed -i -E 's/linux.navercorp.com\/naver\/\$releasever/dlnavix.navercorp.com\/9.4/g' /etc/yum.repos.d/navix.repo
 
@@ -94,9 +93,7 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/navix/9/9.4/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/habanalabs.repo
 
-RUN _GPG_TEMP=$(mktemp -d) && \
-    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
-    rm -rf "${_GPG_TEMP}"
+RUN wget -q -O "/tmp/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "/tmp/habana_pubkey" && rm -f /tmp/habana_pubkey
 
 RUN dnf install -y \
         habanalabs-rdma-core-"$VERSION"-"$REVISION".el9 \
@@ -120,7 +117,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 
 RUN python3 -m pip install --upgrade protobuf
 
-RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

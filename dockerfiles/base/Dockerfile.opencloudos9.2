@@ -7,6 +7,7 @@ FROM opencloudos/opencloudos9-minimal:9.2-v20250327
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG PYPI_URL
 
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
@@ -59,9 +60,8 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo 'gpgcheck=1'  >> /etc/yum.repos.d/habanalabs.repo && \
     echo 'enable=1'  >> /etc/yum.repos.d/habanalabs.repo
 
-RUN _GPG_TEMP=$(mktemp -d) && \
-    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
-    rm -rf "${_GPG_TEMP}"
+RUN wget -q -O "/tmp/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "/tmp/habana_pubkey" && rm -f /tmp/habana_pubkey
+
 
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
@@ -105,10 +105,19 @@ RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.
     ./configure --prefix=${MPI_ROOT} --with-verbs && \
     make -j$(nproc) && make install && cd / && rm -rf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz /tmp/openmpi-${OPENMPI_VERSION}
 
-RUN python3 -m pip install pyverbs && \
-    python3 -m pip install --upgrade protobuf
+RUN mkdir -p /tmp/pyverbs && \
+    cd /tmp/pyverbs && \
+    python3 -m pip download pyverbs==59.0 && \
+    tar zxf pyverbs-59.0.tar.gz && \
+    cd pyverbs-59.0 && \
+    sed -i 's/cython>=3.0.12/cython>=3.0.12,<3.2.0/' pyproject.toml && \
+    python3 -m pip install . && \
+    cd && \
+    rm -rf /tmp/pyverbs
 
-RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install --upgrade protobuf
+
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

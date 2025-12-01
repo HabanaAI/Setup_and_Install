@@ -13,6 +13,7 @@ ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
 ARG TORCH_TYPE
+ARG PYPI_URL
 
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
@@ -38,7 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY install_packages.sh .
 
-RUN PYTHON_SUFFIX=py311 ./install_packages.sh && rm -f install_packages.sh && \
+RUN PYTHON_SUFFIX=py311 PYPI_URL=${PYPI_URL} ./install_packages.sh && rm -f install_packages.sh && \
     /sbin/ldconfig && echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
 
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4

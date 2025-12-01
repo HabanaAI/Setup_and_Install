@@ -7,6 +7,7 @@ FROM registry.access.redhat.com/ubi9/ubi:9.4
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG PYPI_URL
 
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
@@ -89,7 +90,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py && \
     rm -f get-pip.py && \
     python3 -m pip install setuptools==79.0.1 wheel && \
-    python3 -m pip install --upgrade Jinja2 protobuf urllib3 requests
+    python3 -m pip install --upgrade Jinja2 protobuf urllib3
 
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
@@ -110,9 +111,7 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/rhel/9/9.4/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgcheck=1" >> /etc/yum.repos.d/habanalabs.repo
 
-RUN _GPG_TEMP=$(mktemp -d) && \
-    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
-    rm -rf "${_GPG_TEMP}"
+RUN wget -q -O "/tmp/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "/tmp/habana_pubkey" && rm -f /tmp/habana_pubkey
 
 # for Habana GPG key with SHA-1 signature
 RUN update-crypto-policies --set DEFAULT:SHA1
@@ -137,7 +136,7 @@ RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

@@ -13,6 +13,7 @@ ARG REVISION
 ARG BASE_NAME
 ARG ARTIFACTORY_URL
 ARG TORCH_TYPE
+ARG PYPI_URL
 
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
@@ -44,7 +45,7 @@ RUN bash -c "\
 
 COPY install_packages.sh .
 
-RUN ./install_packages.sh && rm -f install_packages.sh && \
+RUN PYPI_URL=${PYPI_URL} ./install_packages.sh && rm -f install_packages.sh && \
     /sbin/ldconfig && echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
 
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4

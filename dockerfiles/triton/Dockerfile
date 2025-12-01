@@ -8,6 +8,7 @@ ARG ARTIFACTORY_URL
 ARG PT_VERSION
 ARG VERSION
 ARG REVISION
+ARG PYPI_URL
 ARG HABANA_PIP_VERSION="22.3"
 ARG PT_BUILD_REPO=gaudi-pt-modules
 ARG PT_PACKAGE_NAME="pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz"
@@ -54,7 +55,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN python3 -m pip install pip==24.2 --disable-pip-version-check && \
     python3 -m pip install setuptools==75.1.0 --disable-pip-version-check && \
-    python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --disable-pip-version-check
+    python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL} --disable-pip-version-check
 
 RUN ln -s /usr/bin/python3.10 /usr/bin/python && wget --no-verbose "${PT_ARTIFACT_PATH}/${PT_PACKAGE_NAME}" && \
     mkdir -p /root/habanalabs/pytorch_temp && \

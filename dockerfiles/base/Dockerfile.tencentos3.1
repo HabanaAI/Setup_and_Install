@@ -7,6 +7,7 @@ FROM tencentos/tencentos_server31_mini:20230630
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG PYPI_URL
 
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
@@ -77,9 +78,7 @@ RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
-RUN _GPG_TEMP=$(mktemp -d) && \
-    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
-    rm -rf "${_GPG_TEMP}"
+RUN wget -q -O "/tmp/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "/tmp/habana_pubkey" && rm -f /tmp/habana_pubkey
 
 RUN dnf install -y \
         habanalabs-rdma-core-"$VERSION"-"$REVISION".tl3 \
@@ -109,7 +108,7 @@ ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
 RUN alternatives --set python /usr/bin/python3
 
-RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

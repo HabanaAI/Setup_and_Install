@@ -107,4 +107,3 @@ This script can be used as reference to build docker images for Gaudi.
      ```
      The current samples/model_repository/vllm_model contains llama27B 1x.We also have sample model files for llama2 7b/70b and qwen2-7b respectively under samples/model_repository/test_models folder. To use them , copy the model.json and config.pbtxt to vllm_model folder structure.
    * To test with client, please follow the instructions [here](https://github.com/triton-inference-server/vllm_backend?tab=readme-ov-file#sending-your-first-inference)
-

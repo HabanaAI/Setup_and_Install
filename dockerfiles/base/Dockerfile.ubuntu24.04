@@ -7,6 +7,7 @@ FROM ubuntu:noble
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
+ARG PYPI_URL
 ARG OPENMPI_VER=4.1.6
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -87,7 +88,7 @@ RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --d
     mv -f /etc/dpkg/dpkg.cfg.d/excludes.bak /etc/dpkg/dpkg.cfg.d/excludes && \
     sed -i "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
-RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}"
+RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \
