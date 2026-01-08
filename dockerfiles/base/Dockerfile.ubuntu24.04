@@ -40,8 +40,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq-dev \
         lsof \
         make \
-        openmpi-bin=${OPENMPI_VER}-* \
-        openmpi-common=${OPENMPI_VER}-* \
         openssh-client \
         openssh-server \
         protobuf-compiler \
@@ -53,6 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get autoremove && rm -rf /var/lib/apt/lists/* && \
     rm -f /etc/ssh/ssh_host_*_key*
 
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on
 
@@ -66,11 +65,22 @@ RUN mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MAN
 COPY install_efa.sh .
 RUN ./install_efa.sh && rm -f install_efa.sh /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
-ENV LD_LIBRARY_PATH=/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV OPENMPI_VERSION=5.0.8
+ENV OPENMPI_SHA256=f891ddf2dab3b604f2521d0569615bc1c07a1ac86a295ac543e059aecb303621
+ENV MPI_ROOT=/opt/habanalabs/openmpi-${OPENMPI_VERSION}
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV RDMAV_FORK_SAFE=1
 ENV FI_EFA_USE_DEVICE_RDMA=1
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
+
+RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz && \
+    echo "${OPENMPI_SHA256} /tmp/openmpi-${OPENMPI_VERSION}.tar.gz" | sha256sum -c - && \
+    tar -xzf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz -C /tmp && \
+    cd /tmp/openmpi-${OPENMPI_VERSION} && \
+    ./configure --prefix=${MPI_ROOT} --with-verbs && \
+    make -j$(nproc) && make install && cd / && rm -rf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz /tmp/openmpi-${OPENMPI_VERSION}
 
 RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/habana-artifactory.gpg && \
     chown root:root /usr/share/keyrings/habana-artifactory.gpg && \
@@ -89,6 +99,12 @@ RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --d
     sed -i "/$ARTIFACTORY_URL/d" /etc/apt/sources.list
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
+
+# Wrapper to unset LD_PRELOAD before SSH
+RUN echo '#!/bin/bash' > /usr/local/bin/ssh && \
+    echo 'unset LD_PRELOAD' >> /usr/local/bin/ssh && \
+    echo 'exec /usr/bin/ssh "$@"' >> /usr/local/bin/ssh && \
+    chmod +x /usr/local/bin/ssh
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

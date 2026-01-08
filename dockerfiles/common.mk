@@ -8,9 +8,9 @@ PYTHON_SUFFIX=py$(subst .,,$(CUSTOM_PYTHON_VERSION))
 TORCH_TYPE ?= fork
 
 REPO_SERVER ?= vault.habana.ai
-PT_VERSION ?= 2.7.1
-RELEASE_VERSION ?= 1.22.2
-RELEASE_BUILD_ID ?= 32
+PT_VERSION ?= 2.9.0
+RELEASE_VERSION ?= 1.23.0
+RELEASE_BUILD_ID ?= 645
 PYPI_URL ?= https://pypi.org/simple/
 
 BASE_IMAGE_URL ?= base-installer-$(BUILD_OS)

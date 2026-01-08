@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for RHEL 9.4
+# HabanaLabs Dockerfile PyTorch installer layer for RHEL 9.4 with python 3.12
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION

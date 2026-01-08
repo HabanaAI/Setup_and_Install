@@ -25,8 +25,7 @@ RUN dnf update -y && dnf install -y \
         clang \
         cmake3 \
         cpp \
-        gcc \
-        gcc-c++ \
+        gcc-toolset-13 \
         git \
         glibc \
         glibc-devel \
@@ -59,26 +58,37 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py && \
     rm -f get-pip.py && \
     python3 -m pip install setuptools==79.0.1 wheel && \
-    python3 -m pip install --upgrade Jinja2 protobuf requests urllib3
+    python3 -m pip install --upgrade Jinja2 protobuf requests
 
 COPY install_efa.sh .
 COPY tencentos_efa_patch.txt /tmp/tencentos_efa_patch.txt
 RUN ./install_efa.sh && rm -f install_efa.sh /tmp/tencentos_efa_patch.txt /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
-ENV MPI_ROOT=/usr/mpi/gcc/openmpi-4.1.5a1
-ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib64:/usr/lib/habanalabs:$LD_LIBRARY_PATH
+ENV OPENMPI_VERSION=5.0.8
+ENV OPENMPI_SHA256=f891ddf2dab3b604f2521d0569615bc1c07a1ac86a295ac543e059aecb303621
+ENV MPI_ROOT=/opt/habanalabs/openmpi-${OPENMPI_VERSION}
+ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
 ENV FI_EFA_USE_DEVICE_RDMA=1
 
+RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz && \
+    echo "${OPENMPI_SHA256} /tmp/openmpi-${OPENMPI_VERSION}.tar.gz" | sha256sum -c - && \
+    tar -xzf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz -C /tmp && \
+    cd /tmp/openmpi-${OPENMPI_VERSION} && \
+    ./configure --prefix=${MPI_ROOT} --with-verbs && \
+    make -j$(nproc) && make install && cd / && rm -rf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz /tmp/openmpi-${OPENMPI_VERSION}
+
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana TC31 Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1" >> /etc/yum.repos.d/habanalabs.repo && \
     echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/tencentos/3/3.1/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo
 
-RUN wget -q -O "/tmp/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "/tmp/habana_pubkey" && rm -f /tmp/habana_pubkey
+RUN _GPG_TEMP=$(mktemp -d) && \
+    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
+    rm -rf "${_GPG_TEMP}"
 
 RUN dnf install -y \
         habanalabs-rdma-core-"$VERSION"-"$REVISION".tl3 \
@@ -117,6 +127,8 @@ RUN mkdir -p /var/run/sshd && \
     echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config && \
     sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config && \
     mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc
+
+RUN echo "source /opt/rh/gcc-toolset-13/enable" | tee -a ~/.bashrc
 
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
