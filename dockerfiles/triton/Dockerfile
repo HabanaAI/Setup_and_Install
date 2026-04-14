@@ -32,7 +32,9 @@ ENV PYTHONPATH=/root:/usr/lib/habanalabs
 RUN echo "deb https://${ARTIFACTORY_URL}/artifactory/debian jammy main" | tee -a /etc/apt/sources.list && \
     wget "https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public" && \
     apt-key add public && rm public && apt-get update && \
-    apt-get install -y --no-install-recommends habanalabs-rdma-core="$VERSION"-"$REVISION" \
+    apt-get install -y libfdt-dev && \
+    apt-get install -y --no-install-recommends \
+        habanalabs-rdma-core="$VERSION"-"$REVISION" \
         habanalabs-thunk="$VERSION"-"$REVISION" \
         habanalabs-firmware-tools="$VERSION"-"$REVISION" \
         habanalabs-graph="$VERSION"-"$REVISION" && \
@@ -61,12 +63,16 @@ RUN ln -s /usr/bin/python3.10 /usr/bin/python && wget --no-verbose "${PT_ARTIFAC
     mkdir -p /root/habanalabs/pytorch_temp && \
     tar -xf pytorch_modules-v"${PT_VERSION}"_"${VERSION}"_"${REVISION}".tgz -C ${PT_EXTRACT_PATH}/. && \
     python3 -m pip install pip=="${HABANA_PIP_VERSION}" && \
-    pip install mpi4py==3.1.4 --disable-pip-version-check && \
-    grep -ivE "#|lightning" ${PT_EXTRACT_PATH}/requirements-pytorch.txt > ${PT_EXTRACT_PATH}/requirements-pytorch-nolightning.txt && \
-    pip install -r ${PT_EXTRACT_PATH}/requirements-pytorch-nolightning.txt --no-warn-script-location --disable-pip-version-check && \
+    # limiting setuptools version in mpi4py==3.1.6 configuration due to incompatibility with setuptools>=81.0.0 
+    wget https://files.pythonhosted.org/packages/b3/17/1d146e0127b66f1945251f130afac430985d2f9d75a3c0330355f21d876a/mpi4py-3.1.6.tar.gz && \
+    tar -zxf mpi4py-3.1.6.tar.gz && \
+    cd mpi4py-3.1.6 && \
+    sed -i 's/setuptools >= 40.9.0/setuptools >= 40.9.0, <= 79.0.1/' pyproject.toml && \
+    python3 -m pip install --disable-pip-version-check . && \
+    cd - && \
+    rm -rf mpi4py-${PYTHON_MPI_VERSION} mpi4py-${PYTHON_MPI_VERSION}.tar.gz && \
+    pip install -r ${PT_EXTRACT_PATH}/requirements-pytorch.txt --no-warn-script-location --disable-pip-version-check && \
     pip install ${PT_EXTRACT_PATH}/*.whl --disable-pip-version-check && \
-    grep "lightning" ${PT_EXTRACT_PATH}/requirements-pytorch.txt > ${PT_EXTRACT_PATH}/requirements-pytorch-lightning.txt && \
-    pip install -r ${PT_EXTRACT_PATH}/requirements-pytorch-lightning.txt --disable-pip-version-check && \
     echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc && \
     pip uninstall -y pillow && \
     pip uninstall -y pillow-simd && \

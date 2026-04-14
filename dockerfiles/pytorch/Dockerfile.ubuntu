@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu22.04
+# HabanaLabs Dockerfile PyTorch installer layer for Ubuntu 22.04 and Ubuntu 24.04
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION

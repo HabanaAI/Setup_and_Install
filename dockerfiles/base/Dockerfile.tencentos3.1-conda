@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile base installer layer for TencentOS 3.1
+# HabanaLabs Dockerfile base installer layer for TencentOS 3.1 with Conda environment
+ARG ARTIFACTORY_URL
 FROM tencentos/tencentos_server31_mini:20230630
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 ARG PYPI_URL
-
+ARG CONDA_INSTALLER=Miniforge3-Linux-x86_64.sh
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
 
@@ -119,6 +120,17 @@ ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 RUN alternatives --set python /usr/bin/python3
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
+
+RUN wget "https://github.com/conda-forge/miniforge/releases/latest/download/${CONDA_INSTALLER}" && \
+    bash ${CONDA_INSTALLER} -b -p /opt/conda && \
+    rm -f ${CONDA_INSTALLER} && \
+    /opt/conda/condabin/conda config --set auto_activate False
+
+ENV PATH=/opt/conda/condabin:$PATH
+
+RUN source /opt/conda/bin/activate && \
+    conda install -y python=3.10.20 && \
+    python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
 
 # SSH configuration necessary to support mpi-operator v2
 RUN mkdir -p /var/run/sshd && \

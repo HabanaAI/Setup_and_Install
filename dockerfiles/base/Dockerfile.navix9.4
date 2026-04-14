@@ -4,7 +4,7 @@
 #
 # HabanaLabs Dockerfile base installer layer for Navix 9.4
 # wget https://dlnavix.navercorp.com/cloud-images/Navix-Container-Base-9.4-20241121.0.x86_64.tar.xz
-# docker load Navix-Container-Base-9.4-20241121.0.x86_64.tar.xz
+# docker load -i Navix-Container-Base-9.4-20241121.0.x86_64.tar.xz
 FROM navix-container-base-9.4-20241121.0.x86_64:latest
 ARG ARTIFACTORY_URL
 ARG VERSION
@@ -27,6 +27,7 @@ RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.n
     dnf clean all
 
 RUN dnf update -y && dnf install -y \
+        boost-devel \
         bzip2 \
         bzip2-devel \
         clang \
@@ -41,9 +42,11 @@ RUN dnf update -y && dnf install -y \
         iproute \
         jemalloc \
         libarchive \
+        libfdt-devel \
         libffi-devel \
         libjpeg-devel \
         libksba \
+        libnl3-devel \
         llvm \
         lsb_release \
         lsof \

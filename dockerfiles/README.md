@@ -23,15 +23,16 @@ This folder contains Gaudi dockerfiles and makefiles that can be used to build H
 
 ## Support Matrix
 
-| BUILD_OS       | Internal torch | Upstream torch | Custom python |
-|----------------|:--------------:|:--------------:|:-------------:|
-| ubuntu22.04    |       Yes      |       Yes      |      3.11     |
-| ubuntu24.04    |       Yes      |                |               |
-| rhel9.4        |       Yes      |       Yes      |      3.12     |
-| rhel9.6        |       Yes      |                |               |
-| tencentos3.1   |       Yes      |                |               |
-| opencloudos9.2 |       Yes      |                |               |
-| navix9.4       |       Yes      |                |               |
+| BUILD_OS           | Internal torch | Upstream torch | Custom python |
+|--------------------|:--------------:|:--------------:|:-------------:|
+| ubuntu22.04        |       Yes      |       Yes      |      3.11     |
+| ubuntu24.04        |       Yes      |       Yes      |               |
+| rhel9.4            |       Yes      |       Yes      |      3.12     |
+| rhel9.6            |       Yes      |       Yes      |               |
+| tencentos3.1       |       Yes      |                |               |
+| tencentos3.1-conda |       Yes      |                |               |
+| navix9.4           |       Yes      |                |               |
+| navix9.6           |       Yes      |                |               |
 
 <br/>
 You can also build triton-installer, which is based on ubuntu22.04 OS

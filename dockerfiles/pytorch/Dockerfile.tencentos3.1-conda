@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for TencentOS 3.1
+# HabanaLabs Dockerfile PyTorch installer layer for TencentOS 3.1 with Conda environment
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -16,7 +16,7 @@ ARG TORCH_TYPE
 ARG PYPI_URL
 
 LABEL name="PyTorch Installer"
-LABEL summary="Habanalabs PyTorch installer layer for Tencentos 3.1"
+LABEL summary="Habanalabs PyTorch installer layer for Tencentos 3.1 with Conda environment"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
@@ -50,6 +50,8 @@ ENV PKG_CONFIG_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64/pkgconfig:/opt/habanal
 ENV CMAKE_PREFIX_PATH=/opt/habanalabs/openmpi-5.0.8/include:${CMAKE_PREFIX_PATH}
 COPY install_packages.sh .
 
+RUN source /opt/conda/bin/activate && \
+    PYPI_URL=${PYPI_URL} ./install_packages.sh
 RUN PYPI_URL=${PYPI_URL} ./install_packages.sh && rm -f install_packages.sh && \
     /sbin/ldconfig && echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
 

@@ -19,11 +19,11 @@ case "${BASE_NAME}" in
     *tencentos*)
         OS_STRING="tencentos31"
     ;;
-    *opencloudos9*)
-        OS_STRING="opencloudos92"
-    ;;
-    *navix9*)
+    *navix9.4*)
         OS_STRING="navix94"
+    ;;
+    *navix9.6*)
+        OS_STRING="navix96"
     ;;
 esac
 PT_ARTIFACT_PATH="https://${ARTIFACTORY_URL}/artifactory/gaudi-pt-modules/${VERSION}/${REVISION}/pytorch/${OS_STRING}"

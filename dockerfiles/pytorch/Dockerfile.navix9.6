@@ -1,8 +1,8 @@
-# Copyright (c) 2025 HabanaLabs, Ltd.
+# Copyright (c) 2026 HabanaLabs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile PyTorch installer layer for OpenCloudOS 9.2
+# HabanaLabs Dockerfile PyTorch installer layer for Navix 9.6
 ARG BASE_NAME
 ARG VERSION
 ARG REVISION
@@ -16,14 +16,13 @@ ARG TORCH_TYPE
 ARG PYPI_URL
 
 LABEL name="PyTorch Installer"
-LABEL summary="Habanalabs PyTorch installer layer for OpenCloudOS 9.2"
+LABEL summary="Habanalabs PyTorch installer layer for Navix 9.6"
 LABEL description="Image with pre installed Habanalabs packages for PyTorch"
 
 ENV PYTHONPATH=/root:/usr/lib/habanalabs/
 
-RUN dnf update --nobest -y && dnf install --nobest --allowerasing -y \
+RUN dnf update --nobest -y && dnf install --nobest --nodocs --setopt=install_weak_deps=false --allowerasing -y \
         cairo-devel \
-        curl \
         gperftools-devel \
         iproute \
         jq \
@@ -37,7 +36,7 @@ RUN dnf update --nobest -y && dnf install --nobest --allowerasing -y \
 
 COPY install_packages.sh .
 
-RUN  PYPI_URL=${PYPI_URL} ./install_packages.sh && rm -f install_packages.sh && \
+RUN PYPI_URL=${PYPI_URL} ./install_packages.sh && rm -f install_packages.sh && \
     /sbin/ldconfig && echo "source /etc/profile.d/habanalabs.sh" >> ~/.bashrc
 
 # Set LD_PRELOAD after all required installations to
@@ -45,4 +44,4 @@ RUN  PYPI_URL=${PYPI_URL} ./install_packages.sh && rm -f install_packages.sh && 
 ENV LD_PRELOAD=/usr/lib64/libtcmalloc.so.4
 ENV TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD=7516192768
 
-RUN rm -f /etc/yum.repos.d/habana.repo
+RUN rm -f /etc/yum.repos.d/mirror.repo

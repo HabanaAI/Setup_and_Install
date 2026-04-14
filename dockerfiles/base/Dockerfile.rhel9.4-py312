@@ -55,6 +55,7 @@ RUN dnf update -y && dnf install -y \
         iproute \
         jemalloc \
         libarchive \
+        libfdt-devel \
         libffi-devel \
         libjpeg-devel \
         libksba \

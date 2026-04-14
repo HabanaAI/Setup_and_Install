@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gpg-agent \
         graphviz \
         libcairo2-dev \
+        libfdt-dev \
         libgl1 \
         libgnutls30 \
         libgoogle-glog0v5 \
@@ -83,7 +84,6 @@ ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
-ENV FI_EFA_USE_DEVICE_RDMA=1
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 

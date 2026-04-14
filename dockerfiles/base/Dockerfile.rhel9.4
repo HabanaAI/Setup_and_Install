@@ -55,6 +55,7 @@ RUN dnf update -y && dnf install -y \
         iproute \
         jemalloc \
         libarchive \
+        libfdt-devel \
         libffi-devel \
         libjpeg-devel \
         libksba \
@@ -105,7 +106,6 @@ ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
-ENV FI_EFA_USE_DEVICE_RDMA=0
 ENV OMPI_MCA_btl=^openib
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \

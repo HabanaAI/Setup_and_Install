@@ -8,7 +8,6 @@ ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 ARG PYPI_URL
-ARG OPENMPI_VER=4.1.6
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
@@ -30,13 +29,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gnupg \
         gpg-agent \
         graphviz \
+        libfdt-dev \
         libgl1 \
         libgnutls30 \
         libgoogle-glog0v6t64 \
         libjemalloc2 \
         libjpeg-dev \
         libkrb5-3 \
-        libopenmpi-dev \
         libpq-dev \
         lsof \
         make \
@@ -71,12 +70,10 @@ ENV MPI_ROOT=/opt/habanalabs/openmpi-${OPENMPI_VERSION}
 ENV LD_LIBRARY_PATH=${MPI_ROOT}/lib:/usr/lib/habanalabs:$LD_LIBRARY_PATH
 ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV RDMAV_FORK_SAFE=1
-ENV FI_EFA_USE_DEVICE_RDMA=1
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
 
 RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz && \
-    echo "${OPENMPI_SHA256} /tmp/openmpi-${OPENMPI_VERSION}.tar.gz" | sha256sum -c - && \
     tar -xzf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz -C /tmp && \
     cd /tmp/openmpi-${OPENMPI_VERSION} && \
     ./configure --prefix=${MPI_ROOT} --with-verbs && \
@@ -100,7 +97,6 @@ RUN wget -O- https://${ARTIFACTORY_URL}/artifactory/api/gpg/key/public | gpg --d
 
 RUN python3 -m pip install habana_media_loader=="${VERSION}"."${REVISION}" --extra-index-url ${PYPI_URL}
 
-# Wrapper to unset LD_PRELOAD before SSH
 RUN echo '#!/bin/bash' > /usr/local/bin/ssh && \
     echo 'unset LD_PRELOAD' >> /usr/local/bin/ssh && \
     echo 'exec /usr/bin/ssh "$@"' >> /usr/local/bin/ssh && \

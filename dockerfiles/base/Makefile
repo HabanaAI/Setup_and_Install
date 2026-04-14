@@ -19,6 +19,14 @@ ifeq ($(BUILD_OS),navix9.4)
     endif
 endif
 
+ifeq ($(BUILD_OS),navix9.6)
+    ifneq ($(shell $(DOCKER) image inspect navix-container-base-9.6-20250708.0.x86_64 --format="image_exists" 2>/dev/null), image_exists)
+		wget https://dlnavix.navercorp.com/cloud-images/Navix-Container-Base-9.6-20250708.0.x86_64.tar.xz 
+		docker load -i Navix-Container-Base-9.6-20250708.0.x86_64.tar.xz 
+		rm -f Navix-Container-Base-9.6-20250708.0.x86_64.tar.xz 
+    endif
+endif
+
 init: check_base
 	$(HIDE)mkdir -p $(BUILD_DIR)
 	$(HIDE)cp $(CURDIR)/LICENSE $(BUILD_DIR)/

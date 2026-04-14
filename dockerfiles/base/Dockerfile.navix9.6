@@ -1,32 +1,39 @@
-# Copyright (c) 2025 Habana Labs, Ltd.
+# Copyright (c) 2026 Habana Labs, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# HabanaLabs Dockerfile base installer layer for OpenCloudOS 9.2
-FROM opencloudos/opencloudos9-minimal:9.2-v20250327
+# HabanaLabs Dockerfile base installer layer for Navix 9.6
+# wget https://dlnavix.navercorp.com/cloud-images/Navix-Container-Base-9.6-20250708.0.x86_64.tar.xz
+# docker load -i Navix-Container-Base-9.6-20250708.0.x86_64.tar.xz 
+FROM navix-container-base-9.6-20250708.0.x86_64:latest
 ARG ARTIFACTORY_URL
 ARG VERSION
 ARG REVISION
 ARG PYPI_URL
+
+RUN sed -i -E 's/linux.navercorp.com\/naver\/\$releasever/dlnavix.navercorp.com\/9.6/g' /etc/yum.repos.d/navix.repo
 
 LABEL vendor="Habanalabs Ltd."
 LABEL release="${VERSION}-${REVISION}"
 
 COPY LICENSE /licenses/
 
-RUN dnf install -y python3-dnf-plugin-versionlock && \
-    dnf versionlock add opencloudos-release* opencloudos-repos* && \
+RUN dnf install -y \
+        python3-dnf-plugin-versionlock && \
+    dnf versionlock add navix-release* navix-repos* && \
     dnf clean all
 
-RUN dnf update -y && dnf install -y --setopt=install_weak_deps=false \
+RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    dnf clean all
+
+RUN dnf update -y && dnf install -y \
         bzip2 \
         bzip2-devel \
         clang \
         cmake3 \
         cpp \
-        ffmpeg \
-        gcc \
-        gcc-c++ \
+        ffmpeg-free \
+        gcc-toolset-13 \
         git \
         glibc \
         glibc-devel \
@@ -34,11 +41,11 @@ RUN dnf update -y && dnf install -y --setopt=install_weak_deps=false \
         iproute \
         jemalloc \
         libarchive \
+        libfdt-devel \
         libffi-devel \
         libjpeg-devel \
         libksba \
         llvm \
-        gawk \
         lsb_release \
         lsof \
         mesa-libGL \
@@ -46,25 +53,20 @@ RUN dnf update -y && dnf install -y --setopt=install_weak_deps=false \
         openssh-server \
         openssl \
         openssl-devel \
+        perl-Net-SSLeay \
         python3-devel \
+        python3.12 \
+        python3.12-devel \
         unzip \
         wget \
         zlib-devel && \
     dnf clean all && \
     rm -f /etc/ssh/ssh_host_*_key*
 
-RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
-    echo "name=Habana OpenCloudOS repo" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/opencloudos/9/9.2" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/opencloudos/9/9.2/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
-    echo 'gpgcheck=1'  >> /etc/yum.repos.d/habanalabs.repo && \
-    echo 'enable=1'  >> /etc/yum.repos.d/habanalabs.repo
-
-RUN _GPG_TEMP=$(mktemp -d) && \
-    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
-    rm -rf "${_GPG_TEMP}"
-
-RUN ln -sf /usr/bin/python3 /usr/bin/python
+RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 2 && \
+    alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
+    alternatives --install /usr/bin/python3-config python3-config /usr/bin/python3.12-config 1 && \
+    alternatives --set python3 /usr/bin/python3.12
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=on
@@ -76,7 +78,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 -m pip install --upgrade Jinja2 requests
 
 COPY install_efa.sh .
-RUN ./install_efa.sh 1.41.0 && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
 ENV OPENMPI_VERSION=5.0.8
 ENV OPENMPI_SHA256=f891ddf2dab3b604f2521d0569615bc1c07a1ac86a295ac543e059aecb303621
@@ -86,17 +88,26 @@ ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
-ENV FI_EFA_USE_DEVICE_RDMA=0
 ENV OMPI_MCA_btl=^openib
 
+RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
+    echo "name=Habana Navix Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "baseurl=https://${ARTIFACTORY_URL}/artifactory/navix/9/9.6" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgkey=https://${ARTIFACTORY_URL}/artifactory/navix/9/9.6/repodata/repomd.xml.key" >> /etc/yum.repos.d/habanalabs.repo && \
+    echo "gpgcheck=1" >> /etc/yum.repos.d/habanalabs.repo
+
+RUN _GPG_TEMP=$(mktemp -d) && \
+    wget -q -O "${_GPG_TEMP}/habana_pubkey" "https://${ARTIFACTORY_URL}/artifactory/gaudi-general/keyPairs/primary/public" && rpm --import "${_GPG_TEMP}/habana_pubkey" && \
+    rm -rf "${_GPG_TEMP}"
+
 RUN dnf install -y \
-        habanalabs-rdma-core-"$VERSION"-"$REVISION".oc9 \
-        habanalabs-thunk-"$VERSION"-"$REVISION".oc9 \
-        habanalabs-firmware-tools-"$VERSION"-"$REVISION".oc9 \
-        habanalabs-graph-"$VERSION"-"$REVISION".oc9 && \
+        habanalabs-rdma-core-"$VERSION"-"$REVISION".el9 \
+        habanalabs-thunk-"$VERSION"-"$REVISION".el9 \
+        habanalabs-firmware-tools-"$VERSION"-"$REVISION".el9 \
+        habanalabs-graph-"$VERSION"-"$REVISION".el9 && \
     dnf clean all && \
     chmod +t /var/log/habana_logs && \
-    rm -f /etc/yum.repos.d/habana.repo
+    rm -f /etc/yum.repos.d/habanalabs.repo
 
 ENV RDMA_CORE_ROOT=/opt/habanalabs/rdma-core/src
 ENV RDMA_CORE_LIB=${RDMA_CORE_ROOT}/build/lib
@@ -108,15 +119,7 @@ RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.
     ./configure --prefix=${MPI_ROOT} --with-verbs && \
     make -j$(nproc) && make install && cd / && rm -rf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz /tmp/openmpi-${OPENMPI_VERSION}
 
-RUN mkdir -p /tmp/pyverbs && \
-    cd /tmp/pyverbs && \
-    python3 -m pip download pyverbs==59.0 && \
-    tar zxf pyverbs-59.0.tar.gz && \
-    cd pyverbs-59.0 && \
-    sed -i 's/cython>=3.0.12/cython>=3.0.12,<3.2.0/' pyproject.toml && \
-    python3 -m pip install . && \
-    cd && \
-    rm -rf /tmp/pyverbs
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 RUN python3 -m pip install --upgrade protobuf
 
@@ -130,12 +133,12 @@ RUN mkdir -p /var/run/sshd && \
     sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config && \
     mkdir -p /var/run/sshd && echo "/usr/sbin/sshd -p 3022" | tee -a ~/.bashrc
 
-# Wrapper to unset LD_PRELOAD before SSH
+RUN echo "source /opt/rh/gcc-toolset-13/enable" | tee -a ~/.bashrc
+
 RUN echo '#!/bin/bash' > /usr/local/bin/ssh && \
     echo 'unset LD_PRELOAD' >> /usr/local/bin/ssh && \
     echo 'exec /usr/bin/ssh "$@"' >> /usr/local/bin/ssh && \
     chmod +x /usr/local/bin/ssh
-
 ENV GC_KERNEL_PATH=/usr/lib/habanalabs/libtpc_kernels.so
 ENV HABANA_LOGS=/var/log/habana_logs/
 ENV HABANA_SCAL_BIN_PATH=/opt/habanalabs/engines_fw
