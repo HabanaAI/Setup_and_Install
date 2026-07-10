@@ -8,10 +8,10 @@ PYTHON_SUFFIX=py$(subst .,,$(CUSTOM_PYTHON_VERSION))
 TORCH_TYPE ?= fork
 
 REPO_SERVER ?= vault.habana.ai
-PT_VERSION ?= 2.10.0
-RELEASE_VERSION ?= 1.24.0
-RELEASE_BUILD_ID ?= 1007
-PYPI_URL ?= https://vault.habana.ai/artifactory/api/pypi/gaudi-python/simple
+PT_VERSION ?= 2.11.0
+RELEASE_VERSION ?= 1.24.1
+RELEASE_BUILD_ID ?= 482
+PYPI_URL ?= https://pypi.org/simple/
 
 BASE_IMAGE_URL ?= base-installer-$(BUILD_OS)
 ifdef CUSTOM_PYTHON_VERSION

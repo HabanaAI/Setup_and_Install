@@ -31,7 +31,7 @@ init: check_base
 	$(HIDE)mkdir -p $(BUILD_DIR)
 	$(HIDE)cp $(CURDIR)/LICENSE $(BUILD_DIR)/
 	$(HIDE)cp $(CURDIR)/*.sh $(BUILD_DIR)/
-	$(HIDE)cp $(CURDIR)/tencentos_efa_patch.txt $(BUILD_DIR)/
+	$(HIDE)cp $(CURDIR)/aws_efa_installer.patch $(BUILD_DIR)/
     ifdef CUSTOM_PYTHON_VERSION
 		$(HIDE)cp $(CURDIR)/Dockerfile.$(BUILD_OS)-${PYTHON_SUFFIX} $(BUILD_DIR)/Dockerfile
     else

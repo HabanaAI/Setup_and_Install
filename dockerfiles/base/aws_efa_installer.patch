@@ -1,11 +1,11 @@
 diff --git a/common.sh b/common.sh
-index 3c3a0e4..b463f42 100755
+index 3c3a0e4..32a0f81 100755
 --- a/common.sh
 +++ b/common.sh
-@@ -50,6 +50,15 @@ has_substring() {
+@@ -50,6 +50,25 @@ has_substring() {
  	fi
  }
-
+ 
 +is_tencentos_3() {
 +	. /etc/os-release
 +	if [ "$NAME" = "TencentOS Server" ] && [ "$VERSION_ID" = "3.1" ]; then
@@ -15,91 +15,105 @@ index 3c3a0e4..b463f42 100755
 +	fi
 +}
 +
++is_navix_9() {
++	. /etc/os-release
++	if [ "$NAME" = "Navix" ] &&
++		echo $VERSION_ID | egrep -q '9\.[0-9]'; then
++		return 0
++	else
++		return 1
++	fi
++}
++
  is_amazon_linux_2() {
  	. /etc/os-release
  	if [ "$NAME" = "Amazon Linux" ] && [ "$VERSION_ID" = "2" ]; then
-@@ -164,7 +173,7 @@ is_suse_15() {
+@@ -164,7 +183,7 @@ is_suse_15() {
  }
-
+ 
  install_cmd() {
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9; then
  		if [ $1 == "localinstall" ]; then
  			shift
  			yum -y localinstall $@
-@@ -181,7 +190,7 @@ install_cmd() {
+@@ -181,7 +200,7 @@ install_cmd() {
  	fi
  }
  search_cmd() {
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9; then
  		yum list installed $@
  	elif is_suse_15; then
  		zypper search --installed-only --match-exact $@
-@@ -194,7 +203,7 @@ search_cmd() {
+@@ -194,7 +213,7 @@ search_cmd() {
  }
  remove_cmd() {
  	# we don't remove the dependencies of the efa packages as it may have reverse dependencies on other system packages
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9 || is_suse_15; then
  		rpm --erase --nodeps $@
  	elif is_debian_10 || is_debian_11 || is_ubuntu_2004 || is_ubuntu_2204 || is_ubuntu_2404; then
  		# purge is identical to remove except that packages are removed and purged
-@@ -207,7 +216,7 @@ remove_cmd() {
+@@ -207,7 +226,7 @@ remove_cmd() {
  }
  # Get the list of file installed by the package name
  query_file_list_cmd() {
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9 || is_suse_15; then
  		rpm -ql $@
  	elif is_debian_10 || is_debian_11 || is_ubuntu_2004 || is_ubuntu_2204 || is_ubuntu_2404; then
  		dpkg -L $@
-@@ -220,7 +229,7 @@ query_file_list_cmd() {
+@@ -220,7 +239,7 @@ query_file_list_cmd() {
  # reverse dependencies (some other installed packages depend on them)
  # this command will return non-zero
  remove_dryrun_cmd() {
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_suse_15 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9 || is_suse_15; then
  		rpm --erase --test $@
  	elif is_debian_10 || is_debian_11 || is_ubuntu_2004 || is_ubuntu_2204 || is_ubuntu_2404; then
  		dpkg -r --dry-run $@
 diff --git a/efa_installer.sh b/efa_installer.sh
-index 544673f..faf3369 100755
+index 544673f..2f17e4b 100755
 --- a/efa_installer.sh
 +++ b/efa_installer.sh
 @@ -97,7 +97,7 @@ select_mpi() {
  }
-
+ 
  detect_os() {
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9; then
  		PACKAGE_TYPE="rpm"
  		KERNEL_SEARCH_STRING=kernel
  		INSTALL_ARGS="--setopt=skip_missing_names_on_install=False"
-@@ -209,7 +209,7 @@ setup_install_package_paths() {
+@@ -209,10 +209,10 @@ setup_install_package_paths() {
  	local kmod_path
-
+ 
  	if [ "${PACKAGE_TYPE}" = "rpm" ]; then
 -		if is_rhel_8 || is_rockylinux_8; then
-+		if is_rhel_8 || is_rockylinux_8|| is_tencentos_3; then
++		if is_rhel_8 || is_rockylinux_8 || is_tencentos_3; then
  			base_dir="RPMS/ROCKYLINUX8/${arch}"
  			debug_dir="RPMS/ROCKYLINUX8/${arch}/debug"
- 		elif is_rockylinux_9 || is_rhel_9; then
+-		elif is_rockylinux_9 || is_rhel_9; then
++		elif is_rockylinux_9 || is_rhel_9 || is_navix_9; then
+ 			base_dir="RPMS/ROCKYLINUX9/${arch}"
+ 			debug_dir="RPMS/ROCKYLINUX9/${arch}/debug"
+ 		elif is_amazon_linux_2; then
 @@ -465,7 +465,7 @@ install_apt_package() {
  install_dependencies() {
  	local packages
-
+ 
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9; then
  		packages="pciutils rpmdevtools"
  		if [ ${SKIP_KMOD} -eq 0 ]; then
  			for kernel in ${INSTALLED_KERNELS[@]}; do
 @@ -785,7 +785,7 @@ uninstall_efa() {
-
+ 
  uninstall_old_efa_packages() {
  	# Uninstall 'openmpi' and 'libfabric' if packaged by AWS.
 -	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9; then
-+	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3; then
++	if is_amazon_linux_2 || is_amazon_linux_2023 || is_rhel_8 || is_rockylinux_8 || is_rockylinux_9 || is_rhel_9 || is_tencentos_3 || is_navix_9; then
  		for pkg in openmpi libfabric libfabric-debuginfo; do
  			rpm -ql $pkg | grep -q /opt/amazon
  			if [ $? -eq 0 ]; then
