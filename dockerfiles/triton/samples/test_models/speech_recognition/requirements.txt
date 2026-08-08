@@ -1,0 +1,3 @@
+soundfile
+librosa
+tritonclient[http]==2.41.0
