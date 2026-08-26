@@ -13,42 +13,34 @@ case $ID in
     navix)
         find RPMS/ -name 'dkms*.rpm' -exec rm -f {} \;
         find RPMS/ -name 'efa-*.rpm' -exec rm -f {} \;
-        dnf install -y RPMS/ROCKYLINUX9/x86_64/rdma-core/*.rpm
-        RUN_EFA_INSTALLER="echo 'Skipping EFA installer on RHEL'"
+        patch -f -p1 -i /tmp/aws_efa_installer.patch --reject-file=aws_efa_installer.patch.rej --no-backup-if-mismatch
     ;;
     rhel)
         # we cannot install dkms packages on RHEL images due to OCP rules
         find RPMS/ -name 'dkms*.rpm' -exec rm -f {} \;
         find RPMS/ -name 'efa-*.rpm' -exec rm -f {} \;
-        case $VERSION_ID in
-            9*)
-                dnf install -y RPMS/ROCKYLINUX9/x86_64/rdma-core/*.rpm
-            ;;
-            *)
-                echo "Unsupported RHEL version: $VERSION_ID"
-                exit 1
-            ;;
-        esac
-        RUN_EFA_INSTALLER="echo 'Skipping EFA installer on RHEL'"
     ;;
     tencentos)
-        # dnf install -y RPMS/ROCKYLINUX8/x86_64/rdma-core/*.rpm
-        find RPMS/ -name 'dkms*.rpm' -exec rm -f {} \;
-        find RPMS/ -name 'efa-*.rpm' -exec rm -f {} \;
-        rm -rf RPMS/ROCKYLINUX8/x86_64/rdma-core/rdma*
-        patch -f -p1 -i /tmp/tencentos_efa_patch.txt --reject-file=tencentos_efa_patch.rej --no-backup-if-mismatch
-        tmp_dir_ofed=$(mktemp -d)
-        wget -O $tmp_dir_ofed/MLNX_OFED.tgz https://${ARTIFACTORY_URL}/artifactory/gaudi-installer/deps/MLNX_OFED_LINUX-5.8-3.0.7.0-rhel8.4-x86_64.tgz
-        pushd $tmp_dir_ofed
-        tar xf MLNX_OFED.tgz
-        ofed_packages_path="mlnx-ofed"
-        pushd mlnx-ofed
-        yum install pciutils-libs tcsh tk python36 gcc-gfortran kernel-modules fuse-libs numactl-libs -y
-        ./mlnxofedinstall --distro RHEL8.4 --skip-distro-check --user-space-only --skip-repo --force
-        popd
-        popd
-        rm -rf $tmp_dir_ofed
-        RUN_EFA_INSTALLER="echo 'Skipping EFA installer on tencentos'"
+        case $VERSION_ID in
+            "3.1")
+                find RPMS/ -name 'dkms*.rpm' -exec rm -f {} \;
+                find RPMS/ -name 'efa-*.rpm' -exec rm -f {} \;
+                rm -rf RPMS/ROCKYLINUX8/x86_64/rdma-core/rdma*
+                patch -f -p1 -i /tmp/aws_efa_installer.patch --reject-file=aws_efa_installer.patch.rej --no-backup-if-mismatch
+                tmp_dir_ofed=$(mktemp -d)
+                wget -O $tmp_dir_ofed/MLNX_OFED.tgz https://${ARTIFACTORY_URL}/artifactory/gaudi-installer/deps/MLNX_OFED_LINUX-5.8-3.0.7.0-rhel8.4-x86_64.tgz
+                pushd $tmp_dir_ofed
+                tar -zxf MLNX_OFED.tgz
+                ofed_packages_path="mlnx-ofed"
+                pushd mlnx-ofed
+                yum install pciutils-libs tcsh tk python36 gcc-gfortran kernel-modules fuse-libs numactl-libs -y
+                ./mlnxofedinstall --distro RHEL8.4 --skip-distro-check --user-space-only --skip-repo --force
+                popd
+                popd
+                rm -rf $tmp_dir_ofed
+                RUN_EFA_INSTALLER="echo 'Skipping EFA installer on TencentOS 3.1'"
+            ;;
+        esac
     ;;
     ubuntu)
         apt-get update

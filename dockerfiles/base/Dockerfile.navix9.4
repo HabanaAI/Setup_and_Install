@@ -55,6 +55,7 @@ RUN dnf update -y && dnf install -y \
         openssh-server \
         openssl \
         openssl-devel \
+        patch \
         perl-Net-SSLeay \
         python3-devel \
         python3.12 \
@@ -80,7 +81,8 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 -m pip install --upgrade Jinja2 requests
 
 COPY install_efa.sh .
-RUN ./install_efa.sh && rm install_efa.sh && rm -rf /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+COPY aws_efa_installer.patch /tmp/aws_efa_installer.patch
+RUN ./install_efa.sh && rm -f install_efa.sh /tmp/aws_efa_installer.patch /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
 ENV OPENMPI_VERSION=5.0.8
 ENV OPENMPI_SHA256=f891ddf2dab3b604f2521d0569615bc1c07a1ac86a295ac543e059aecb303621
@@ -90,8 +92,14 @@ ENV PATH=${MPI_ROOT}/bin:$PATH
 ENV OPAL_PREFIX=${MPI_ROOT}
 ENV MPICC=${MPI_ROOT}/bin/mpicc
 ENV RDMAV_FORK_SAFE=1
-ENV FI_EFA_USE_DEVICE_RDMA=0
 ENV OMPI_MCA_btl=^openib
+
+RUN wget -q -O /tmp/openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz && \
+    echo "${OPENMPI_SHA256} /tmp/openmpi-${OPENMPI_VERSION}.tar.gz" | sha256sum -c - && \
+    tar -xzf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz -C /tmp && \
+    cd /tmp/openmpi-${OPENMPI_VERSION} && \
+    ./configure --prefix=${MPI_ROOT} --with-verbs && \
+    make -j$(nproc) && make install && cd / && rm -rf /tmp/openmpi-${OPENMPI_VERSION}.tar.gz /tmp/openmpi-${OPENMPI_VERSION}
 
 RUN echo "[habanalabs]" > /etc/yum.repos.d/habanalabs.repo && \
     echo "name=Habana Navix Linux repo" >> /etc/yum.repos.d/habanalabs.repo && \

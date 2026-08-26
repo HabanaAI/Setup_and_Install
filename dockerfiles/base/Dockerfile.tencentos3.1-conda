@@ -63,8 +63,8 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python3 -m pip install --upgrade Jinja2 protobuf requests
 
 COPY install_efa.sh .
-COPY tencentos_efa_patch.txt /tmp/tencentos_efa_patch.txt
-RUN ./install_efa.sh && rm -f install_efa.sh /tmp/tencentos_efa_patch.txt /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
+COPY aws_efa_installer.patch /tmp/aws_efa_installer.patch
+RUN ./install_efa.sh && rm -f install_efa.sh /tmp/aws_efa_installer.patch /etc/ld.so.conf.d/efa.conf /etc/profile.d/efa.sh
 
 ENV OPENMPI_VERSION=5.0.8
 ENV OPENMPI_SHA256=f891ddf2dab3b604f2521d0569615bc1c07a1ac86a295ac543e059aecb303621

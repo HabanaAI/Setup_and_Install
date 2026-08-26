@@ -27,8 +27,8 @@ This folder contains Gaudi dockerfiles and makefiles that can be used to build H
 |--------------------|:--------------:|:--------------:|:-------------:|
 | ubuntu22.04        |       Yes      |       Yes      |      3.11     |
 | ubuntu24.04        |       Yes      |       Yes      |               |
-| rhel9.4            |       Yes      |       Yes      |      3.12     |
 | rhel9.6            |       Yes      |       Yes      |               |
+| rhel9.8            |       Yes      |       Yes      |               |
 | tencentos3.1       |       Yes      |                |               |
 | tencentos3.1-conda |       Yes      |                |               |
 | navix9.4           |       Yes      |                |               |
@@ -59,16 +59,16 @@ This script can be used as reference to build docker images for Gaudi.
     make build
     ```
     Examples:
-    #### Build pytorch image for rhel9.4:
+    #### Build pytorch image for rhel9.6:
     ```
     cd pytorch
-    make build BUILD_OS=rhel9.4
+    make build BUILD_OS=rhel9.6
     ```
 
-    #### Build pytorch image for rhel9.4 with python3.12:
+    #### Build pytorch image for ubuntu22.04 with python3.11:
     ```
     cd pytorch
-    make build BUILD_OS=rhel9.4 CUSTOM_PYTHON_VERSION=3.12
+    make build BUILD_OS=ubuntu22.04 CUSTOM_PYTHON_VERSION=3.11
     ```
 
     #### Build pytorch image for ubuntu22.04 with upstream pytorch:
@@ -93,7 +93,7 @@ This script can be used as reference to build docker images for Gaudi.
 
     #### Optional Parameters
     * BUILD_OS - set the OS to build (default ubuntu22.04)
-    * CUSTOM_PYTHON_VERSION - build OS with different python version than default - available ubuntu22.04 with python3.11 and rhel9.4 with python3.12
+    * CUSTOM_PYTHON_VERSION - build OS with different python version than default - available ubuntu22.04 with python3.11
     * TORCH_TYPE - build pytorch docker with upstream or fork (internal) torch version (default fork)
     * BUILD_DIR - the folder where the build be executed from (default dockerbuild in image folder)
     * VERBOSE - set to TRUE to echo the commands (default FALSE)

@@ -10,11 +10,11 @@ else
 fi
 OS_STRING="ubuntu${OS_NUMBER}"
 case "${BASE_NAME}" in
-    *rhel9.4*)
-        OS_STRING="rhel94"
-    ;;
     *rhel9.6*)
         OS_STRING="rhel96"
+    ;;
+    *rhel9.8*)
+        OS_STRING="rhel98"
     ;;
     *tencentos*)
         OS_STRING="tencentos31"
